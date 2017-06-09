@@ -13,38 +13,26 @@ def main():
     df = pandas.read_csv(csv_path)
 
     mut_types = df['MutType'].drop_duplicates().values
-    structure_orders = [ df['StructureOrder'].drop_duplicates().values[0] ]
+    structure_orders = df['StructureOrder'].drop_duplicates().values
 
     for mut_type in mut_types:
         for structure_order in structure_orders:
             sub_df = df.loc[ (df['MutType'] == mut_type) & (df['StructureOrder'] == structure_order) ]
             print mut_type, structure_order
-            print 'FC:', fraction_correct(
+            print 'FC:', '%.3f' % fraction_correct(
                 sub_df['total'].values,
                 sub_df['ExperimentalDDG'].values,
             )
 
-            print bootstrap_xy_stat(
-                sub_df['total'].values,
-                sub_df['ExperimentalDDG'].values,
-                fraction_correct,
-            )
-
-            print 'FC fuzzy:', fraction_correct_fuzzy_linear(
+            print 'FC fuzzy:', '%.3f' % fraction_correct_fuzzy_linear(
                 sub_df['total'].values,
                 sub_df['ExperimentalDDG'].values,
             )
 
-            print 'MAE:', mae( sub_df['total'], sub_df['ExperimentalDDG'] )
+            print 'MAE:', '%.3f' % mae( sub_df['total'], sub_df['ExperimentalDDG'] )
             slope, intercept, r_value, p_value, std_err = scipy.stats.linregress( sub_df['total'], sub_df['ExperimentalDDG'] )
-            print 'R:', r_value
-            print 'slope:', slope
-            print get_xy_dataset_statistics_pandas(
-                sub_df,
-                x_series = 'total',
-                y_series = 'ExperimentalDDG',
-                bootstrap_data = True
-            )
+            print 'R:', '%.3f' % r_value
+            print 'slope:', '%.3f' % slope
             print
 
 if __name__ == '__main__':
