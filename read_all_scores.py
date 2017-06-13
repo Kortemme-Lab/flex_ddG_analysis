@@ -6,8 +6,14 @@ import sys
 from stats import fraction_correct, mae as calc_mae, bootstrap_xy_stat
 import scipy
 
+import matplotlib
+import matplotlib.pyplot as plt
+import seaborn as sns
+
 csv_path = os.path.expanduser( '~/data/ddg/interface_ddg_paper/publication_analyze_output/60k_with_control/split/id.csv.gz' )
 assert( os.path.isfile(csv_path) )
+
+output_dir = 'output'
 
 def main():
     df = pd.read_csv(csv_path)
@@ -25,6 +31,13 @@ def main():
     for prediction_run in sorted( df['PredictionRunName'].drop_duplicates().values ):
         for mut_type in mut_types:
             for structure_order in structure_orders:
+                sub_output_dir = os.path.join(output_dir, prediction_run.replace('.', ''))
+                sub_output_dir = os.path.join(sub_output_dir, mut_type)
+                sub_output_dir = os.path.join(sub_output_dir, structure_order)
+
+                if not os.path.isdir(sub_output_dir):
+                    os.makedirs(sub_output_dir)
+
                 sub_df = df.loc[ (df['MutType'] == mut_type) & (df['StructureOrder'] == structure_order) & (df['PredictionRunName'] == prediction_run) ]
                 print mut_type, structure_order, prediction_run
 
@@ -47,6 +60,14 @@ def main():
                 df_mut_types.append(mut_type)
                 df_structure_orders.append(structure_order)
                 prediction_runs.append(prediction_run)
+
+                fig = plt.figure(figsize=(8.5, 8.5), dpi=600)
+                ax = fig.add_subplot(1, 1, 1)
+                ax = sns.regplot(x="total", y="ExperimentalDDG", data = sub_df, ax=ax)
+                fig_path = os.path.join(sub_output_dir, 'total_vs_experimental.pdf')
+                fig.savefig( fig_path )
+                print fig_path
+
                 print
 
     results_df = pd.DataFrame( {
@@ -60,6 +81,7 @@ def main():
     } )
     sort_cols = ['FractionCorrect', 'R', 'MAE']
     ascendings = [False, False, True]
+    results_df.to_csv( os.path.join(output_dir, 'results.csv') )
     for sort_col, asc in zip(sort_cols, ascendings):
         results_df.sort_values( sort_col, inplace = True, ascending = asc )
         print results_df[ ['PredictionRun', 'MutTypes', 'StructureOrder', sort_col] ].head(n=10)
