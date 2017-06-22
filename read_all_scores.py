@@ -7,31 +7,33 @@ import shutil
 from stats import fraction_correct, mae as calc_mae, bootstrap_xy_stat
 import scipy
 
-import matplotlib
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 csv_path = os.path.expanduser( '~/data/ddg/interface_ddg_paper/publication_analyze_output/60k_with_control/split/id.csv.gz' )
-assert( os.path.isfile(csv_path) )
-
 output_dir = 'output'
+generate_plots = False
+
+if generate_plots:
+    # Import here as they can be slow, and are unneeded if plots aren't going to be made
+    import matplotlib
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
+assert( os.path.isfile(csv_path) )
 if os.path.isdir(output_dir):
     shutil.rmtree(output_dir)
 
 def add_score_categories(df):
-    stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ]
-    stabilizing['MutType'] = 'stabilizing'
+    stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
+    stabilizing.loc[:,'MutType'] = 'stabilizing'
 
-    neutral = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] > -1.0) & (df['ExperimentalDDG'] < 1.0) ]
-    neutral['MutType'] = 'neutral'
+    neutral = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] > -1.0) & (df['ExperimentalDDG'] < 1.0) ].copy()
+    neutral.loc[:,'MutType'] = 'neutral'
 
-    positive = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] >= 1.0) ]
-    positive['MutType'] = 'positive'
+    positive = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] >= 1.0) ].copy()
+    positive.loc[:,'MutType'] = 'positive'
 
     df = df.append( stabilizing )
     df = df.append( positive )
     df = df.append( neutral )
-
     return df
 
 def main():
@@ -53,9 +55,10 @@ def main():
         for mut_type in mut_types:
             for structure_order in structure_orders:
                 outer_sub_df = df.loc[ (df['MutType'] == mut_type) & (df['StructureOrder'] == structure_order) & (df['PredictionRunName'] == prediction_run) ]
-                outer_fig = plt.figure(figsize=(8.5, 8.5), dpi=600)
-                outer_ax = outer_fig.add_subplot(1, 1, 1)
                 num_steps = float( len(outer_sub_df['ScoreMethodID'].drop_duplicates().values) )
+                if generate_plots:
+                    outer_fig = plt.figure(figsize=(8.5, 8.5), dpi=600)
+                    outer_ax = outer_fig.add_subplot(1, 1, 1)
 
                 for step_i, step in enumerate( sorted( outer_sub_df['ScoreMethodID'].drop_duplicates().values ) ):
                     sub_df = outer_sub_df.loc[ outer_sub_df['ScoreMethodID'] == step ]
@@ -93,24 +96,26 @@ def main():
                     steps.append(step)
                     ns.append(len(sub_df['ExperimentalDDG']))
 
-                    fig = plt.figure(figsize=(8.5, 8.5), dpi=600)
-                    ax = fig.add_subplot(1, 1, 1)
-                    sns.regplot(x="total", y="ExperimentalDDG", data = sub_df, ax=ax, scatter_kws = { 's' : 4.5 } )
+                    if generate_plots:
+                        fig = plt.figure(figsize=(8.5, 8.5), dpi=600)
+                        ax = fig.add_subplot(1, 1, 1)
+                        sns.regplot(x="total", y="ExperimentalDDG", data = sub_df, ax=ax, scatter_kws = { 's' : 4.5 } )
 
-                    sns.regplot(
-                        x="total", y="ExperimentalDDG", data = sub_df, ax=outer_ax,
-                        color = ( float(num_steps - step_i) / num_steps, 0, ( float(step_i) / num_steps ) ),
-                        scatter_kws = { 's' : 2 },
-                    )
+                        sns.regplot(
+                            x="total", y="ExperimentalDDG", data = sub_df, ax=outer_ax,
+                            color = ( float(num_steps - step_i) / num_steps, 0, ( float(step_i) / num_steps ) ),
+                            scatter_kws = { 's' : 2 },
+                        )
 
-                    fig_path = os.path.join(sub_output_dir, 'total_vs_experimental.pdf')
-                    fig.savefig( fig_path )
-                    plt.close(fig)
-                    print fig_path
+                        fig_path = os.path.join(sub_output_dir, 'total_vs_experimental.pdf')
+                        fig.savefig( fig_path )
+                        plt.close(fig)
+                        print fig_path
 
                     print
-                outer_fig.savefig(outer_fig_path)
-                plt.close(outer_fig)
+                if generate_plots:
+                    outer_fig.savefig(outer_fig_path)
+                    plt.close(outer_fig)
 
     results_df = pd.DataFrame( {
         'PredictionRun' : prediction_runs,
