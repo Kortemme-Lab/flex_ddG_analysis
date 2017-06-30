@@ -5,7 +5,7 @@ all_data = fread('zcat ~/data/ddg/interface_ddg_paper/control_and_60k-score_term
 # all_data = read.csv( gzfile('~/data/ddg/interface_ddg_paper/control_and_60k-score_terms.csv.gz','rt') )
 # all_data = read.csv( '~/data/ddg/interface_ddg_paper/control_and_60k-score_terms.csv' )
 
-# all_data = all_data[ MutType == 'complete' & (ScoreMethodID == 2500 | ScoreMethodID == 5000)] # Shorter dataset for testing
+all_data = all_data[ MutType == 'complete' & (ScoreMethodID == 2500 | ScoreMethodID == 5000)] # Shorter dataset for testing
 
 all_data$total_diff = ( all_data$fa_atr + all_data$fa_dun + all_data$fa_elec + all_data$fa_intra_rep + all_data$fa_rep + all_data$fa_sol + all_data$hbond_bb_sc + all_data$hbond_lr_bb + all_data$hbond_sc ) - all_data$total
 
@@ -76,6 +76,42 @@ calc_gam <- function(df, by_labels, img_type) {
 
     sink()
     close(zz)
+
+
+    # Save lpmatrix for later fitting
+    step = 0.01
+    boundary = 40
+    newd <- data.frame(
+        fa_atr = ( (-boundary/step):(boundary/step) ) * step,
+        fa_elec = ( (-boundary/step):(boundary/step) ) * step,
+        fa_rep = ( (-boundary/step):(boundary/step) ) * step,
+        fa_sol = ( (-boundary/step):(boundary/step) ) * step,
+        hbond_bb_sc = ( (-boundary/step):(boundary/step) ) * step,
+        hbond_lr_bb = ( (-boundary/step):(boundary/step) ) * step,
+        hbond_sc = ( (-boundary/step):(boundary/step) ) * step
+    )
+    pred = predict.gam(gamobj, newd)
+    print( "coef" )
+    print( coef(gamobj) )
+    Xp <- predict(gamobj, newd, type="lpmatrix")
+
+    xn <- c(.341,.122,.476,.981,-2,-8,4) ## want prediction at these values
+    x0 <- 1         ## intercept column
+    dx <- step      ## covariate spacing in `newd'
+    for (j in 0:2) { ## loop through smooth terms
+        cols <- 1+j*9 +1:9      ## relevant cols of Xp
+        i <- floor(xn[j+1]/step)  ## find relevant rows of Xp
+        w1 <- (xn[j+1]-i*dx)/dx ## interpolation weights
+        ## find approx. predict matrix row portion, by interpolation
+        x0 <- c(x0,Xp[i+2,cols]*w1 + Xp[i+1,cols]*(1-w1))
+    }
+    dim(x0)<-c(1,28)
+    fv <- x0%*%coef(gamobj) + xn[4]    ## evaluate and add offset
+    ## compare to normal prediction
+    ## print( predict(b,newdata=data.frame(x0=xn[1],x1=xn[2],
+    ##                                     x2=xn[3],x3=xn[4]),se=FALSE) )
+    print( fv )
+
     return( sqrt(gamsum$r.sq) )
 }
 
