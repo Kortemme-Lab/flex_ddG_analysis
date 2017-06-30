@@ -106,11 +106,11 @@ calc_gam <- function(df, by_labels, img_type) {
         x0 <- c(x0,Xp[i+2,cols]*w1 + Xp[i+1,cols]*(1-w1))
     }
     dim(x0)<-c(1,28)
-    fv <- x0%*%coef(gamobj) + xn[4]    ## evaluate and add offset
+    ## fv <- x0%*%coef(gamobj) + xn[4]    ## evaluate and add offset
     ## compare to normal prediction
     ## print( predict(b,newdata=data.frame(x0=xn[1],x1=xn[2],
     ##                                     x2=xn[3],x3=xn[4]),se=FALSE) )
-    print( fv )
+    ## print( fv )
 
     return( sqrt(gamsum$r.sq) )
 }
