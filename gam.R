@@ -94,8 +94,12 @@ calc_gam <- function(df, by_labels, img_type) {
     print( "coef" )
     print( coef(gamobj) )
     Xp <- predict(gamobj, newd, type="lpmatrix")
+    xn <- c(.341, .122, .476, .981, -2, -8, 4) ## want prediction at these values
 
-    xn <- c(.341,.122,.476,.981,-2,-8,4) ## want prediction at these values
+    ncols <- length(colnames(Xp))
+    nsmoothterms <- length(xn)
+
+
     x0 <- 1         ## intercept column
     dx <- step      ## covariate spacing in `newd'
     for (j in 0:2) { ## loop through smooth terms
@@ -105,12 +109,12 @@ calc_gam <- function(df, by_labels, img_type) {
         ## find approx. predict matrix row portion, by interpolation
         x0 <- c(x0,Xp[i+2,cols]*w1 + Xp[i+1,cols]*(1-w1))
     }
-    dim(x0)<-c(1,28)
-    ## fv <- x0%*%coef(gamobj) + xn[4]    ## evaluate and add offset
+    dim(x0) <- c(1,ncols)
+    fv <- x0 %*% coef(gamobj) + xn[4]    ## evaluate and add offset
     ## compare to normal prediction
-    ## print( predict(b,newdata=data.frame(x0=xn[1],x1=xn[2],
-    ##                                     x2=xn[3],x3=xn[4]),se=FALSE) )
-    ## print( fv )
+    print( predict(b,newdata=data.frame(x0=xn[1],x1=xn[2],
+                                        x2=xn[3],x3=xn[4]),se=FALSE) )
+    print( fv )
 
     return( sqrt(gamsum$r.sq) )
 }

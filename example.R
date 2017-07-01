@@ -14,7 +14,6 @@ pred <- predict.gam(b,newd)
 
 Xp <- predict(b,newd,type="lpmatrix")
 
-
 ##################################################################
 ## The following shows how to use use an "lpmatrix" as a lookup
 ## table for approximate prediction. The idea is to create
@@ -29,6 +28,8 @@ Xp <- predict(b,newd,type="lpmatrix")
 ###################################################################
 
 xn <- c(.341,.122,.476,.981) ## want prediction at these values
+ncols <- length(colnames(Xp))
+print( colnames(Xp) )
 x0 <- 1         ## intercept column
 dx <- 1/90      ## covariate spacing in `newd'
 for (j in 0:2) { ## loop through smooth terms
@@ -38,7 +39,7 @@ for (j in 0:2) { ## loop through smooth terms
   ## find approx. predict matrix row portion, by interpolation
   x0 <- c(x0,Xp[i+2,cols]*w1 + Xp[i+1,cols]*(1-w1))
 }
-dim(x0)<-c(1,28)
+dim(x0)<-c(1,ncols)
 fv <- x0%*%coef(b) + xn[4]    ## evaluate and add offset
 ## compare to normal prediction
 print( predict(b,newdata=data.frame(x0=xn[1],x1=xn[2],
