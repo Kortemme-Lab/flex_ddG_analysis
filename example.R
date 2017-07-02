@@ -29,15 +29,16 @@ Xp <- predict(b,newd,type="lpmatrix")
 
 xn <- c(.341,.122,.476,.981) ## want prediction at these values
 ncols <- length(colnames(Xp))
-print( colnames(Xp) )
+print( Xp )
 x0 <- 1         ## intercept column
 dx <- 1/90      ## covariate spacing in `newd'
 for (j in 0:2) { ## loop through smooth terms
-  cols <- 1+j*9 +1:9      ## relevant cols of Xp
-  i <- floor(xn[j+1]*90)  ## find relevant rows of Xp
-  w1 <- (xn[j+1]-i*dx)/dx ## interpolation weights
-  ## find approx. predict matrix row portion, by interpolation
-  x0 <- c(x0,Xp[i+2,cols]*w1 + Xp[i+1,cols]*(1-w1))
+    cols <- 1+j*9 +1:9      ## relevant cols of Xp
+    i <- floor(xn[j+1]*90)  ## find relevant rows of Xp
+    print( paste0( 'i', i ) )
+    w1 <- (xn[j+1]-i*dx)/dx ## interpolation weights
+    ## find approx. predict matrix row portion, by interpolation
+    x0 <- c(x0,Xp[i+2,cols]*w1 + Xp[i+1,cols]*(1-w1))
 }
 dim(x0)<-c(1,ncols)
 fv <- x0%*%coef(b) + xn[4]    ## evaluate and add offset

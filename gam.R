@@ -77,7 +77,6 @@ calc_gam <- function(df, by_labels, img_type) {
     sink()
     close(zz)
 
-
     # Save lpmatrix for later fitting
     step = 0.01
     boundary = 40
@@ -91,30 +90,41 @@ calc_gam <- function(df, by_labels, img_type) {
         hbond_sc = ( (-boundary/step):(boundary/step) ) * step
     )
     pred = predict.gam(gamobj, newd)
-    print( "coef" )
-    print( coef(gamobj) )
     Xp <- predict(gamobj, newd, type="lpmatrix")
-    xn <- c(.341, .122, .476, .981, -2, -8, 4) ## want prediction at these values
+    xn_vals <- c(3.7054, 0.1415, -0.446, -0.8832, -0.0129, 0.1304, 0.664) ## want prediction at these values
+    xn <- (xn_vals + boundary) / ( 2 * boundary ) # Convert to percentage in boundary range
 
     ncols <- length(colnames(Xp))
     nsmoothterms <- length(xn)
-
+    nsections <- ( ncols - 1 ) / nsmoothterms
+    print( paste0( 'nsmoothterms ', nsmoothterms, ' nsections ', nsections ) )
 
     x0 <- 1         ## intercept column
-    dx <- step      ## covariate spacing in `newd'
-    for (j in 0:2) { ## loop through smooth terms
-        cols <- 1+j*9 +1:9      ## relevant cols of Xp
-        i <- floor(xn[j+1]/step)  ## find relevant rows of Xp
-        w1 <- (xn[j+1]-i*dx)/dx ## interpolation weights
+    for (j in 0:(nsmoothterms-1)) { ## loop through smooth terms
+        cols <- 1+j*nsections + 1:nsections      ## relevant cols of Xp
+        #### print( cols )
+        i <- floor( xn[j+1] * nrow(Xp) )  ## find relevant rows of Xp
+        #### print( paste0( 'i ', i ) )
+        w1 <- xn_vals[j+1] %% step / step
+        #### print( paste0( 'w1 ', w1 ) )
         ## find approx. predict matrix row portion, by interpolation
         x0 <- c(x0,Xp[i+2,cols]*w1 + Xp[i+1,cols]*(1-w1))
+        #### print( paste0( 'x0 ', x0 ) )
     }
     dim(x0) <- c(1,ncols)
-    fv <- x0 %*% coef(gamobj) + xn[4]    ## evaluate and add offset
+    fv <- x0 %*% coef(gamobj) ## evaluate
     ## compare to normal prediction
-    print( predict(b,newdata=data.frame(x0=xn[1],x1=xn[2],
-                                        x2=xn[3],x3=xn[4]),se=FALSE) )
-    print( fv )
+    print( predict(gamobj, newdata=data.frame(
+                               fa_atr=xn_vals[1],
+                               fa_elec=xn_vals[2],
+                               fa_rep=xn_vals[3],
+                               fa_sol=xn_vals[4],
+                               hbond_bb_sc=xn_vals[5],
+                               hbond_lr_bb=xn_vals[6],
+                               hbond_sc=xn_vals[7]
+                           ),
+                   se=FALSE) )
+    print( paste0( "fv", " ", fv ) )
 
     return( sqrt(gamsum$r.sq) )
 }
