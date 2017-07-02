@@ -5,7 +5,7 @@ all_data = fread('zcat ~/data/ddg/interface_ddg_paper/control_and_60k-score_term
 # all_data = read.csv( gzfile('~/data/ddg/interface_ddg_paper/control_and_60k-score_terms.csv.gz','rt') )
 # all_data = read.csv( '~/data/ddg/interface_ddg_paper/control_and_60k-score_terms.csv' )
 
-all_data = all_data[ MutType == 'complete' & (ScoreMethodID == 2500 | ScoreMethodID == 5000)] # Shorter dataset for testing
+### all_data = all_data[ MutType == 'complete' & (ScoreMethodID == 2500 | ScoreMethodID == 5000)] # Shorter dataset for testing
 
 all_data$total_diff = ( all_data$fa_atr + all_data$fa_dun + all_data$fa_elec + all_data$fa_intra_rep + all_data$fa_rep + all_data$fa_sol + all_data$hbond_bb_sc + all_data$hbond_lr_bb + all_data$hbond_sc ) - all_data$total
 
@@ -89,42 +89,62 @@ calc_gam <- function(df, by_labels, img_type) {
         hbond_lr_bb = ( (-boundary/step):(boundary/step) ) * step,
         hbond_sc = ( (-boundary/step):(boundary/step) ) * step
     )
+
     pred = predict.gam(gamobj, newd)
     Xp <- predict(gamobj, newd, type="lpmatrix")
-    xn_vals <- c(3.7054, 0.1415, -0.446, -0.8832, -0.0129, 0.1304, 0.664) ## want prediction at these values
-    xn <- (xn_vals + boundary) / ( 2 * boundary ) # Convert to percentage in boundary range
 
-    ncols <- length(colnames(Xp))
-    nsmoothterms <- length(xn)
-    nsections <- ( ncols - 1 ) / nsmoothterms
-    print( paste0( 'nsmoothterms ', nsmoothterms, ' nsections ', nsections ) )
+    df$gamTotal = predict(gamobj, df)
 
-    x0 <- 1         ## intercept column
-    for (j in 0:(nsmoothterms-1)) { ## loop through smooth terms
-        cols <- 1+j*nsections + 1:nsections      ## relevant cols of Xp
-        #### print( cols )
-        i <- floor( xn[j+1] * nrow(Xp) )  ## find relevant rows of Xp
-        #### print( paste0( 'i ', i ) )
-        w1 <- xn_vals[j+1] %% step / step
-        #### print( paste0( 'w1 ', w1 ) )
-        ## find approx. predict matrix row portion, by interpolation
-        x0 <- c(x0,Xp[i+2,cols]*w1 + Xp[i+1,cols]*(1-w1))
-        #### print( paste0( 'x0 ', x0 ) )
-    }
-    dim(x0) <- c(1,ncols)
-    fv <- x0 %*% coef(gamobj) ## evaluate
-    ## compare to normal prediction
-    print( predict(gamobj, newdata=data.frame(
-                               fa_atr=xn_vals[1],
-                               fa_elec=xn_vals[2],
-                               fa_rep=xn_vals[3],
-                               fa_sol=xn_vals[4],
-                               hbond_bb_sc=xn_vals[5],
-                               hbond_lr_bb=xn_vals[6],
-                               hbond_sc=xn_vals[7]
-                           ),
-                   se=FALSE) )
-    print( paste0( "fv", " ", fv ) )
+    # Save lpmatrix, coeff, step, boundary; df with predictions
+    out_path = file.path( file.path(output_dir, unique_name),
+                         'lpmatrix.csv' )
+    write.table( Xp, out_path )
+    system( paste0("gzip ", out_path) )
+    out_path = file.path( file.path(output_dir, unique_name),
+                         'coeff' )
+    write.table( coef(gamobj), out_path )
+    out_path = file.path( file.path(output_dir, unique_name),
+                         'predictions.csv' )
+    write.table( df, out_path )
+    system( paste0("gzip ", out_path) )
+
+    zz = file( file.path( file.path(output_dir, unique_name), 'step-boundary'), open = "wt")
+    sink(zz)
+    print(step)
+    print(boundary)
+    sink()
+    close(zz)
+
+    # Check calculating prediction manually
+    ## xn_vals <- c(3.7054, 0.1415, -0.446, -0.8832, -0.0129, 0.1304, 0.664) ## want prediction at these values
+    ## xn <- (xn_vals + boundary) / ( 2 * boundary ) # Convert to percentage in boundary range
+
+    ## ncols <- length(colnames(Xp))
+    ## nsmoothterms <- length(xn)
+    ## nsections <- ( ncols - 1 ) / nsmoothterms
+    ## print( paste0( 'nsmoothterms ', nsmoothterms, ' nsections ', nsections ) )
+
+    ## x0 <- 1         ## intercept column
+    ## for (j in 0:(nsmoothterms-1)) { ## loop through smooth terms
+    ##     cols <- 1+j*nsections + 1:nsections      ## relevant cols of Xp
+    ##     i <- floor( xn[j+1] * nrow(Xp) )  ## find relevant rows of Xp
+    ##     w1 <- xn_vals[j+1] %% step / step
+    ##     ## find approx. predict matrix row portion, by interpolation
+    ##     x0 <- c(x0,Xp[i+2,cols]*w1 + Xp[i+1,cols]*(1-w1))
+    ## }
+    ## dim(x0) <- c(1,ncols)
+    ## fv <- x0 %*% coef(gamobj) ## evaluate
+    ## ## compare to normal prediction
+    ## print( predict(gamobj, newdata=data.frame(
+    ##                            fa_atr=xn_vals[1],
+    ##                            fa_elec=xn_vals[2],
+    ##                            fa_rep=xn_vals[3],
+    ##                            fa_sol=xn_vals[4],
+    ##                            hbond_bb_sc=xn_vals[5],
+    ##                            hbond_lr_bb=xn_vals[6],
+    ##                            hbond_sc=xn_vals[7]
+    ##                        ),
+    ##                se=FALSE) )
 
     return( sqrt(gamsum$r.sq) )
 }
