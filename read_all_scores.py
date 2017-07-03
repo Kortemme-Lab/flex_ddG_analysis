@@ -10,18 +10,19 @@ import scipy
 
 csv_path = os.path.expanduser( '~/data/ddg/interface_ddg_paper/publication_analyze_output/60k_with_control/split/id.csv.gz' )
 output_dir = 'output'
-generate_plots = False
 print_statistics = False
+output_fig_path = os.path.join( output_dir, 'figures' )
+if not os.path.isdir( output_fig_path ):
+    os.makedirs( output_fig_path )
 
-if generate_plots:
-    # Import here as they can be slow, and are unneeded if plots aren't going to be made
-    import matplotlib
-    import matplotlib.pyplot as plt
-    import seaborn as sns
+# Import here as they can be slow, and are unneeded if plots aren't going to be made
+import matplotlib
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 assert( os.path.isfile(csv_path) )
-if os.path.isdir(output_dir):
-    shutil.rmtree(output_dir)
+if not os.path.isdir(output_dir):
+    os.makedirs(output_dir)
 
 def add_score_categories(df):
     stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
@@ -38,7 +39,7 @@ def add_score_categories(df):
     df = df.append( neutral )
     return df
 
-def main():
+def main( generate_plots = False ):
     df = add_score_categories( pd.read_csv(csv_path) )
 
     # Add 'complete' to front of list so scaling is calculated first
@@ -166,5 +167,53 @@ def main():
     results_df.sort_values('R', ascending = False).to_csv( results_csv_path )
     print results_csv_path
 
+def figure_1():
+    exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
+    control_run_name = 'zemu_control'
+    point_size = 5.0
+
+    df = pd.read_csv(csv_path)
+
+    fig = plt.figure(
+        figsize=(8.5, 8.5), dpi=600
+    )
+
+    complete_corrs = df.loc[ (df['MutType'] == 'complete') & (df['PredictionRunName'] == exp_run_name) ].groupby( 'ScoreMethodID' )[['total','ExperimentalDDG']].corr().ix[0::2,'ExperimentalDDG'].sort_values( ascending = False )
+    best_step = complete_corrs.index[0][0]
+    ax1 = fig.add_subplot(2, 2, 1)
+    sns.regplot(
+        x = "total", y = "ExperimentalDDG",
+        data = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == 'complete') & (df['ScoreMethodID'] == best_step) ], ax = ax1, scatter_kws = { 's' : point_size }
+    )
+
+    complete_corrs = df.loc[ (df['MutType'] == 'complete') & (df['PredictionRunName'] == control_run_name) ].groupby( 'ScoreMethodID' )[['total','ExperimentalDDG']].corr().ix[0::2,'ExperimentalDDG'].sort_values( ascending = False )
+    best_step = complete_corrs.index[0][0]
+    ax2 = fig.add_subplot(2, 2, 2)
+    sns.regplot(
+        x = "total", y = "ExperimentalDDG",
+        data = df.loc[ (df['PredictionRunName'] == control_run_name) & (df['MutType'] == 'complete') & (df['ScoreMethodID'] == best_step) ], ax = ax2, scatter_kws = { 's' : point_size }
+    )
+
+    complete_corrs = df.loc[ (df['MutType'] == 's2l') & (df['PredictionRunName'] == exp_run_name) ].groupby( 'ScoreMethodID' )[['total','ExperimentalDDG']].corr().ix[0::2,'ExperimentalDDG'].sort_values( ascending = False )
+    best_step = complete_corrs.index[0][0]
+    ax3 = fig.add_subplot(2, 2, 3)
+    sns.regplot(
+        x = "total", y = "ExperimentalDDG",
+        data = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == 's2l') & (df['ScoreMethodID'] == best_step) ], ax = ax3, scatter_kws = { 's' : point_size }
+    )
+
+
+    complete_corrs = df.loc[ (df['MutType'] == 's2l') & (df['PredictionRunName'] == control_run_name) ].groupby( 'ScoreMethodID' )[['total','ExperimentalDDG']].corr().ix[0::2,'ExperimentalDDG'].sort_values( ascending = False )
+    best_step = complete_corrs.index[0][0]
+    ax4 = fig.add_subplot(2, 2, 4)
+    sns.regplot(
+        x = "total", y = "ExperimentalDDG",
+        data = df.loc[ (df['PredictionRunName'] == control_run_name) & (df['MutType'] == 's2l') & (df['ScoreMethodID'] == best_step) ], ax = ax4, scatter_kws = { 's' : point_size }
+    )
+
+    out_path = os.path.join( output_fig_path, 'fig1.pdf' )
+    fig.savefig( out_path )
+
 if __name__ == '__main__':
-    main()
+    figure_1()
+    # main()
