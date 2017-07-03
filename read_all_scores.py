@@ -46,6 +46,35 @@ def main( generate_plots = False ):
     mut_types = sorted( df['MutType'].drop_duplicates().values )
     mut_types.insert(0, mut_types.pop( mut_types.index('complete') ) )
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+assert( os.path.isfile(csv_path) )
+if not os.path.isdir(output_dir):
+    os.makedirs(output_dir)
+
+def add_score_categories(df):
+    stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
+    stabilizing.loc[:,'MutType'] = 'stabilizing'
+
+    neutral = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] > -1.0) & (df['ExperimentalDDG'] < 1.0) ].copy()
+    neutral.loc[:,'MutType'] = 'neutral'
+
+    positive = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] >= 1.0) ].copy()
+    positive.loc[:,'MutType'] = 'positive'
+
+    df = df.append( stabilizing )
+    df = df.append( positive )
+    df = df.append( neutral )
+    return df
+
+def main( generate_plots = False ):
+    df = add_score_categories( pd.read_csv(csv_path) )
+
+    # Add 'complete' to front of list so scaling is calculated first
+    mut_types = sorted( df['MutType'].drop_duplicates().values )
+    mut_types.insert(0, mut_types.pop( mut_types.index('complete') ) )
+
     structure_orders = sorted( df['StructureOrder'].drop_duplicates().values )
     fcs_unscaled = []
     maes_unscaled = []
@@ -170,46 +199,98 @@ def main( generate_plots = False ):
 def figure_1():
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
     control_run_name = 'zemu_control'
-    point_size = 5.0
+    point_size = 4.5
+    alpha = 0.6
+    scatter_kws = { 's' : point_size, 'alpha' : alpha }
+    line_kws = { 'linewidth' : 0.9 }
 
     df = pd.read_csv(csv_path)
+    exp_colname = 'Experimental DDG'
+    pred_colname = 'Rosetta Score'
+    df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
+    df = df.rename( columns = {'total' : pred_colname} )
 
     fig = plt.figure(
         figsize=(8.5, 8.5), dpi=600
     )
 
-    complete_corrs = df.loc[ (df['MutType'] == 'complete') & (df['PredictionRunName'] == exp_run_name) ].groupby( 'ScoreMethodID' )[['total','ExperimentalDDG']].corr().ix[0::2,'ExperimentalDDG'].sort_values( ascending = False )
+    complete_corrs = df.loc[ (df['MutType'] == 'complete') & (df['PredictionRunName'] == exp_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
     best_step = complete_corrs.index[0][0]
-    ax1 = fig.add_subplot(2, 2, 1)
+    df_a = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == 'complete') & (df['ScoreMethodID'] == best_step) ]
+    ax1 = fig.add_subplot( 2, 2, 1 )
+
+    complete_corrs = df.loc[ (df['MutType'] == 'complete') & (df['PredictionRunName'] == control_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
+    best_step = complete_corrs.index[0][0]
+    df_b = df.loc[ (df['PredictionRunName'] == control_run_name) & (df['MutType'] == 'complete') & (df['ScoreMethodID'] == best_step) ]
+    ax2 = fig.add_subplot( 2, 2, 2 )
+
+    complete_corrs = df.loc[ (df['MutType'] == 's2l') & (df['PredictionRunName'] == exp_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
+    best_step = complete_corrs.index[0][0]
+    df_c = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == 's2l') & (df['ScoreMethodID'] == best_step) ]
+    ax3 = fig.add_subplot( 2, 2, 3 )
+
+    complete_corrs = df.loc[ (df['MutType'] == 's2l') & (df['PredictionRunName'] == control_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
+    best_step = complete_corrs.index[0][0]
+    df_d = df.loc[ (df['PredictionRunName'] == control_run_name) & (df['MutType'] == 's2l') & (df['ScoreMethodID'] == best_step) ]
+    ax4 = fig.add_subplot( 2, 2, 4 )
+
+    xmin = min( df_a[pred_colname].min(), df_b[pred_colname].min(), df_c[pred_colname].min(), df_d[pred_colname].min() )
+    xmax = max( df_a[pred_colname].max(), df_b[pred_colname].max(), df_c[pred_colname].max(), df_d[pred_colname].max() )
+    ymin = min( df_a[exp_colname].min(), df_b[exp_colname].min(), df_c[exp_colname].min(), df_d[exp_colname].min() )
+    ymax = max( df_a[exp_colname].max(), df_b[exp_colname].max(), df_c[exp_colname].max(), df_d[exp_colname].max() )
+    ax1.set_xlim( xmin, xmax )
+    ax1.set_ylim( ymin, ymax )
+    ax2.set_xlim( xmin, xmax )
+    ax2.set_ylim( ymin, ymax )
+    ax3.set_xlim( xmin, xmax )
+    ax3.set_ylim( ymin, ymax )
+    ax4.set_xlim( xmin, xmax )
+    ax4.set_ylim( ymin, ymax )
+
     sns.regplot(
-        x = "total", y = "ExperimentalDDG",
-        data = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == 'complete') & (df['ScoreMethodID'] == best_step) ], ax = ax1, scatter_kws = { 's' : point_size }
+        x = pred_colname, y = exp_colname,
+        data = df_a, ax = ax1,
+        scatter_kws = scatter_kws,
+        line_kws = line_kws,
+        ci = None,
+        color = sns.color_palette()[0],
+    )
+    sns.regplot(
+        x = pred_colname, y = exp_colname,
+        data = df_b, ax = ax2,
+        scatter_kws = scatter_kws,
+        line_kws = line_kws,
+        ci = None,
+        color = sns.color_palette()[0],
+    )
+    sns.regplot(
+        x = pred_colname, y = exp_colname,
+        data = df_c, ax = ax3,
+        scatter_kws = scatter_kws,
+        line_kws = line_kws,
+        ci = None,
+        color = sns.color_palette()[0],
+    )
+    sns.regplot(
+        x = pred_colname, y = exp_colname,
+        data = df_d, ax = ax4,
+        scatter_kws = scatter_kws,
+        line_kws = line_kws,
+        ci = None,
+        color = sns.color_palette()[0],
     )
 
-    complete_corrs = df.loc[ (df['MutType'] == 'complete') & (df['PredictionRunName'] == control_run_name) ].groupby( 'ScoreMethodID' )[['total','ExperimentalDDG']].corr().ix[0::2,'ExperimentalDDG'].sort_values( ascending = False )
-    best_step = complete_corrs.index[0][0]
-    ax2 = fig.add_subplot(2, 2, 2)
-    sns.regplot(
-        x = "total", y = "ExperimentalDDG",
-        data = df.loc[ (df['PredictionRunName'] == control_run_name) & (df['MutType'] == 'complete') & (df['ScoreMethodID'] == best_step) ], ax = ax2, scatter_kws = { 's' : point_size }
-    )
+    # ax2.set_xticklabels([])
+    ax1.set_xlabel('')
+    ax2.set_xlabel('')
+    ax2.set_ylabel('')
+    # ax2.set_yticklabels([])
+    ax4.set_ylabel('')
 
-    complete_corrs = df.loc[ (df['MutType'] == 's2l') & (df['PredictionRunName'] == exp_run_name) ].groupby( 'ScoreMethodID' )[['total','ExperimentalDDG']].corr().ix[0::2,'ExperimentalDDG'].sort_values( ascending = False )
-    best_step = complete_corrs.index[0][0]
-    ax3 = fig.add_subplot(2, 2, 3)
-    sns.regplot(
-        x = "total", y = "ExperimentalDDG",
-        data = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == 's2l') & (df['ScoreMethodID'] == best_step) ], ax = ax3, scatter_kws = { 's' : point_size }
-    )
-
-
-    complete_corrs = df.loc[ (df['MutType'] == 's2l') & (df['PredictionRunName'] == control_run_name) ].groupby( 'ScoreMethodID' )[['total','ExperimentalDDG']].corr().ix[0::2,'ExperimentalDDG'].sort_values( ascending = False )
-    best_step = complete_corrs.index[0][0]
-    ax4 = fig.add_subplot(2, 2, 4)
-    sns.regplot(
-        x = "total", y = "ExperimentalDDG",
-        data = df.loc[ (df['PredictionRunName'] == control_run_name) & (df['MutType'] == 's2l') & (df['ScoreMethodID'] == best_step) ], ax = ax4, scatter_kws = { 's' : point_size }
-    )
+    ax1.set_title('(a)')
+    ax2.set_title('(b)')
+    ax3.set_title('(c)')
+    ax4.set_title('(d)')
 
     out_path = os.path.join( output_fig_path, 'fig1.pdf' )
     fig.savefig( out_path )
