@@ -5,6 +5,8 @@ all_data = fread('zcat ~/data/ddg/interface_ddg_paper/control_and_60k-score_term
 # all_data = read.csv( gzfile('~/data/ddg/interface_ddg_paper/control_and_60k-score_terms.csv.gz','rt') )
 # all_data = read.csv( '~/data/ddg/interface_ddg_paper/control_and_60k-score_terms.csv' )
 
+all_data = all_data[ ( ScoreMethodID == 40 | ScoreMethodID == 10000 | ScoreMethodID == 20000 | ScoreMethodID == 30000 | ScoreMethodID == 40000 | ScoreMethodID == 50000 | ScoreMethodID == 60000 ) ] # 10k intervals
+
 ### all_data = all_data[ MutType == 'complete' & (ScoreMethodID == 2500 | ScoreMethodID == 5000)] # Shorter dataset for testing
 
 all_data$total_diff = ( all_data$fa_atr + all_data$fa_dun + all_data$fa_elec + all_data$fa_intra_rep + all_data$fa_rep + all_data$fa_sol + all_data$hbond_bb_sc + all_data$hbond_lr_bb + all_data$hbond_sc ) - all_data$total
@@ -13,6 +15,7 @@ print( 'Dataframe loaded successfully\n' )
 print( paste0( 'Number of rows where total score sum does not match within tolerance: ', sum( abs(all_data$total_diff) >= 0.01 ) ) )
 
 output_dir = "output_R"
+unlink(output_dir, recursive=TRUE)
 dir.create(output_dir, showWarnings = FALSE)
 
 calc_gam <- function(df, by_labels, img_type) {
@@ -107,6 +110,14 @@ calc_gam <- function(df, by_labels, img_type) {
                          'predictions.csv' )
     write.table( df, out_path )
     system( paste0("gzip ", out_path) )
+    write.table( coef(gamobj), out_path )
+    out_path = file.path( file.path(output_dir, unique_name),
+                         'gamobj.Rdata.gz' )
+    save(
+        gamobj,
+        file = out_path,
+        compress = "gzip"
+        )
 
     zz = file( file.path( file.path(output_dir, unique_name), 'step-boundary'), open = "wt")
     sink(zz)
@@ -159,3 +170,5 @@ print( "GAM on all backrub steps" )
 
 steps_corr_summary = all_data[,.( gamR=calc_gam(.SD, .BY, 'png'), R=cor(total, ExperimentalDDG) ), by=.(PredictionRunName,MutType)] # .SD is subset for each group by, .BY is group labels
 print( steps_corr_summary )
+
+write.csv( steps_corr_summary, file.path( output_dir, "steps_corr_summary.csv") )
