@@ -103,14 +103,16 @@ calc_gam <- function(df, by_labels, img_type) {
                          'lpmatrix.csv' )
     write.table( Xp, out_path )
     system( paste0("gzip ", out_path) )
+
     out_path = file.path( file.path(output_dir, unique_name),
                          'coeff' )
     write.table( coef(gamobj), out_path )
+
     out_path = file.path( file.path(output_dir, unique_name),
                          'predictions.csv' )
     write.table( df, out_path )
     system( paste0("gzip ", out_path) )
-    write.table( coef(gamobj), out_path )
+
     out_path = file.path( file.path(output_dir, unique_name),
                          'gamobj.Rdata.gz' )
     save(
@@ -125,6 +127,10 @@ calc_gam <- function(df, by_labels, img_type) {
     print(boundary)
     sink()
     close(zz)
+
+    # Predict values on all_data
+    all_data$new_pred <- predict(gamobj, all_data)
+    names(all_data)[names(all_data) == "new_pred"] <- paste0( unique_name, "-gamTotal" )
 
     # Check calculating prediction manually
     ## xn_vals <- c(3.7054, 0.1415, -0.446, -0.8832, -0.0129, 0.1304, 0.664) ## want prediction at these values
@@ -172,3 +178,9 @@ steps_corr_summary = all_data[,.( gamR=calc_gam(.SD, .BY, 'png'), R=cor(total, E
 print( steps_corr_summary )
 
 write.csv( steps_corr_summary, file.path( output_dir, "steps_corr_summary.csv") )
+
+# Save all data
+print( "Saving all data" )
+out_path = file.path( output_dir, "all_data.csv")
+write.csv( all_data, out_path )
+system( paste0("gzip ", out_path) )
