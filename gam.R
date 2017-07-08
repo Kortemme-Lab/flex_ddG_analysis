@@ -1,9 +1,8 @@
 library(mgcv)
 library(data.table)
+library(car)
 
 all_data = fread('zcat ~/data/ddg/interface_ddg_paper/control_and_60k-score_terms.csv.gz', header = T, sep = ',')
-# all_data = read.csv( gzfile('~/data/ddg/interface_ddg_paper/control_and_60k-score_terms.csv.gz','rt') )
-# all_data = read.csv( '~/data/ddg/interface_ddg_paper/control_and_60k-score_terms.csv' )
 
 all_data = all_data[ ( ScoreMethodID == 40 | ScoreMethodID == 10000 | ScoreMethodID == 20000 | ScoreMethodID == 30000 | ScoreMethodID == 40000 | ScoreMethodID == 50000 | ScoreMethodID == 60000 ) ] # 10k intervals
 
@@ -18,6 +17,9 @@ output_dir = "output_R"
 unlink(output_dir, recursive=TRUE)
 dir.create(output_dir, showWarnings = FALSE)
 
+## save column names of prediction columns for later use
+pred_col_names = c()
+
 calc_gam <- function(df, by_labels, img_type) {
     df_args <- c(by_labels, sep="-")
     unique_name = do.call(paste, df_args)
@@ -28,7 +30,7 @@ calc_gam <- function(df, by_labels, img_type) {
     sink(zz)
 
     gamobj <- gam( ExperimentalDDG ~ s(fa_atr, fx=TRUE, k=-1, bs="cs") + s(fa_elec, fx=TRUE, k=-1, bs="cs") + s(fa_rep, fx=TRUE, k=-1, bs="cs") + s(fa_sol, fx=TRUE, k=-1, bs="cs") + s(hbond_bb_sc, fx=TRUE, k=-1, bs="cs") + s(hbond_lr_bb, fx=TRUE, k=-1, bs="cs") + s(hbond_sc, fx=TRUE, k=-1, bs="cs"),
-                  # family=gaussian(link=identity),
+                  ## family=gaussian(link=identity),
                   data = df,
                   control = gam.control(nthreads = 4)
                   )
@@ -80,7 +82,7 @@ calc_gam <- function(df, by_labels, img_type) {
     sink()
     close(zz)
 
-    # Save lpmatrix for later fitting
+    ## Save lpmatrix for later fitting
     step = 0.01
     boundary = 40
     newd <- data.frame(
@@ -98,7 +100,7 @@ calc_gam <- function(df, by_labels, img_type) {
 
     df$gamTotal = predict(gamobj, df)
 
-    # Save lpmatrix, coeff, step, boundary; df with predictions
+    ## Save lpmatrix, coeff, step, boundary; df with predictions
     out_path = file.path( file.path(output_dir, unique_name),
                          'lpmatrix.csv' )
     write.table( Xp, out_path )
@@ -128,11 +130,15 @@ calc_gam <- function(df, by_labels, img_type) {
     sink()
     close(zz)
 
-    # Predict values on all_data
-    all_data$new_pred <- predict(gamobj, all_data)
-    names(all_data)[names(all_data) == "new_pred"] <- paste0( unique_name, "-gamTotal" )
+    ## Predict values on all_data
+    pred_col_name = paste0( unique_name, "-gamTotal" )
+    pred_col_names <- c( pred_col_names, pred_col_name )
+    assign( 'pred_col_names', pred_col_names, envir=.GlobalEnv )
+    all_data$new_pred = predict(gamobj, all_data)
+    names(all_data)[names(all_data) == "new_pred"] <- pred_col_name
+    assign( 'all_data', all_data, envir=.GlobalEnv )
 
-    # Check calculating prediction manually
+    ## Check calculating prediction manually
     ## xn_vals <- c(3.7054, 0.1415, -0.446, -0.8832, -0.0129, 0.1304, 0.664) ## want prediction at these values
     ## xn <- (xn_vals + boundary) / ( 2 * boundary ) # Convert to percentage in boundary range
 
@@ -179,8 +185,25 @@ print( steps_corr_summary )
 
 write.csv( steps_corr_summary, file.path( output_dir, "steps_corr_summary.csv") )
 
-# Save all data
+## Save all data
 print( "Saving all data" )
 out_path = file.path( output_dir, "all_data.csv")
 write.csv( all_data, out_path )
 system( paste0("gzip ", out_path) )
+
+## Cross correlation of gam prediction columns
+print( "Cross correlation" )
+complete_data = all_data[ MutType == 'complete', pred_col_names, with=FALSE ]
+
+complete_data_cor = cor(complete_data)
+out_path = file.path( output_dir, "gam_predict-cor.csv")
+write.csv( complete_data_cor, out_path )
+print( complete_data_cor )
+
+print( "Cross correlation png" )
+png(
+    file.path( output_dir, "gam_predict-cor.png" ),
+    width=20, height=20, units="cm", res=400
+)
+scatterplotMatrix( complete_data )
+dev.off()
