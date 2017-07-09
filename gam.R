@@ -6,7 +6,7 @@ all_data = fread('zcat ~/data/ddg/interface_ddg_paper/control_and_60k-score_term
 
 all_data = all_data[ ( ScoreMethodID == 40 | ScoreMethodID == 10000 | ScoreMethodID == 20000 | ScoreMethodID == 30000 | ScoreMethodID == 40000 | ScoreMethodID == 50000 | ScoreMethodID == 60000 ) ] # 10k intervals
 
-### all_data = all_data[ MutType == 'complete' & (ScoreMethodID == 2500 | ScoreMethodID == 5000)] # Shorter dataset for testing
+### all_data = all_data[ (MutType == 'complete' | MutType == 's2l') & (ScoreMethodID == 2500 | ScoreMethodID == 5000)] # Shorter dataset for testing
 
 all_data$total_diff = ( all_data$fa_atr + all_data$fa_dun + all_data$fa_elec + all_data$fa_intra_rep + all_data$fa_rep + all_data$fa_sol + all_data$hbond_bb_sc + all_data$hbond_lr_bb + all_data$hbond_sc ) - all_data$total
 
@@ -193,17 +193,25 @@ system( paste0("gzip ", out_path) )
 
 ## Cross correlation of gam prediction columns
 print( "Cross correlation" )
-complete_data = all_data[ MutType == 'complete', pred_col_names, with=FALSE ]
+selection_cols = c( pred_col_names, c("ExperimentalDDG", "PredictionRunName", "MutType", "ScoreMethodID") )
+complete_data = all_data[ , selection_cols, with=FALSE ]
 
-complete_data_cor = cor(complete_data)
-out_path = file.path( output_dir, "gam_predict-cor.csv")
-write.csv( complete_data_cor, out_path )
-print( complete_data_cor )
+alt_gam_r = NULL
+for ( pred_col in pred_col_names ) {
+    print( pred_col )
+    print( head(complete_data[,pred_col,with=FALSE]) )
+    print( "ExperimentalDDG" )
+    print( head(complete_data[,"ExperimentalDDG",with=FALSE]) )
+    print( cor(complete_data[,pred_col,with=FALSE], complete_data[,"ExperimentalDDG",with=FALSE]) )
+    alt_gam_r_inner = complete_data[,.( R=cor(get(pred_col), ExperimentalDDG, use = "complete.obs", method = "pearson") ), by=.(PredictionRunName,MutType,ScoreMethodID)] # .SD is subset for each group by, .BY is group labels
+    names(alt_gam_r_inner)[names(alt_gam_r_inner)=="R"] <- paste0(pred_col, "-expR")
+    if( is.null(alt_gam_r) ) {
+        alt_gam_r = alt_gam_r_inner
+    } else {
+        alt_gam_r = merge(alt_gam_r, alt_gam_r_inner, all=TRUE)
+    }
+}
 
-print( "Cross correlation png" )
-png(
-    file.path( output_dir, "gam_predict-cor.png" ),
-    width=20, height=20, units="cm", res=400
-)
-scatterplotMatrix( complete_data )
-dev.off()
+print( alt_gam_r )
+out_path = file.path( output_dir, "alt_gam_r.csv")
+write.csv( alt_gam_r, out_path )
