@@ -11,7 +11,7 @@ import scipy
 csv_path = os.path.expanduser( '~/data/ddg/interface_ddg_paper/publication_analyze_output/60k_with_control/split/id.csv.gz' )
 output_dir = 'output'
 print_statistics = False
-output_fig_path = os.path.join( output_dir, 'figures' )
+output_fig_path = os.path.join( output_dir, 'figures_and_tables' )
 if not os.path.isdir( output_fig_path ):
     os.makedirs( output_fig_path )
 
@@ -23,6 +23,19 @@ import seaborn as sns
 assert( os.path.isfile(csv_path) )
 if not os.path.isdir(output_dir):
     os.makedirs(output_dir)
+
+mut_types = {
+    'complete' : 'Complete',
+    'sing_mut' : 'Single',
+    's2l' : 'Small-To-Large',
+    'ala' : 'Alanine',
+}
+
+
+def load_df():
+    df = add_score_categories( pd.read_csv(csv_path) )
+    df = df.drop_duplicates( ['PredictionRunName', 'DataSetID', 'PredictionID', 'ScoreMethodID', 'MutType', 'total', 'ExperimentalDDG', 'StructureOrder'] )
+    return df
 
 def add_score_categories(df):
     stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
@@ -40,7 +53,7 @@ def add_score_categories(df):
     return df
 
 def main( generate_plots = False ):
-    df = add_score_categories( pd.read_csv(csv_path) )
+    df = load_df()
 
     # Add 'complete' to front of list so scaling is calculated first
     mut_types = sorted( df['MutType'].drop_duplicates().values )
@@ -69,7 +82,7 @@ def add_score_categories(df):
     return df
 
 def main( generate_plots = False ):
-    df = add_score_categories( pd.read_csv(csv_path) )
+    df = load_df()
 
     # Add 'complete' to front of list so scaling is calculated first
     mut_types = sorted( df['MutType'].drop_duplicates().values )
@@ -204,7 +217,7 @@ def figure_1():
     scatter_kws = { 's' : point_size, 'alpha' : alpha }
     line_kws = { 'linewidth' : 0.9 }
 
-    df = pd.read_csv(csv_path)
+    df = load_df()
     exp_colname = 'Experimental DDG'
     pred_colname = 'Rosetta Score'
     df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
@@ -295,6 +308,42 @@ def figure_1():
     out_path = os.path.join( output_fig_path, 'fig1.pdf' )
     fig.savefig( out_path )
 
+def table_1():
+    # Dataset composition
+    df = load_df()
+    df = df.drop_duplicates( ['PredictionRunName', 'DataSetID', 'PredictionID', 'ScoreMethodID', 'MutType', 'total', 'ExperimentalDDG', 'StructureOrder'] )
+    control_df = df.loc[ (df['PredictionRunName'] == 'zemu_control') & (df['ScoreMethodID'] == 40 ) ]
+    print control_df.head()
+
+    ns = []
+    descriptions = {
+        'complete' : 'Complete dataset (duplicates removed)',
+        'sing_mut' : 'Single mutations',
+        's2l' : 'Small-To-Large (single or multiple)',
+        'ala' : 'Alanine (single or multiple)',
+    }
+    description_rows = []
+    mut_type_names = []
+
+    for mut_type in mut_types.keys():
+        ns.append( len( control_df.loc[ control_df['MutType'] == mut_type ] ) )
+        mut_type_names.append( mut_types[mut_type] )
+        description_rows.append( descriptions[mut_type] )
+
+    table_df = pd.DataFrame( {
+        'Name' : mut_type_names,
+        'n' : ns,
+        'Description' : description_rows,
+    } )
+
+    # Remove name column for now
+    table_df = table_df[ ['n', 'Description'] ] # Order columns correctly
+    table_df.sort_values( 'n', inplace = True, ascending = False )
+
+    print table_df.head()
+    table_df.to_csv( os.path.join(output_fig_path, 'table_1.csv') )
+
 if __name__ == '__main__':
-    figure_1()
+    # figure_1()
+    table_1()
     # main()
