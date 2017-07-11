@@ -209,7 +209,7 @@ def main( generate_plots = False ):
     results_df.sort_values('R', ascending = False).to_csv( results_csv_path )
     print results_csv_path
 
-def figure_1():
+def figure_2():
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
     control_run_name = 'zemu_control'
     point_size = 4.5
@@ -343,7 +343,37 @@ def table_1():
     print table_df.head()
     table_df.to_csv( os.path.join(output_fig_path, 'table_1.csv') )
 
+def figure_3():
+    exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
+    point_size = 4.5
+    alpha = 0.6
+    scatter_kws = { 's' : point_size, 'alpha' : alpha }
+    line_kws = { 'linewidth' : 0.9 }
+
+    df = load_df()
+    exp_colname = 'Experimental DDG'
+    pred_colname = 'Rosetta Score'
+    df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
+    df = df.rename( columns = {'total' : pred_colname} )
+
+    fig = plt.figure(
+        figsize=(8.5, 8.5), dpi=600
+    )
+
+
+    mut_type_subsets = ['complete', 's2l', 'sing_mut', 'ala']
+
+    for ax_i, mut_type_subset in enumerate( mut_type_subsets ):
+        ax = fig.add_subplot( 2, 2, 1 )
+        print mut_type_subset
+        rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname]
+        maes = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
+
+        print
+
 if __name__ == '__main__':
-    # figure_1()
-    table_1()
+    # figure_2()
+    # table_1()
+    figure_3()
+
     # main()
