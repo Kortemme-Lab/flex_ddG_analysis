@@ -19,6 +19,7 @@ if not os.path.isdir( output_fig_path ):
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
+current_palette = sns.color_palette()
 
 assert( os.path.isfile(csv_path) )
 if not os.path.isdir(output_dir):
@@ -356,20 +357,64 @@ def figure_3():
     df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
     df = df.rename( columns = {'total' : pred_colname} )
 
+    sns.set_style("white")
     fig = plt.figure(
-        figsize=(8.5, 8.5), dpi=600
+        figsize=(10.0, 8.5), dpi=600
     )
+    fig.subplots_adjust( wspace = 0.6, hspace = 0.3)
 
 
     mut_type_subsets = ['complete', 's2l', 'sing_mut', 'ala']
 
+    r_axes = []
+    r_min = float('inf')
+    r_max = float('-inf')
+
+    mae_axes = []
+    mae_min = float('inf')
+    mae_max = float('-inf')
+
     for ax_i, mut_type_subset in enumerate( mut_type_subsets ):
-        ax = fig.add_subplot( 2, 2, 1 )
-        print mut_type_subset
-        rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname]
+        ax = fig.add_subplot( 2, 2, ax_i + 1 )
+        ax.set_title( mut_types[mut_type_subset] )
+        ax.set_ylabel("Pearson's R")
+        ax.yaxis.label.set_color(current_palette[0] )
+        ax.set_xlabel("Backrub Step")
+        rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
         maes = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
 
-        print
+        ax.plot( rs['ScoreMethodID'], rs['Experimental DDG'], 'o', color = current_palette[0] )
+        r_min = min( r_min, min(rs['Experimental DDG']) )
+        r_max = max( r_max, max(rs['Experimental DDG']) )
+
+        ax2 = ax.twinx()
+        ax2.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
+        ax2.set_ylabel("MAE")
+        ax2.plot( maes.index, maes.values, 's', color = current_palette[1] )
+        mae_min = min( mae_min, min(maes.values) )
+        mae_max = max( mae_max, max(maes.values) )
+
+        ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
+        ax2.yaxis.label.set_color(current_palette[1] )
+
+        r_axes.append( ax )
+        mae_axes.append( ax2 )
+
+    r_range = r_max - r_min
+    r_min -= r_range * 0.1
+    r_max += r_range * 0.1
+    mae_range = mae_max - mae_min
+    mae_min -= mae_range * 0.1
+    mae_max += mae_range * 0.1
+
+    for ax in r_axes:
+        ax.set_ylim( [r_min, r_max] )
+
+    for ax in mae_axes:
+        ax.set_ylim( [mae_min, mae_max] )
+
+    out_path = os.path.join( output_fig_path, 'fig3.pdf' )
+    fig.savefig( out_path )
 
 if __name__ == '__main__':
     # figure_2()
