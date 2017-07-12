@@ -60,13 +60,6 @@ def main( generate_plots = False ):
     mut_types = sorted( df['MutType'].drop_duplicates().values )
     mut_types.insert(0, mut_types.pop( mut_types.index('complete') ) )
 
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-assert( os.path.isfile(csv_path) )
-if not os.path.isdir(output_dir):
-    os.makedirs(output_dir)
-
 def add_score_categories(df):
     stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
     stabilizing.loc[:,'MutType'] = 'stabilizing'
