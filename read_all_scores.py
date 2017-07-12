@@ -53,13 +53,6 @@ def add_score_categories(df):
     df = df.append( neutral )
     return df
 
-def main( generate_plots = False ):
-    df = load_df()
-
-    # Add 'complete' to front of list so scaling is calculated first
-    mut_types = sorted( df['MutType'].drop_duplicates().values )
-    mut_types.insert(0, mut_types.pop( mut_types.index('complete') ) )
-
 def add_score_categories(df):
     stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
     stabilizing.loc[:,'MutType'] = 'stabilizing'
@@ -416,4 +409,4 @@ if __name__ == '__main__':
     figure_2()
     figure_3()
 
-    # main()
+    main()
