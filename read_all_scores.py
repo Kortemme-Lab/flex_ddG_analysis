@@ -221,6 +221,8 @@ def figure_2():
     df = load_df()
     exp_colname = 'Experimental DDG'
     pred_colname = 'Rosetta Score'
+    top_subset = 'complete'
+    bottom_subset = 's2l'
     df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
     df = df.rename( columns = {'total' : pred_colname} )
 
@@ -228,24 +230,24 @@ def figure_2():
         figsize=(8.5, 8.5), dpi=600
     )
 
-    complete_corrs = df.loc[ (df['MutType'] == 'complete') & (df['PredictionRunName'] == exp_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
-    best_step = complete_corrs.index[0][0]
-    df_a = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == 'complete') & (df['ScoreMethodID'] == best_step) ]
+    complete_corrs = df.loc[ (df['MutType'] == top_subset) & (df['PredictionRunName'] == exp_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
+    best_step_a = complete_corrs.index[0][0]
+    df_a = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == top_subset) & (df['ScoreMethodID'] == best_step_a) ]
     ax1 = fig.add_subplot( 2, 2, 1 )
 
-    complete_corrs = df.loc[ (df['MutType'] == 'complete') & (df['PredictionRunName'] == control_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
-    best_step = complete_corrs.index[0][0]
-    df_b = df.loc[ (df['PredictionRunName'] == control_run_name) & (df['MutType'] == 'complete') & (df['ScoreMethodID'] == best_step) ]
+    complete_corrs = df.loc[ (df['MutType'] == top_subset) & (df['PredictionRunName'] == control_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
+    best_step_b = complete_corrs.index[0][0]
+    df_b = df.loc[ (df['PredictionRunName'] == control_run_name) & (df['MutType'] == top_subset) & (df['ScoreMethodID'] == best_step_b) ]
     ax2 = fig.add_subplot( 2, 2, 2 )
 
-    complete_corrs = df.loc[ (df['MutType'] == 's2l') & (df['PredictionRunName'] == exp_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
-    best_step = complete_corrs.index[0][0]
-    df_c = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == 's2l') & (df['ScoreMethodID'] == best_step) ]
+    complete_corrs = df.loc[ (df['MutType'] == bottom_subset) & (df['PredictionRunName'] == exp_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
+    best_step_c = complete_corrs.index[0][0]
+    df_c = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == bottom_subset) & (df['ScoreMethodID'] == best_step_c) ]
     ax3 = fig.add_subplot( 2, 2, 3 )
 
-    complete_corrs = df.loc[ (df['MutType'] == 's2l') & (df['PredictionRunName'] == control_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
-    best_step = complete_corrs.index[0][0]
-    df_d = df.loc[ (df['PredictionRunName'] == control_run_name) & (df['MutType'] == 's2l') & (df['ScoreMethodID'] == best_step) ]
+    complete_corrs = df.loc[ (df['MutType'] == bottom_subset) & (df['PredictionRunName'] == control_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
+    best_step_d = complete_corrs.index[0][0]
+    df_d = df.loc[ (df['PredictionRunName'] == control_run_name) & (df['MutType'] == bottom_subset) & (df['ScoreMethodID'] == best_step_d) ]
     ax4 = fig.add_subplot( 2, 2, 4 )
 
     xmin = min( df_a[pred_colname].min(), df_b[pred_colname].min(), df_c[pred_colname].min(), df_d[pred_colname].min() )
@@ -301,12 +303,12 @@ def figure_2():
     # ax2.set_yticklabels([])
     ax4.set_ylabel('')
 
-    ax1.set_title('(a)')
-    ax2.set_title('(b)')
-    ax3.set_title('(c)')
-    ax4.set_title('(d)')
+    ax1.set_title( '(a) Backrub (%d steps) - %s' % (best_step_a, mut_types[top_subset]) )
+    ax2.set_title( '(b) Control - %s' % (mut_types[top_subset] ) )
+    ax3.set_title( '(c) Backrub (%d steps) - %s' % (best_step_c, mut_types[bottom_subset]) )
+    ax4.set_title( '(d) Control - %s' % (mut_types[bottom_subset]) )
 
-    out_path = os.path.join( output_fig_path, 'fig1.pdf' )
+    out_path = os.path.join( output_fig_path, 'fig2.pdf' )
     fig.savefig( out_path )
 
 def table_1():
@@ -417,8 +419,8 @@ def figure_3():
     fig.savefig( out_path )
 
 if __name__ == '__main__':
-    # figure_2()
-    # table_1()
+    table_1()
+    figure_2()
     figure_3()
 
     # main()
