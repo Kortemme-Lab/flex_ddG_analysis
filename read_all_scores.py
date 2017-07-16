@@ -109,7 +109,7 @@ def main( generate_plots = False ):
                     outer_fig_path = os.path.join(sub_output_dir, 'all_steps.pdf')
                     sub_output_dir = os.path.join(sub_output_dir, str(step))
 
-                    if not os.path.isdir(sub_output_dir):
+                    if not os.path.isdir(sub_output_dir) and generate_plots:
                         os.makedirs(sub_output_dir)
 
                     slope, intercept, r_value, p_value, std_err = scipy.stats.linregress( sub_df['total'], sub_df['ExperimentalDDG'] )
