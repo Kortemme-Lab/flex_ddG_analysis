@@ -19,7 +19,7 @@ categorized_query_cache = os.path.join( dataframe_cache, 'categorized_queries' )
 if not os.path.isdir( categorized_query_cache ):
     os.makedirs( categorized_query_cache )
 
-def main( mysql_host, mysql_port, mysql_user, mysql_pass, mysql_db ):
+def fetch_from_db_and_reorder( mysql_host, mysql_port, mysql_user, mysql_pass, mysql_db ):
     with open('scores_select.sql', 'r') as f:
         all_scores_query = ' '.join( [ line.strip() for line in f.readlines() if not line.startswith('#') ] )
 
@@ -37,26 +37,25 @@ def main( mysql_host, mysql_port, mysql_user, mysql_pass, mysql_db ):
 
         cached_df_path = os.path.join( dataframe_cache, prediction_set_name + '_all-scores.csv.gz' )
         if os.path.isfile(cached_df_path):
-            print 'Reading cached df:', cached_df_path
+            print 'Cached main df exists:', cached_df_path
             df = pd.read_csv(cached_df_path, compression = 'gzip' )
         else:
             df = pd.read_sql_query( all_scores_query % prediction_set_name, mysql_con)
+            # Multiply by step factor
+            if step_multiplication_factor:
+                df.loc[:,'ScoreMethodID'] *= step_multiplication_factor
+
             df.to_csv(cached_df_path, compression = 'gzip' )
 
         print 'PDBs in set: %d' % len( df[['PDBFileID']].drop_duplicates() )
         print 'Datapoints length (without duplicates): %d' % len( df[['DataSetID']].drop_duplicates() )
-
-        # Multiply by step factor
-        if step_multiplication_factor:
-            df.loc[:,'ScoreMethodID'] *= step_multiplication_factor
 
         # Reorder structure ID's, if specified
         for structure_order in structure_orders:
             # Check for cache
             cached_query_df_path = os.path.join( dataframe_cache, prediction_set_name + '-' + structure_order + '.csv.gz' )
             if os.path.isfile( cached_query_df_path ):
-                print 'Reading cached query df:', cached_query_df_path
-                new_query_df = pd.read_csv( cached_query_df_path, compression = 'gzip' )
+                print 'Cached ordered df exists:', cached_query_df_path
             else:
                 if structure_order == 'id':
                     new_query_df = df.assign( StructureOrder = 'id' )
@@ -114,4 +113,4 @@ if __name__ == '__main__':
                         help = 'MySQL database schema')
 
     args = parser.parse_args()
-    main( args.host, args.port, args.user, args.password, args.db)
+    fetch_from_db_and_reorder( args.host, args.port, args.user, args.password, args.db)
