@@ -30,3 +30,4 @@ WHERE PredictionPPI.PredictionSet='zemu_1.2-60000_rscript_validated-t14'
 AND UserPPAnalysisSet.Subset='ZEMu'
 GROUP BY PredictionPPI.ID, PredictionPPIStructureScore.StructureID, PredictionPPIStructureScore.ScoreType, PredictionPPIStructureScore.ScoreMethodID
 ORDER BY PredictionPPI.ID, PredictionPPIStructureScore.StructureID, PredictionPPIStructureScore.ScoreType, PredictionPPIStructureScore.ScoreMethodID
+;
