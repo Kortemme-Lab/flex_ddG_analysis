@@ -2,19 +2,32 @@ import pandas as pd
 import argparse
 import getpass
 import MySQLdb
+import os
+import time
+
+cache_dir = 'query_cache'
+if not os.path.isdir( cache_dir ):
+    os.makedirs( cache_dir )
 
 def main( mysql_host, mysql_port, mysql_user, mysql_pass, mysql_db ):
     with open('scores_select.sql', 'r') as f:
-        sql_query = ' '.join( [ line.strip() for line in f.readlines() if not line.startswith('#') ] )
+        all_scores_query = ' '.join( [ line.strip() for line in f.readlines() if not line.startswith('#') ] )
 
     mysql_con = MySQLdb.connect( host = mysql_host,
                                  port = mysql_port,
                                  user = mysql_user, passwd = mysql_pass,
                                  db = mysql_db
     )
-    print 'Loading dataframe'
-    df = pd.read_sql(sql_query, con = mysql_con)
-    print 'loaded dataframe from MySQL. records:', len(df)
+
+    print 'Loading all scores dataframe'
+    all_scores_cache = os.path.join( cache_dir, 'all_scores.csv.gz' )
+    if os.path.isfile( all_scores_cache ):
+        all_scores = pd.read_csv( all_scores_cache )
+    else:
+        all_scores = pd.read_sql( all_scores_query, con = mysql_con )
+        all_scores.to_csv( all_scores_cache, compression = 'gzip' )
+
+    print 'Loaded all scores dataframe. Number rows:', len(all_scores)
     mysql_con.close()
 
 if __name__ == '__main__':
