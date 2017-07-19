@@ -1,7 +1,7 @@
 SELECT PredictionPPI.ID AS 'PredictionID', PredictionPPI.PredictionSet AS 'PredictionRunName',
 UserPPDataSetExperiment.ID AS 'DataSetID', UserPPAnalysisSet.Subset,
 UserPPDataSetExperiment.PDBFileID,
-# PredictionPPI.DDGTime AS 'AvgRuntime', PredictionPPI.maxvmem AS 'MaxMemGB',
+PredictionPPI.DDGTime AS 'AvgRuntime', PredictionPPI.maxvmem AS 'MaxMemGB',
 
 PredictionPPIStructureScore.ScoreType, PredictionPPIStructureScore.StructureID,
 PredictionPPIStructureScore.ScoreMethodID,
