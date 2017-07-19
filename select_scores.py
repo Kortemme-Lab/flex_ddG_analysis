@@ -5,9 +5,19 @@ import MySQLdb
 import os
 import time
 
-cache_dir = 'query_cache'
-if not os.path.isdir( cache_dir ):
-    os.makedirs( cache_dir )
+from run_descriptions import all_runs
+
+# Comment out structure orders below to make selection faster
+structure_orders = [
+    'id', # Order structures for averaging based on the random order they were created
+    'WildTypeComplex', # Order structures for averaging by the wild type complex score
+    # 'MutantComplex', # Order structures for averaging by the mutant type complex score
+]
+
+dataframe_cache = '/dbscratch/kyleb/new_query_cache'
+categorized_query_cache = os.path.join( dataframe_cache, 'categorized_queries' )
+if not os.path.isdir( categorized_query_cache ):
+    os.makedirs( categorized_query_cache )
 
 def main( mysql_host, mysql_port, mysql_user, mysql_pass, mysql_db ):
     with open('scores_select.sql', 'r') as f:
@@ -19,15 +29,75 @@ def main( mysql_host, mysql_port, mysql_user, mysql_pass, mysql_db ):
                                  db = mysql_db
     )
 
-    print 'Loading all scores dataframe'
-    all_scores_cache = os.path.join( cache_dir, 'all_scores.csv.gz' )
-    if os.path.isfile( all_scores_cache ):
-        all_scores = pd.read_csv( all_scores_cache )
-    else:
-        all_scores = pd.read_sql( all_scores_query, con = mysql_con )
-        all_scores.to_csv( all_scores_cache, compression = 'gzip' )
+    # Load data and determine common DataSetIDs
+    for benchmark_run in all_runs:
+        step_multiplication_factor = benchmark_run.step_multiplication_factor
+        prediction_set_name = benchmark_run.prediction_set_name
+        print '\n%s' % str(prediction_set_name)
 
-    print 'Loaded all scores dataframe. Number rows:', len(all_scores)
+        cached_df_path = os.path.join( dataframe_cache, prediction_set_name + '_all-scores.csv.gz' )
+        if os.path.isfile(cached_df_path):
+            print 'Reading cached df:', cached_df_path
+            df = pd.read_csv(cached_df_path, compression = 'gzip' )
+        else:
+            df = pd.read_sql_query( all_scores_query % prediction_set_name, mysql_con)
+            df.to_csv(cached_df_path, compression = 'gzip' )
+
+        print 'PDBs in set: %d' % len( df[['PDBFileID']].drop_duplicates() )
+        print 'Datapoints length (without duplicates): %d' % len( df[['DataSetID']].drop_duplicates() )
+
+        # Multiply by step factor
+        if step_multiplication_factor:
+            df.loc[:,'ScoreMethodID'] *= step_multiplication_factor
+
+        # Reorder structure ID's, if specified
+        for structure_order in structure_orders:
+            # Check for cache
+            cached_query_df_path = os.path.join( dataframe_cache, prediction_set_name + '-' + structure_order + '.csv.gz' )
+            if os.path.isfile( cached_query_df_path ):
+                print 'Reading cached query df:', cached_query_df_path
+                new_query_df = pd.read_csv( cached_query_df_path, compression = 'gzip' )
+            else:
+                if structure_order == 'id':
+                    new_query_df = df.assign( StructureOrder = 'id' )
+                elif structure_order in df['ScoreType'].drop_duplicates().values:
+                    new_df = df.copy()
+                    new_df.set_index(['PredictionID', 'ScoreMethodID', 'StructureID'], inplace=True)
+                    sorted_df = df.loc[ df['ScoreType'] == structure_order ].sort_values(
+                        by = ['PredictionID', 'ScoreMethodID', 'total'],
+                    )
+                    new_series_values = {
+                        'NewStructureID' : [],
+                        'PredictionID' : [],
+                        'ScoreMethodID' : [],
+                        'StructureID' : [],
+                    }
+                    row_count = 1
+                    last_id_tup = None
+                    last_prediction_id = None
+                    last_score_method_id = None
+                    for index, row in sorted_df.iterrows():
+                        row_id_tup = (row['PredictionID'], row['ScoreMethodID'])
+                        if last_id_tup == None:
+                            last_id_tup = row_id_tup
+                        if last_id_tup != row_id_tup:
+                            row_count = 1
+                            last_id_tup = row_id_tup
+                        new_series_values['NewStructureID'].append( row_count )
+                        new_series_values['PredictionID'].append( row['PredictionID'] )
+                        new_series_values['ScoreMethodID'].append( row['ScoreMethodID'] )
+                        new_series_values['StructureID'].append( row['StructureID'] )
+                        row_count += 1
+                    new_column_df = pd.DataFrame( new_series_values )
+                    new_column_df.set_index(['PredictionID', 'ScoreMethodID', 'StructureID'], inplace=True)
+                    new_df = new_df.merge(new_column_df, how = 'left', left_index = True, right_index = True )
+                    new_query_df = new_df.reset_index().assign( StructureOrder = structure_order )
+                    new_query_df.drop('StructureID', axis=1, inplace=True)
+                    new_query_df.rename( columns = {'NewStructureID' : 'StructureID'}, inplace = True )
+                new_query_df.to_csv( cached_query_df_path, compression = 'gzip' )
+
+            assert( 'MutType' not in new_query_df.columns )
+
     mysql_con.close()
 
 if __name__ == '__main__':
