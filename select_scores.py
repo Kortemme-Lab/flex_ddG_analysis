@@ -34,6 +34,9 @@ id_columns = [
     'ScoreMethodID', 'StructureID', 'ScoreType',
 ]
 
+# Coerce the dtype for these into strings
+string_cols = ['PredictionRunName', 'Subset', 'PDBFileID', 'ScoreType', 'Mutations']
+
 if not os.path.isdir( dataframe_cache ):
     os.makedirs( dataframe_cache )
 
@@ -126,8 +129,7 @@ def sum_and_average():
                     assert( matching_path == None )
                     matching_path = df_path
             assert( matching_path != None )
-            if matching_path == 'zemu_1.2-60000_rscript_validated-t14-id.csv.gz': # TMP
-                paths_to_analyze.append( (benchmark_run, structure_order, os.path.join( dataframe_cache, matching_path ) ) )
+            paths_to_analyze.append( (benchmark_run, structure_order, os.path.join( dataframe_cache, matching_path ) ) )
 
     output_dir = os.path.join( dataframe_cache, 'summed_and_averaged' )
     if not os.path.isdir( output_dir ):
@@ -147,17 +149,13 @@ def sum_and_average():
         )
         complex_scores_df = complex_scores_df.sort_index() #( columns = ['PredictionID', 'StructureID', ] )
         summed_df_noindex = complex_scores_df.groupby(id_columns[:-1], as_index = False)[this_score_columns].sum()
-        print 'sum group by', # TMP
         for name, group in complex_scores_df.groupby(id_columns[:-1]):
             if len(group) != 6:
                 print 'len(group) != 6'
                 print name
                 print group
                 print
-
         summed_df = complex_scores_df.groupby(id_columns[:-1])[this_score_columns].sum().reset_index()
-        for pred_id, struct_id in zip( [143468, 143469], [9, 9] ): # TMP
-            complex_scores_df.loc[ (complex_scores_df['PredictionID'] == pred_id) & (complex_scores_df['StructureID'] == struct_id) ][ id_columns + ['total'] ].sort_values(['ScoreMethodID', 'ScoreType', 'StructureID']).to_csv( '/kortemmelab/home/kyleb/tmp/foobar/complex_scores_%s-%d.csv' % (pred_id, struct_id) ) # TMP
 
         df_structure_orders = summed_df['StructureOrder'].drop_duplicates()
         assert( len(df_structure_orders) == 1 )
@@ -165,22 +163,12 @@ def sum_and_average():
         max_struct_id = summed_df['StructureID'].max()
 
         for num_structs in xrange( 1, max_struct_id + 1 ):
-            if num_structs not in [8, 9]: # TMP
-                continue # TMP
-
-
             new_structure_order = structure_order + '_%02d' % num_structs
             csv_path = os.path.join( output_dir, '%s-%s.csv.gz' % (benchmark_run.prediction_set_name, new_structure_order) )
-            # if os.path.isfile( csv_path ): # TMP
-            #     continue
+            if os.path.isfile( csv_path ):
+                continue
 
             subset_summed_df = summed_df.loc[ summed_df['StructureID'] <= num_structs ]
-            print '143468', len( subset_summed_df[ subset_summed_df['PredictionID'] == 143468 ] ) # TMP
-            print '143469', len( subset_summed_df[ subset_summed_df['PredictionID'] == 143469 ] ) # TMP
-            subset_summed_df[ subset_summed_df['PredictionID'] == 143468 ].sort_values(['ScoreMethodID', 'StructureID']).to_csv( '/kortemmelab/home/kyleb/tmp/foobar/143468-%d.csv' % num_structs ) # TMP
-            subset_summed_df[ subset_summed_df['PredictionID'] == 143469 ].sort_values(['ScoreMethodID', 'StructureID']).to_csv( '/kortemmelab/home/kyleb/tmp/foobar/143469-%d.csv' % num_structs ) # TMP
-            print subset_summed_df[ subset_summed_df['PredictionID'] == 143469 ].head() # TMP
-
             avg_df = subset_summed_df.groupby(id_columns[:-2])[this_score_columns].mean().round(decimals=4).reset_index()
             avg_df = avg_df.assign( StructureOrder = new_structure_order )
             avg_df = avg_df[desired_summed_and_averaged_columns].round(4)
@@ -188,10 +176,6 @@ def sum_and_average():
                 ['PredictionRunName', 'DataSetID', 'ScoreMethodID'],
                 inplace = True,
             )
-
-            print avg_df[ avg_df['PredictionID'] == 143468 ].head() # TMP
-            print avg_df[ avg_df['PredictionID'] == 143469 ].head() # TMP
-            continue # TMP
 
             avg_df.to_csv( csv_path, compression = 'gzip' )
             print 'Saved:', csv_path
