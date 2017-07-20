@@ -8,10 +8,14 @@ import shutil
 from stats import fraction_correct, mae as calc_mae, bootstrap_xy_stat
 import scipy
 
-csv_path = os.path.expanduser( '~/data/ddg/interface_ddg_paper/publication_analyze_output/60k_with_control/split/id.csv.gz' )
+csv_paths = [
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-t14-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-id_50.csv.gz' ),
+]
 output_dir = 'output'
 print_statistics = False
 output_fig_path = os.path.join( output_dir, 'figures_and_tables' )
+from subsets import subsets
 if not os.path.isdir( output_fig_path ):
     os.makedirs( output_fig_path )
 
@@ -21,7 +25,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 current_palette = sns.color_palette()
 
-assert( os.path.isfile(csv_path) )
+for csv_path in csv_paths:
+    assert( os.path.isfile(csv_path) )
 if not os.path.isdir(output_dir):
     os.makedirs(output_dir)
 
@@ -34,11 +39,16 @@ mut_types = {
 
 
 def load_df():
-    df = add_score_categories( pd.read_csv(csv_path) )
+    df = pd.read_csv( csv_paths[0] )
+    for csv_path in csv_paths[1:]:
+        df = df.append( pd.read_csv( csv_path ) )
+    df = add_score_categories( df )
     df = df.drop_duplicates( ['PredictionRunName', 'DataSetID', 'PredictionID', 'ScoreMethodID', 'MutType', 'total', 'ExperimentalDDG', 'StructureOrder'] )
     return df
 
 def add_score_categories(df):
+    df = df.assign( MutType = 'complete' )
+
     stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
     stabilizing.loc[:,'MutType'] = 'stabilizing'
 
@@ -51,21 +61,12 @@ def add_score_categories(df):
     df = df.append( stabilizing )
     df = df.append( positive )
     df = df.append( neutral )
-    return df
 
-def add_score_categories(df):
-    stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
-    stabilizing.loc[:,'MutType'] = 'stabilizing'
+    for subset_name, subset_keys in subsets.iteritems():
+        subset_df = df.loc[ df['DataSetID'].isin(subset_keys) ].copy()
+        subset_df.loc[:,'MutType'] = subset_name
+        df = df.append( subset_df )
 
-    neutral = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] > -1.0) & (df['ExperimentalDDG'] < 1.0) ].copy()
-    neutral.loc[:,'MutType'] = 'neutral'
-
-    positive = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] >= 1.0) ].copy()
-    positive.loc[:,'MutType'] = 'positive'
-
-    df = df.append( stabilizing )
-    df = df.append( positive )
-    df = df.append( neutral )
     return df
 
 def main( generate_plots = False ):
@@ -301,8 +302,7 @@ def table_1():
     # Dataset composition
     df = load_df()
     df = df.drop_duplicates( ['PredictionRunName', 'DataSetID', 'PredictionID', 'ScoreMethodID', 'MutType', 'total', 'ExperimentalDDG', 'StructureOrder'] )
-    control_df = df.loc[ (df['PredictionRunName'] == 'zemu_control') & (df['ScoreMethodID'] == 40 ) ]
-    print control_df.head()
+    control_df = df.loc[ (df['PredictionRunName'] == 'zemu_control') & (df['ScoreMethodID'] == 8 ) ]
 
     ns = []
     descriptions = {

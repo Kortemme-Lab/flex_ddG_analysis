@@ -154,17 +154,20 @@ def sum_and_average():
         max_struct_id = summed_df['StructureID'].max()
 
         for num_structs in xrange( 1, max_struct_id + 1 ):
+            new_structure_order = structure_order + '_%02d' % num_structs
+            csv_path = os.path.join( output_dir, '%s-%s.csv.gz' % (benchmark_run.prediction_set_name, new_structure_order) )
+            if os.path.isfile( csv_path ):
+                continue
+
             subset_summed_df = summed_df.loc[ summed_df['StructureID'] <= num_structs ]
             avg_df = subset_summed_df.groupby(id_columns[:-2])[this_score_columns].mean().round(decimals=4).reset_index()
-            new_structure_order = structure_order + '_%02d' % num_structs
-            avg_df.assign( StructureOrder = new_structure_order )
+            avg_df = avg_df.assign( StructureOrder = new_structure_order )
             avg_df = avg_df[desired_summed_and_averaged_columns].round(4)
             avg_df.sort_values(
                 ['PredictionRunName', 'DataSetID', 'ScoreMethodID'],
                 inplace = True,
             )
 
-            csv_path = os.path.join( output_dir, '%s-%s.csv.gz' % (benchmark_run.prediction_set_name, new_structure_order) )
             avg_df.to_csv( csv_path, compression = 'gzip' )
             print 'Saved:', csv_path
 

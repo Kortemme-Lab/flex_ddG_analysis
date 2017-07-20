@@ -8,4 +8,12 @@ talaris_60k_run = ddg_benchmark_run(
     5 # Step multiplication factor
 )
 
-all_runs = [ talaris_60k_run ]
+talaris_control_run = ddg_benchmark_run(
+    'zemu_control', # Predicton run name
+    1 # Step multiplication factor
+)
+
+all_runs = [
+    talaris_control_run,
+    talaris_60k_run,
+]
