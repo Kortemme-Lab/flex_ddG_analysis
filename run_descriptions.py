@@ -13,7 +13,13 @@ talaris_control_run = ddg_benchmark_run(
     1 # Step multiplication factor
 )
 
+ref_run = ddg_benchmark_run(
+    'zemu_1.2-60000_rscript_validated-ref', # Predicton run name
+    5 # Step multiplication factor
+)
+
 all_runs = [
     talaris_control_run,
     talaris_60k_run,
+    # ref_run,
 ]
