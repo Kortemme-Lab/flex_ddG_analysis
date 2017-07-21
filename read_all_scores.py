@@ -63,7 +63,7 @@ def add_score_categories(df):
     df = df.append( neutral )
 
     for subset_name, subset_keys in subsets.iteritems():
-        subset_df = df.loc[ df['DataSetID'].isin(subset_keys) ].copy()
+        subset_df = df.loc[ (df['MutType'] == 'complete') & (df['DataSetID'].isin(subset_keys)) ].copy()
         subset_df.loc[:,'MutType'] = subset_name
         df = df.append( subset_df )
 
@@ -404,9 +404,111 @@ def figure_3():
     out_path = os.path.join( output_fig_path, 'fig3.pdf' )
     fig.savefig( out_path )
 
+def figure_4():
+    exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
+    sorting_types = ['WildTypeComplex', 'id']
+    base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
+    number_of_structures = 50
+
+    for sorting_type in sorting_types:
+        structure_orders = []
+        df = None
+        for struct_id in xrange(1, number_of_structures + 1):
+            csv_path = base_path % (exp_run_name, sorting_type, struct_id)
+            assert( os.path.isfile( csv_path ) )
+
+            if struct_id == 1:
+                df = pd.read_csv( csv_path )
+            else:
+                df = df.append( pd.read_csv( csv_path ) )
+
+            structure_orders.append( '%s_%02d' % (sorting_type, struct_id) )
+
+        df['StructureOrder'] = df['StructureOrder'].apply(
+            lambda s: int( s.split('_')[1] )
+        )
+
+        df = add_score_categories(df)
+
+        point_size = 4.5
+        alpha = 0.6
+        scatter_kws = { 's' : point_size, 'alpha' : alpha }
+        line_kws = { 'linewidth' : 0.9 }
+
+        exp_colname = 'Experimental DDG'
+        pred_colname = 'Rosetta Score'
+        df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
+        df = df.rename( columns = {'total' : pred_colname} )
+
+        sns.set_style("white")
+        fig = plt.figure(
+            figsize=(10.0, 8.5), dpi=600
+        )
+        fig.subplots_adjust( wspace = 0.6, hspace = 0.3)
+        fig.suptitle('Number of Structures Performance (sorting by %s)' % sorting_type, fontsize=20)
+
+        mut_type_subsets = ['complete', 's2l', 'sing_mut', 'ala']
+
+        r_axes = []
+        r_min = float('inf')
+        r_max = float('-inf')
+
+        mae_axes = []
+        mae_min = float('inf')
+        mae_max = float('-inf')
+
+        for ax_i, mut_type_subset in enumerate( mut_type_subsets ):
+            ax = fig.add_subplot( 2, 2, ax_i + 1 )
+            ax.set_ylabel("Pearson's R")
+            ax.yaxis.label.set_color(current_palette[0] )
+            ax.set_xlabel("Number of Structures")
+            rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby(['StructureOrder', 'ScoreMethodID'])[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
+
+            # Determine best correlation step
+            argmax = rs['Experimental DDG'].argmax()
+            best_step_id = rs.ix[argmax]['ScoreMethodID']
+            ax.set_title( '%s (%d steps)' % (mut_types[mut_type_subset], best_step_id) )
+            rs = rs.loc[ rs['ScoreMethodID'] == best_step_id ]
+
+            maes = df.loc[ (df['ScoreMethodID'] == best_step_id) & (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('StructureOrder')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
+
+            ax.plot( rs['StructureOrder'], rs['Experimental DDG'], 'o', color = current_palette[0] )
+            r_min = min( r_min, min(rs['Experimental DDG']) )
+            r_max = max( r_max, max(rs['Experimental DDG']) )
+
+            ax2 = ax.twinx()
+            ax2.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
+            ax2.set_ylabel("MAE")
+            ax2.plot( maes.index, maes.values, 's', color = current_palette[1] )
+            mae_min = min( mae_min, min(maes.values) )
+            mae_max = max( mae_max, max(maes.values) )
+
+            ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
+            ax2.yaxis.label.set_color(current_palette[1] )
+
+            r_axes.append( ax )
+            mae_axes.append( ax2 )
+
+        r_range = r_max - r_min
+        r_min -= r_range * 0.1
+        r_max += r_range * 0.1
+        mae_range = mae_max - mae_min
+        mae_min -= mae_range * 0.1
+        mae_max += mae_range * 0.1
+
+        for ax in r_axes:
+            ax.set_ylim( [r_min, r_max] )
+
+        for ax in mae_axes:
+            ax.set_ylim( [mae_min, mae_max] )
+
+        out_path = os.path.join( output_fig_path, 'fig4-%s.pdf' % sorting_type )
+        fig.savefig( out_path )
+
 if __name__ == '__main__':
     table_1()
     figure_2()
     figure_3()
+    figure_4()
 
     main()
