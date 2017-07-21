@@ -5,6 +5,7 @@ import MySQLdb
 import os
 import sys
 import time
+import numpy as np
 
 from run_descriptions import all_runs
 
@@ -34,8 +35,17 @@ id_columns = [
     'ScoreMethodID', 'StructureID', 'ScoreType',
 ]
 
-# Coerce the dtype for these into strings
-string_cols = ['PredictionRunName', 'Subset', 'PDBFileID', 'ScoreType', 'Mutations']
+# Coerce the dtype for these
+string_cols = ['PredictionRunName', 'Subset', 'PDBFileID', 'ScoreType', 'Mutations', 'AvgRuntime', 'MaxMemGB']
+int_cols = ['PredictionID', 'DataSetID', 'StructureID', 'ScoreMethodID']
+float_cols = ['ExperimentalDDG', 'total', 'talaris_total_check', 'ref_total_check', 'fa_atr', 'fa_dun', 'fa_elec', 'fa_intra_rep', 'fa_rep', 'fa_sol', 'hbond_bb_sc', 'hbond_lr_bb', 'hbond_sc', 'hbond_sr_bb', 'omega', 'p_aa_pp', 'pro_close', 'rama', 'ref', 'yhh_planarity', 'fa_dun_dev', 'fa_dun_rot', 'fa_dun_semi', 'fa_intra_atr_xover4', 'fa_intra_elec', 'fa_intra_rep_xover4', 'fa_intra_sol_xover4', 'hxl_tors', 'lk_ball', 'lk_ball_bridge', 'lk_ball_bridge_uncpl', 'lk_ball_iso', 'rama_prepro', 'cart_bonded', 'lk_ball_wtd']
+dtypes = {}
+for col in string_cols:
+    dtypes[col] = object
+for col in int_cols:
+    dtypes[col] = np.int64
+for col in float_cols:
+    dtypes[col] = np.float64
 
 if not os.path.isdir( dataframe_cache ):
     os.makedirs( dataframe_cache )
@@ -137,7 +147,10 @@ def sum_and_average():
 
     for benchmark_run, structure_order, df_path in paths_to_analyze:
         print 'Summing and averaging:', df_path
-        df = pd.read_csv( df_path, compression = 'gzip' )
+        df = pd.read_csv(
+            df_path, compression = 'gzip',
+            dtype = dtypes,
+        )
 
         this_score_columns = [col for col in global_score_columns if col in df.columns]
         score_and_id_columns = this_score_columns + id_columns
@@ -194,5 +207,5 @@ if __name__ == '__main__':
                         help = 'MySQL database schema')
 
     args = parser.parse_args()
-    # fetch_from_db_and_reorder( args.host, args.port, args.user, args.password, args.db)
+    fetch_from_db_and_reorder( args.host, args.port, args.user, args.password, args.db)
     sum_and_average()
