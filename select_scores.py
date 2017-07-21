@@ -39,6 +39,38 @@ id_columns = [
 string_cols = ['PredictionRunName', 'Subset', 'PDBFileID', 'ScoreType', 'Mutations', 'AvgRuntime', 'MaxMemGB']
 int_cols = ['PredictionID', 'DataSetID', 'StructureID', 'ScoreMethodID']
 float_cols = ['ExperimentalDDG', 'total', 'talaris_total_check', 'ref_total_check', 'fa_atr', 'fa_dun', 'fa_elec', 'fa_intra_rep', 'fa_rep', 'fa_sol', 'hbond_bb_sc', 'hbond_lr_bb', 'hbond_sc', 'hbond_sr_bb', 'omega', 'p_aa_pp', 'pro_close', 'rama', 'ref', 'yhh_planarity', 'fa_dun_dev', 'fa_dun_rot', 'fa_dun_semi', 'fa_intra_atr_xover4', 'fa_intra_elec', 'fa_intra_rep_xover4', 'fa_intra_sol_xover4', 'hxl_tors', 'lk_ball', 'lk_ball_bridge', 'lk_ball_bridge_uncpl', 'lk_ball_iso', 'rama_prepro', 'cart_bonded', 'lk_ball_wtd']
+
+amino_acid_details = {
+    'A': {'Polarity': 'H', 'van_der_Waals_volume': 67.0,  'Name': 'Alanine',       'LongCode': 'ALA', 'Aromaticity': 'L', 'Size': 'small'},
+    'C': {'Polarity': 'P', 'van_der_Waals_volume': 86.0,  'Name': 'Cysteine',      'LongCode': 'CYS', 'Aromaticity': '-', 'Size': 'small'},
+    'E': {'Polarity': 'C', 'van_der_Waals_volume': 109.0, 'Name': 'Glutamic acid', 'LongCode': 'GLU', 'Aromaticity': '-', 'Size': 'large'},
+    'D': {'Polarity': 'C', 'van_der_Waals_volume': 91.0,  'Name': 'Aspartic acid', 'LongCode': 'ASP', 'Aromaticity': '-', 'Size': 'small'},
+    'G': {'Polarity': 'P', 'van_der_Waals_volume': 48.0,  'Name': 'Glycine',       'LongCode': 'GLY', 'Aromaticity': '-', 'Size': 'small'},
+    'F': {'Polarity': 'H', 'van_der_Waals_volume': 135.0, 'Name': 'Phenylalanine', 'LongCode': 'PHE', 'Aromaticity': 'R', 'Size': 'large'},
+    'I': {'Polarity': 'H', 'van_der_Waals_volume': 124.0, 'Name': 'Isoleucine',    'LongCode': 'ILE', 'Aromaticity': 'L', 'Size': 'large'},
+    'H': {'Polarity': 'C', 'van_der_Waals_volume': 118.0, 'Name': 'Histidine',     'LongCode': 'HIS', 'Aromaticity': '-', 'Size': 'large'},
+    'K': {'Polarity': 'C', 'van_der_Waals_volume': 135.0, 'Name': 'Lysine',        'LongCode': 'LYS', 'Aromaticity': '-', 'Size': 'large'},
+    'M': {'Polarity': 'H', 'van_der_Waals_volume': 124.0, 'Name': 'Methionine',    'LongCode': 'MET', 'Aromaticity': 'L', 'Size': 'large'},
+    'L': {'Polarity': 'H', 'van_der_Waals_volume': 124.0, 'Name': 'Leucine',       'LongCode': 'LEU', 'Aromaticity': 'L', 'Size': 'large'},
+    'N': {'Polarity': 'P', 'van_der_Waals_volume': 96.0,  'Name': 'Asparagine',    'LongCode': 'ASN', 'Aromaticity': '-', 'Size': 'small'},
+    'Q': {'Polarity': 'P', 'van_der_Waals_volume': 114.0, 'Name': 'Glutamine',     'LongCode': 'GLN', 'Aromaticity': '-', 'Size': 'large'},
+    'P': {'Polarity': 'H', 'van_der_Waals_volume': 90.0,  'Name': 'Proline',       'LongCode': 'PRO', 'Aromaticity': '-', 'Size': 'small'},
+    'S': {'Polarity': 'P', 'van_der_Waals_volume': 73.0,  'Name': 'Serine',        'LongCode': 'SER', 'Aromaticity': '-', 'Size': 'small'},
+    'R': {'Polarity': 'C', 'van_der_Waals_volume': 148.0, 'Name': 'Arginine',      'LongCode': 'ARG', 'Aromaticity': '-', 'Size': 'large'},
+    'T': {'Polarity': 'P', 'van_der_Waals_volume': 93.0,  'Name': 'Threonine',     'LongCode': 'THR', 'Aromaticity': '-', 'Size': 'small'},
+    'W': {'Polarity': 'H', 'van_der_Waals_volume': 163.0, 'Name': 'Tryptophan',    'LongCode': 'TRP', 'Aromaticity': 'R', 'Size': 'large'},
+    'V': {'Polarity': 'H', 'van_der_Waals_volume': 105.0, 'Name': 'Valine',        'LongCode': 'VAL', 'Aromaticity': 'L', 'Size': 'small'},
+    'Y': {'Polarity': 'H', 'van_der_Waals_volume': 141.0, 'Name': 'Tyrosine',      'LongCode': 'TYR', 'Aromaticity': 'R', 'Size': 'large'},
+}
+
+small_aas = set()
+large_aas = set()
+for aa_key, aa_dict in amino_acid_details.iteritems():
+    if aa_dict['Size'] == 'small':
+        small_aas.add(aa_key)
+    elif aa_dict['Size'] == 'large':
+        large_aas.add(aa_key)
+
 dtypes = {}
 for col in string_cols:
     dtypes[col] = object
@@ -50,15 +82,9 @@ for col in float_cols:
 if not os.path.isdir( dataframe_cache ):
     os.makedirs( dataframe_cache )
 
-def fetch_from_db_and_reorder( mysql_host, mysql_port, mysql_user, mysql_pass, mysql_db ):
+def fetch_from_db_and_reorder( mysql_con ):
     with open('scores_select.sql', 'r') as f:
         all_scores_query = ' '.join( [ line.strip() for line in f.readlines() if not line.startswith('#') ] )
-
-    mysql_con = MySQLdb.connect( host = mysql_host,
-                                 port = mysql_port,
-                                 user = mysql_user, passwd = mysql_pass,
-                                 db = mysql_db
-    )
 
     # Load data and determine common DataSetIDs
     for benchmark_run in all_runs:
@@ -193,6 +219,99 @@ def sum_and_average():
             avg_df.to_csv( csv_path, compression = 'gzip' )
             print 'Saved:', csv_path
 
+def fetch_zemu_properties( mysql_con ):
+    with open('dataset_select.sql', 'r') as f:
+        dataset_query = ' '.join( [ line.strip() for line in f.readlines() if not line.startswith('#') ] )
+
+    df = pd.read_sql_query( dataset_query, mysql_con)
+    print df.head()
+
+    single = set()
+    multiple = set()
+    all_ala = set()
+    all_s2l = set()
+    all_l2s = set()
+    some_s2l = set()
+    some_l2s = set()
+
+    # TODO : add resolution subsets
+    # TODO : single mutations count not equal to read_all_scores.py table 1
+    # check track for this and small to large?
+
+    for index, row in df.iterrows():
+        mutations = [ x.split()[1] for x in row['Mutations'].split(';') ] # Split, and throw away chains
+        dataset_id = row['DataSetID']
+
+        if len(mutations) == 1:
+            single.add( dataset_id )
+        elif len(mutations) > 1:
+            multiple.add( dataset_id )
+
+        mutants_all_ala = True
+
+        mutants_all_large = True
+        mutants_all_small = True
+        wts_all_large = True
+        wts_all_small = True
+
+        mutants_some_small = False
+        mutants_some_large = False
+        wts_some_small = False
+        wts_some_large = False
+
+        for mutation in mutations:
+            if mutants_all_ala and mutation[-1] != 'A':
+                mutants_all_ala = False
+
+            if mutants_all_large and mutation[-1] not in large_aas:
+                mutants_all_large = False
+
+            if mutants_all_small and mutation[-1] not in small_aas:
+                mutants_all_small = False
+
+            if wts_all_large and mutation[0] not in large_aas:
+                wts_all_large = False
+
+            if wts_all_small and mutation[0] not in small_aas:
+                wts_all_small = False
+
+            if not mutants_some_small and mutation[-1] in small_aas:
+                mutants_some_small = True
+
+            if not mutants_some_large and mutation[-1] in large_aas:
+                mutants_some_large = True
+
+            if not wts_some_small and mutation[0] in small_aas:
+                wts_some_small = True
+
+            if not wts_some_large and mutation[0] in large_aas:
+                wts_some_large = True
+
+        if mutants_all_ala:
+            all_ala.add( dataset_id )
+
+        if wts_all_small and mutants_all_large:
+            all_s2l.add( dataset_id )
+
+        if wts_all_large and mutants_all_small:
+            all_l2s.add( dataset_id )
+
+        if wts_some_small and mutants_some_large:
+            some_s2l.add( dataset_id )
+
+        if wts_some_large and mutants_some_small:
+            some_l2s.add( dataset_id )
+
+    print 'Summary:'
+    print 'Single mutations:', len(single)
+    print 'Multiple mutations:', len(multiple)
+    print 'All alanines:', len(all_ala)
+    print 'All small to large:', len(all_s2l)
+    print 'All large to small:', len(all_l2s)
+    print 'Some small to large:', len(some_s2l)
+    print 'Some large to small:', len(some_l2s)
+    print
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--host', default = 'localhost',
@@ -205,7 +324,15 @@ if __name__ == '__main__':
                         help = 'MySQL password')
     parser.add_argument('--db', default = 'DDG',
                         help = 'MySQL database schema')
-
     args = parser.parse_args()
-    fetch_from_db_and_reorder( args.host, args.port, args.user, args.password, args.db)
+
+    mysql_con = MySQLdb.connect( host = args.host,
+                                 port = args.port,
+                                 user = args.user, passwd = args.password,
+                                 db = args.db
+    )
+
+    fetch_zemu_properties( mysql_con )
+    sys.exit()
+    fetch_from_db_and_reorder( mysql_con )
     sum_and_average()
