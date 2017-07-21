@@ -63,14 +63,6 @@ amino_acid_details = {
     'Y': {'Polarity': 'H', 'van_der_Waals_volume': 141.0, 'Name': 'Tyrosine',      'LongCode': 'TYR', 'Aromaticity': 'R', 'Size': 'large'},
 }
 
-small_aas = set()
-large_aas = set()
-for aa_key, aa_dict in amino_acid_details.iteritems():
-    if aa_dict['Size'] == 'small':
-        small_aas.add(aa_key)
-    elif aa_dict['Size'] == 'large':
-        large_aas.add(aa_key)
-
 dtypes = {}
 for col in string_cols:
     dtypes[col] = object
@@ -249,57 +241,37 @@ def fetch_zemu_properties( mysql_con ):
 
         mutants_all_ala = True
 
-        mutants_all_large = True
-        mutants_all_small = True
-        wts_all_large = True
-        wts_all_small = True
+        mutants_some_s2l = False
+        mutants_all_s2l = True
 
-        mutants_some_small = False
-        mutants_some_large = False
-        wts_some_small = False
-        wts_some_large = False
+        mutants_some_l2s = False
+        mutants_all_l2s = True
 
         for mutation in mutations:
             if mutants_all_ala and mutation[-1] != 'A':
                 mutants_all_ala = False
 
-            if mutants_all_large and mutation[-1] not in large_aas:
-                mutants_all_large = False
 
-            if mutants_all_small and mutation[-1] not in small_aas:
-                mutants_all_small = False
-
-            if wts_all_large and mutation[0] not in large_aas:
-                wts_all_large = False
-
-            if wts_all_small and mutation[0] not in small_aas:
-                wts_all_small = False
-
-            if not mutants_some_small and mutation[-1] in small_aas:
-                mutants_some_small = True
-
-            if not mutants_some_large and mutation[-1] in large_aas:
-                mutants_some_large = True
-
-            if not wts_some_small and mutation[0] in small_aas:
-                wts_some_small = True
-
-            if not wts_some_large and mutation[0] in large_aas:
-                wts_some_large = True
+            if  amino_acid_details[mutation[0]]['van_der_Waals_volume'] < amino_acid_details[mutation[-1]]['van_der_Waals_volume']:
+                mutants_some_s2l = True
+                mutants_all_l2s = False
+            else:
+                mutants_all_s2l = False
+                mutants_some_l2s = True
 
         if mutants_all_ala:
             all_ala.add( dataset_id )
 
-        if wts_all_small and mutants_all_large:
+        if mutants_all_s2l:
             all_s2l.add( dataset_id )
 
-        if wts_all_large and mutants_all_small:
-            all_l2s.add( dataset_id )
-
-        if wts_some_small and mutants_some_large:
+        if mutants_some_s2l:
             some_s2l.add( dataset_id )
 
-        if wts_some_large and mutants_some_small:
+        if mutants_all_l2s:
+            all_l2s.add( dataset_id )
+
+        if mutants_some_l2s:
             some_l2s.add( dataset_id )
 
     print 'Summary:'
@@ -311,6 +283,19 @@ def fetch_zemu_properties( mysql_con ):
     print 'Some small to large:', len(some_s2l)
     print 'Some large to small:', len(some_l2s)
     print
+
+    from subsets import subsets
+    for name, set_a, set_b in zip(
+            ['single', 'mult', 'all_s2l', 'ala'],
+            [set(single), set(multiple), set(all_s2l), set(all_ala)],
+            [set(subsets['sing_mut']), set(subsets['mult_mut']), set(subsets['s2l']), set(subsets['ala'])],
+    ):
+        if set_a != set_b:
+            print 'In subsets %s but not new' % name
+            print set_b.difference(set_a)
+            print 'In new %s but not subsets' % name
+            print set_a.difference(set_b)
+            print
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some integers.')
@@ -333,6 +318,5 @@ if __name__ == '__main__':
     )
 
     fetch_zemu_properties( mysql_con )
-    sys.exit()
-    fetch_from_db_and_reorder( mysql_con )
-    sum_and_average()
+    # fetch_from_db_and_reorder( mysql_con )
+    # sum_and_average()
