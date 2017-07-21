@@ -7,6 +7,7 @@ import sys
 import shutil
 from stats import fraction_correct, mae as calc_mae, bootstrap_xy_stat
 import scipy
+import json
 
 csv_paths = [
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-t14-id_50.csv.gz' ),
@@ -15,9 +16,12 @@ csv_paths = [
 output_dir = 'output'
 print_statistics = False
 output_fig_path = os.path.join( output_dir, 'figures_and_tables' )
-from subsets import subsets
 if not os.path.isdir( output_fig_path ):
     os.makedirs( output_fig_path )
+
+# Import subsets
+with open('subsets.json') as f:
+    subsets = json.load(f)
 
 # Import here as they can be slow, and are unneeded if plots aren't going to be made
 import matplotlib
@@ -329,7 +333,9 @@ def table_1():
     table_df = table_df[ ['n', 'Description'] ] # Order columns correctly
     table_df.sort_values( 'n', inplace = True, ascending = False )
 
-    print table_df.head()
+    print 'Table 1:'
+    print table_df.head( n = 20 )
+    print
     table_df.to_csv( os.path.join(output_fig_path, 'table_1.csv') )
 
 def figure_3():

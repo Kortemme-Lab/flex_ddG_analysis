@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import numpy as np
+import json
 
 from run_descriptions import all_runs
 
@@ -211,7 +212,7 @@ def sum_and_average():
             avg_df.to_csv( csv_path, compression = 'gzip' )
             print 'Saved:', csv_path
 
-def fetch_zemu_properties( mysql_con ):
+def fetch_zemu_properties( mysql_con, print_debug = True ):
     with open('dataset_select.sql', 'r') as f:
         dataset_query = ' '.join( [ line.strip() for line in f.readlines() if not line.startswith('#') ] )
 
@@ -226,13 +227,20 @@ def fetch_zemu_properties( mysql_con ):
     some_s2l = set()
     some_l2s = set()
 
-    # TODO : add resolution subsets
-    # TODO : single mutations count not equal to read_all_scores.py table 1
-    # check track for this and small to large?
+    res_gte25 = set()
+    res_gt15_lt25 = set()
+    res_lte15 = set()
 
     for index, row in df.iterrows():
         mutations = [ x.split()[1] for x in row['Mutations'].split(';') ] # Split, and throw away chains
         dataset_id = row['DataSetID']
+
+        if row['Resolution'] <= 1.5:
+            res_lte15.add( dataset_id )
+        elif row['Resolution'] < 2.5:
+            res_gt15_lt25.add( dataset_id )
+        elif row['Resolution'] >= 2.5:
+            res_gte25.add( dataset_id )
 
         if len(mutations) == 1:
             single.add( dataset_id )
@@ -274,21 +282,25 @@ def fetch_zemu_properties( mysql_con ):
         if mutants_some_l2s:
             some_l2s.add( dataset_id )
 
-    print 'Summary:'
-    print 'Single mutations:', len(single)
-    print 'Multiple mutations:', len(multiple)
-    print 'All alanines:', len(all_ala)
-    print 'All small to large:', len(all_s2l)
-    print 'All large to small:', len(all_l2s)
-    print 'Some small to large:', len(some_s2l)
-    print 'Some large to small:', len(some_l2s)
-    print
+    if print_debug:
+        print 'Summary:'
+        print 'Single mutations:', len(single)
+        print 'Multiple mutations:', len(multiple)
+        print 'All alanines:', len(all_ala)
+        print 'All small to large:', len(all_s2l)
+        print 'All large to small:', len(all_l2s)
+        print 'Some small to large:', len(some_s2l)
+        print 'Some large to small:', len(some_l2s)
+        print 'High res (res_lte15):', len(res_lte15)
+        print 'Med res (res_gt15_lt25):', len(res_gt15_lt25)
+        print 'Low res(res_gte25):', len(res_gte25)
+        print
 
     from subsets import subsets
     for name, set_a, set_b in zip(
-            ['single', 'mult', 'all_s2l', 'ala'],
-            [set(single), set(multiple), set(all_s2l), set(all_ala)],
-            [set(subsets['sing_mut']), set(subsets['mult_mut']), set(subsets['s2l']), set(subsets['ala'])],
+            ['single', 'mult', 'all_s2l', 'ala', 'res_lte15', 'res_gt15_lt25', 'res_gte25'],
+            [set(single), set(multiple), set(all_s2l), set(all_ala), set(res_lte15), set(res_gt15_lt25), set(res_gte25)],
+            [set(subsets['sing_mut']), set(subsets['mult_mut']), set(subsets['s2l']), set(subsets['ala']), set(subsets['res_lte15']), set(subsets['res_gt15_lt25']), set(subsets['res_gte25'])],
     ):
         if set_a != set_b:
             print 'In subsets %s but not new' % name
@@ -296,6 +308,21 @@ def fetch_zemu_properties( mysql_con ):
             print 'In new %s but not subsets' % name
             print set_a.difference(set_b)
             print
+
+    subsets_dict = {}
+    subsets_dict['mult_mut'] = sorted(multiple)
+    subsets_dict['sing_mut'] = sorted(single)
+    subsets_dict['s2l'] = sorted(all_s2l)
+    subsets_dict['some_s2l'] = sorted(some_s2l)
+    subsets_dict['ala'] = sorted(all_ala)
+    subsets_dict['l2s'] = sorted(all_l2s)
+    subsets_dict['some_l2s'] = sorted(some_l2s)
+    subsets_dict['res_lte15'] = sorted(res_lte15)
+    subsets_dict['res_gt15_lt25'] = sorted(res_gt15_lt25)
+    subsets_dict['res_gte25'] = sorted(res_gte25)
+
+    with open('subsets.json', 'w') as f:
+        json.dump(subsets_dict, f)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some integers.')
