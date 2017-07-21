@@ -212,12 +212,11 @@ def sum_and_average():
             avg_df.to_csv( csv_path, compression = 'gzip' )
             print 'Saved:', csv_path
 
-def fetch_zemu_properties( mysql_con, print_debug = True ):
+def fetch_zemu_properties( mysql_con, print_debug = False ):
     with open('dataset_select.sql', 'r') as f:
         dataset_query = ' '.join( [ line.strip() for line in f.readlines() if not line.startswith('#') ] )
 
     df = pd.read_sql_query( dataset_query, mysql_con)
-    print df.head()
 
     single = set()
     multiple = set()
@@ -296,19 +295,6 @@ def fetch_zemu_properties( mysql_con, print_debug = True ):
         print 'Low res(res_gte25):', len(res_gte25)
         print
 
-    from subsets import subsets
-    for name, set_a, set_b in zip(
-            ['single', 'mult', 'all_s2l', 'ala', 'res_lte15', 'res_gt15_lt25', 'res_gte25'],
-            [set(single), set(multiple), set(all_s2l), set(all_ala), set(res_lte15), set(res_gt15_lt25), set(res_gte25)],
-            [set(subsets['sing_mut']), set(subsets['mult_mut']), set(subsets['s2l']), set(subsets['ala']), set(subsets['res_lte15']), set(subsets['res_gt15_lt25']), set(subsets['res_gte25'])],
-    ):
-        if set_a != set_b:
-            print 'In subsets %s but not new' % name
-            print set_b.difference(set_a)
-            print 'In new %s but not subsets' % name
-            print set_a.difference(set_b)
-            print
-
     subsets_dict = {}
     subsets_dict['mult_mut'] = sorted(multiple)
     subsets_dict['sing_mut'] = sorted(single)
@@ -345,5 +331,5 @@ if __name__ == '__main__':
     )
 
     fetch_zemu_properties( mysql_con )
-    # fetch_from_db_and_reorder( mysql_con )
-    # sum_and_average()
+    fetch_from_db_and_reorder( mysql_con )
+    sum_and_average()
