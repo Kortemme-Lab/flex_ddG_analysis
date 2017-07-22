@@ -177,20 +177,23 @@ def sum_and_average():
         for score_column in this_score_columns:
             complex_scores_df.loc[:,score_column] *= -1
         complex_scores_df = complex_scores_df.append(
-            df[df.ScoreType.isin( ['WildTypeLPartner', 'WildTypeRPartner', 'MutantComplex'] )][score_and_id_columns]
+            df[df.ScoreType.isin( ['DDG', 'WildTypeLPartner', 'WildTypeRPartner', 'MutantComplex'] )][score_and_id_columns]
         )
         complex_scores_df = complex_scores_df.sort_index() #( columns = ['PredictionID', 'StructureID', ] )
         summed_df_noindex = complex_scores_df.groupby(id_columns[:-1], as_index = False)[this_score_columns].sum()
+        desired_group_length = len( df['ScoreType'].drop_duplicates() )
         for name, group in complex_scores_df.groupby(id_columns[:-1]):
-            if len(group) != 6:
-                print 'len(group) != 6'
+            if len(group) != desired_group_length:
+                print 'len(group) != %d' % desired_group_length
                 print name
                 print group
                 print
         summed_df = complex_scores_df.groupby(id_columns[:-1])[this_score_columns].sum().reset_index()
 
         df_structure_orders = summed_df['StructureOrder'].drop_duplicates()
-        assert( len(df_structure_orders) == 1 )
+        if len(df_structure_orders) != 1:
+            print df_structure_orders
+            assert( len(df_structure_orders) == 1 )
         structure_order = df_structure_orders[0]
         max_struct_id = summed_df['StructureID'].max()
 

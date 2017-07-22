@@ -18,7 +18,19 @@ ref_run = ddg_benchmark_run(
     5 # Step multiplication factor
 )
 
+ddg_monomer_run = ddg_benchmark_run(
+    'ddg_monomer_16_003-zemu-2',
+    1
+)
+
+zemu_values = ddg_benchmark_run(
+    'zemu-values',
+    1
+)
+
 all_runs = [
+    zemu_values,
+    ddg_monomer_run,
     talaris_control_run,
     talaris_60k_run,
     # ref_run,
