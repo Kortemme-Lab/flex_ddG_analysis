@@ -38,7 +38,13 @@ mut_types = {
     'complete' : 'Complete',
     'sing_mut' : 'Single',
     's2l' : 'Small-To-Large',
+    'l2s' : 'Large-To-Small',
     'ala' : 'Alanine',
+    'res_gte25' : 'Res. >= 2.5$\AA$',
+    'res_lte15' : 'Res. <= 1.5$\AA$',
+    'res_gt15_lt25' : '1.5$\AA$ < Res. < 2.5$\AA$',
+    'some_s2l' : 'Some Small-To-Large',
+    'some_l2s' : 'Some Large-To-Small',
 }
 
 
@@ -309,12 +315,7 @@ def table_1():
     control_df = df.loc[ (df['PredictionRunName'] == 'zemu_control') & (df['ScoreMethodID'] == 8 ) ]
 
     ns = []
-    descriptions = {
-        'complete' : 'Complete dataset (duplicates removed)',
-        'sing_mut' : 'Single mutations',
-        's2l' : 'Small-To-Large (single or multiple)',
-        'ala' : 'Alanine (single or multiple)',
-    }
+    descriptions = mut_types
     description_rows = []
     mut_type_names = []
 
@@ -338,7 +339,7 @@ def table_1():
     print
     table_df.to_csv( os.path.join(output_fig_path, 'table_1.csv') )
 
-def figure_3():
+def steps_vs_corr( output_figure_name, mut_type_subsets ):
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
     point_size = 4.5
     alpha = 0.6
@@ -357,8 +358,6 @@ def figure_3():
     )
     fig.subplots_adjust( wspace = 0.6, hspace = 0.3)
 
-
-    mut_type_subsets = ['complete', 's2l', 'sing_mut', 'ala']
 
     r_axes = []
     r_min = float('inf')
@@ -407,7 +406,7 @@ def figure_3():
     for ax in mae_axes:
         ax.set_ylim( [mae_min, mae_max] )
 
-    out_path = os.path.join( output_fig_path, 'fig3.pdf' )
+    out_path = os.path.join( output_fig_path, '%s.pdf' % output_figure_name )
     fig.savefig( out_path )
 
 def figure_4():
@@ -514,7 +513,9 @@ def figure_4():
 if __name__ == '__main__':
     table_1()
     figure_2()
-    figure_3()
+    steps_vs_corr( 'fig3', ['complete', 's2l', 'sing_mut', 'ala'] )
+    steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
+    steps_vs_corr( 'fig3_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
     figure_4()
 
     main()
