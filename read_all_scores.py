@@ -12,6 +12,9 @@ import json
 csv_paths = [
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-t14-id_50.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-WildTypeComplex_03.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-brub_1.6-nt10000-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-values-id_01.csv.gz' ),
 ]
 output_dir = 'output'
 print_statistics = False
@@ -79,7 +82,7 @@ def add_score_categories(df):
 
     return df
 
-def main( generate_plots = False ):
+def make_results_df( generate_plots = False ):
     df = load_df()
 
     # Add 'complete' to front of list so scaling is calculated first
@@ -204,8 +207,17 @@ def main( generate_plots = False ):
         results_df.sort_values( sort_col, inplace = True, ascending = asc )
         print results_df[ ['PredictionRun', 'MutTypes', 'StructureOrder', 'Step', sort_col] ].head(n=20)
     results_csv_path = os.path.join(output_dir, 'results.csv')
+    new_column_order = [
+        'PredictionRun', 'N', 'MutTypes', 'Step', 'StructureOrder',
+        'R', 'MAE', 'MAE_unscaled', 'FractionCorrect', 'FractionCorrect_unscaled',
+        'Slope', 'ScalingIntercepts', 'ScalingSlopes',
+    ]
+    assert( set(new_column_order) == set(results_df.columns) )
+    results_df = results_df[new_column_order]
     results_df.sort_values('R', ascending = False).to_csv( results_csv_path )
     print results_csv_path
+
+    return results_df
 
 def figure_2():
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
@@ -510,12 +522,42 @@ def figure_4():
         out_path = os.path.join( output_fig_path, 'fig4-%s.pdf' % sorting_type )
         fig.savefig( out_path )
 
+def table_2( results_df ):
+    # PredictionRun, Step, StructureOrder
+    display_runs = [
+        ('zemu_1.2-60000_rscript_validated-t14', 35000, 'id_50'),
+        ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_03'),
+        ('zemu_control', 8, 'id_50'),
+        ('zemu-values', 11, 'id_01'),
+    ]
+    display_mut_types = [
+        'complete', 'ala', 'sing_mut', 'mult_mut', 's2l',
+    ]
+
+    results_subset = pd.DataFrame()
+    for mut_type in display_mut_types:
+        for run_name, step, structure_order in display_runs:
+            new_row = results_df.loc[ (results_df['PredictionRun'] == run_name) & (results_df['Step'] == step) & (results_df['StructureOrder'] == structure_order ) & (results_df['MutTypes'] == mut_type) ]
+            if len(new_row) != 1:
+                print run_name, step, structure_order, mut_type
+                print new_row.head()
+                assert( len(new_row) == 1 )
+            if len(results_subset) == 0:
+                results_subset = new_row
+            else:
+                results_subset = results_subset.append( new_row )
+
+    out_path = os.path.join( output_fig_path, 'table_2.csv' )
+    results_subset.to_csv(out_path)
+
+
 if __name__ == '__main__':
+    results_df = make_results_df()
     table_1()
+    table_2( results_df )
+    sys.exit()
     figure_2()
     steps_vs_corr( 'fig3', ['complete', 's2l', 'sing_mut', 'ala'] )
     steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
     steps_vs_corr( 'fig3_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
     figure_4()
-
-    main()

@@ -28,10 +28,16 @@ zemu_values = ddg_benchmark_run(
     1
 )
 
+temp_16 = ddg_benchmark_run(
+    'zemu-brub_1.6-nt10000',
+    1250
+)
+
 all_runs = [
-    zemu_values,
-    ddg_monomer_run,
-    talaris_control_run,
-    talaris_60k_run,
+    ### zemu_values,
+    ### ddg_monomer_run,
+    ### talaris_control_run,
+    ### talaris_60k_run,
+    temp_16,
     # ref_run,
 ]
