@@ -67,6 +67,11 @@ run_names = {
     'zemu-values' : 'ZEMu paper',
 }
 
+sorting_type_descriptions = {
+    'id' : 'no sorting of structures',
+    'WildTypeComplex' : 'structures sorted by minimized wild-type complex energy',
+}
+
 
 cached_loaded_df_initialized = False
 cached_loaded_df = None
@@ -543,7 +548,7 @@ def figure_4():
             figsize=(10.0, 8.5), dpi=600
         )
         fig.subplots_adjust( wspace = 0.6, hspace = 0.3)
-        fig.suptitle('Number of Structures Performance (sorting by %s)' % sorting_type, fontsize=20)
+        fig.suptitle('Number of Structures Performance (%s)' % sorting_type_descriptions[sorting_type], fontsize=20)
 
         mut_type_subsets = ['complete', 's2l', 'sing_mut', 'ala']
 
@@ -555,6 +560,10 @@ def figure_4():
         mae_min = float('inf')
         mae_max = float('-inf')
 
+        # Information for caption
+        ns = []
+        best_step_ids = []
+
         for ax_i, mut_type_subset in enumerate( mut_type_subsets ):
             ax = fig.add_subplot( 2, 2, ax_i + 1 )
             ax.set_ylabel("Pearson's R")
@@ -565,10 +574,15 @@ def figure_4():
             # Determine best correlation step
             argmax = rs['Experimental DDG'].argmax()
             best_step_id = rs.ix[argmax]['ScoreMethodID']
-            ax.set_title( '%s (%d steps)' % (mut_types[mut_type_subset], best_step_id) )
+            best_step_ids.append( best_step_id )
+            ax.set_title( '%s' % (mut_types[mut_type_subset]) )
             rs = rs.loc[ rs['ScoreMethodID'] == best_step_id ]
 
             maes = df.loc[ (df['ScoreMethodID'] == best_step_id) & (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('StructureOrder')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
+
+            n = df.loc[ (df['ScoreMethodID'] == best_step_id) & (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('StructureOrder')[[pred_colname, exp_colname]].apply( lambda x: len( x[exp_colname] ) )
+            assert( len( n.drop_duplicates() ) == 1 )
+            ns.append( n.drop_duplicates().values[0] )
 
             ax.plot( rs['StructureOrder'], rs['Experimental DDG'], 'o', color = current_palette[0] )
             r_min = min( r_min, min(rs['Experimental DDG']) )
@@ -600,8 +614,19 @@ def figure_4():
         for ax in mae_axes:
             ax.set_ylim( [mae_min, mae_max] )
 
-        out_path = os.path.join( output_fig_path, 'fig4-%s.pdf' % sorting_type )
+        output_figure_name = 'fig4-%s' % sorting_type
+        out_path = os.path.join( output_fig_path, output_figure_name + '.pdf' )
+        sub_dict = {
+            'panel-a' : '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[0] ].capitalize(),  ns[0], best_step_ids[0] ),
+            'panel-b' : '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[1] ].capitalize(),  ns[1], best_step_ids[1] ),
+            'panel-c' : '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[2] ].capitalize(),  ns[2], best_step_ids[2] ),
+            'panel-d' : '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[3] ].capitalize(),  ns[3], best_step_ids[3] ),
+            'fig-label' : output_figure_name,
+            'fig-path' : os.path.relpath(out_path, latex_output_dir),
+        }
+
         fig.savefig( out_path )
+        save_latex( 'latex_templates/structs-vs-corr.tex', sub_dict, out_tex_name = output_figure_name )
         print out_path
 
 def table_2( results_df ):
@@ -681,12 +706,12 @@ def table_2( results_df ):
 
 
 if __name__ == '__main__':
-    results_df = make_results_df()
-    table_1()
-    table_2( results_df )
-    figure_2()
-    steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'ala'] )
-    steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
-    steps_vs_corr( 'fig3_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
-    compile_latex()
+    # results_df = make_results_df()
+    # table_1()
+    # table_2( results_df )
+    # figure_2()
+    # steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'ala'] )
+    # steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
+    # steps_vs_corr( 'fig3_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
     figure_4()
+    compile_latex()
