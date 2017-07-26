@@ -548,7 +548,7 @@ def figure_4():
             figsize=(10.0, 8.5), dpi=600
         )
         fig.subplots_adjust( wspace = 0.6, hspace = 0.3)
-        fig.suptitle('Number of Structures Performance (%s)' % sorting_type_descriptions[sorting_type], fontsize=20)
+        fig.suptitle('Number of Structures Performance\n(%s)' % sorting_type_descriptions[sorting_type], fontsize=20)
 
         mut_type_subsets = ['complete', 's2l', 'sing_mut', 'ala']
 
@@ -706,12 +706,11 @@ def table_2( results_df ):
 
 
 if __name__ == '__main__':
-    # results_df = make_results_df()
-    # table_1()
-    # table_2( results_df )
-    # figure_2()
-    # steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'ala'] )
-    # steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
-    # steps_vs_corr( 'fig3_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
+    table_1()
+    table_2( make_results_df )
+    figure_2()
+    steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'ala'] )
+    steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
+    steps_vs_corr( 'fig3_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
     figure_4()
     compile_latex()
