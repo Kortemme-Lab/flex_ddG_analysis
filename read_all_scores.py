@@ -93,26 +93,30 @@ def load_df():
     print 'Done loading csvs\n'
     return df
 
-def add_score_categories(df):
-    df = df.assign( MutType = 'complete' )
+def add_score_categories(df, mut_type_subsets = None):
+    if mut_type_subsets == None or 'complete' in mut_type_subsets:
+        df = df.assign( MutType = 'complete' )
 
-    stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
-    stabilizing.loc[:,'MutType'] = 'stabilizing'
+    if mut_type_subsets == None or 'stabilizing' in mut_type_subsets:
+        stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
+        stabilizing.loc[:,'MutType'] = 'stabilizing'
+        df = df.append( stabilizing )
 
-    neutral = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] > -1.0) & (df['ExperimentalDDG'] < 1.0) ].copy()
-    neutral.loc[:,'MutType'] = 'neutral'
+    if mut_type_subsets == None or 'neutral' in mut_type_subsets:
+        neutral = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] > -1.0) & (df['ExperimentalDDG'] < 1.0) ].copy()
+        neutral.loc[:,'MutType'] = 'neutral'
+        df = df.append( neutral )
 
-    positive = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] >= 1.0) ].copy()
-    positive.loc[:,'MutType'] = 'positive'
-
-    df = df.append( stabilizing )
-    df = df.append( positive )
-    df = df.append( neutral )
+    if mut_type_subsets == None or 'positive' in mut_type_subsets:
+        positive = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] >= 1.0) ].copy()
+        positive.loc[:,'MutType'] = 'positive'
+        df = df.append( positive )
 
     for subset_name, subset_keys in subsets.iteritems():
-        subset_df = df.loc[ (df['MutType'] == 'complete') & (df['DataSetID'].isin(subset_keys)) ].copy()
-        subset_df.loc[:,'MutType'] = subset_name
-        df = df.append( subset_df )
+        if mut_type_subsets == None or subset_name in mut_type_subsets:
+            subset_df = df.loc[ (df['MutType'] == 'complete') & (df['DataSetID'].isin(subset_keys)) ].copy()
+            subset_df.loc[:,'MutType'] = subset_name
+            df = df.append( subset_df )
 
     return df
 
@@ -512,6 +516,7 @@ def figure_4():
     sorting_types = ['WildTypeComplex', 'id']
     base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
     number_of_structures = 50
+    mut_type_subsets = ['complete', 's2l', 'sing_mut', 'ala']
 
     for sorting_type in sorting_types:
         structure_orders = []
@@ -531,7 +536,7 @@ def figure_4():
             lambda s: int( s.split('_')[1] )
         )
 
-        df = add_score_categories(df)
+        df = add_score_categories(df, mut_type_subsets = mut_type_subsets)
 
         point_size = 4.5
         alpha = 0.6
@@ -549,8 +554,6 @@ def figure_4():
         )
         fig.subplots_adjust( wspace = 0.6, hspace = 0.3)
         fig.suptitle('Number of Structures Performance\n(%s)' % sorting_type_descriptions[sorting_type], fontsize=20)
-
-        mut_type_subsets = ['complete', 's2l', 'sing_mut', 'ala']
 
         r_axes = []
         r_min = float('inf')
@@ -707,7 +710,7 @@ def table_2( results_df ):
 
 if __name__ == '__main__':
     table_1()
-    table_2( make_results_df )
+    table_2( make_results_df() )
     figure_2()
     steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'ala'] )
     steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
