@@ -9,6 +9,7 @@ from stats import fraction_correct, mae as calc_mae, bootstrap_xy_stat
 import scipy
 import json
 import subprocess
+import collections
 
 csv_paths = [
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-t14-id_50.csv.gz' ),
@@ -640,16 +641,18 @@ def table_2( results_df ):
         ('zemu_control', 8, 'id_50'),
         ('zemu-values', 11, 'id_01'),
     ]
-    display_columns = {
-        'PredictionRun' : 'Prediction Method',
-        'N' : 'N',
-        'MutTypes' : 'Mutation Category',
-        'R' : 'R',
-        'MAE' : 'MAE',
-        'FractionCorrect' : 'FC',
-    }
-    display_column_order = ['PredictionRun', 'MutTypes', 'R', 'MAE', 'FractionCorrect']
+    display_columns = collections.OrderedDict( [
+        ('PredictionRun', 'Prediction Method'),
+        ('N', 'N'),
+        ('MutTypes', 'Mutation Category'),
+        ('R', 'R'),
+        ('MAE', 'MAE'),
+        ('FractionCorrect', 'FC'),
+   ] )
 
+    subset_table( 'table-2', results_df, display_runs, display_columns )
+
+def subset_table( table_name, results_df, display_runs, display_columns ):
     results_subset = pd.DataFrame()
     for mut_type in display_mut_types:
         for run_name, step, structure_order in display_runs:
@@ -663,8 +666,8 @@ def table_2( results_df ):
             else:
                 results_subset = results_subset.append( new_row )
 
-    out_path = os.path.join( output_fig_path, 'table_2.csv' )
-    beautified_results = results_subset[ display_column_order ].rename( columns = display_columns ).replace( run_names ).replace( mut_types )
+    out_path = os.path.join( output_fig_path, '%s.csv' % table_name.replace('-', '_') )
+    beautified_results = results_subset[ display_columns.keys() ].rename( columns = display_columns ).replace( run_names ).replace( mut_types )
     beautified_results.to_csv(out_path, float_format = '%.2f' )
 
     # Generate latex and add hlines
@@ -699,21 +702,24 @@ def table_2( results_df ):
             new_lines.append( '\hline' )
     new_lines.extend( footer_lines )
 
-    save_latex( 'latex_templates/table-2.tex', {
-        'table-2' : '\n'.join(new_lines),
+    save_latex( 'latex_templates/%s.tex' % table_name, {
+        table_name : '\n'.join(new_lines),
     } )
 
-    print 'Table 2:'
+    print table_name
     print beautified_results.head( n = 30 )
     print
 
 
 if __name__ == '__main__':
     table_1()
-    table_2( make_results_df() )
     figure_2()
     steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'ala'] )
     steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
     steps_vs_corr( 'fig3_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
     figure_4()
+
+    results_df = make_results_df()
+    table_2( results_df )
+
     compile_latex()
