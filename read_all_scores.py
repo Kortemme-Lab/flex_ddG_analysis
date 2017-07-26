@@ -111,14 +111,19 @@ def add_score_categories(df):
 
     return df
 
-def save_latex( latex_template_file, sub_dict ):
+def save_latex( latex_template_file, sub_dict, out_tex_name = None ):
+    if out_tex_name == None:
+        out_tex_name = os.path.basename( latex_template_file )
+    if not out_tex_name.endswith( '.tex' ):
+        out_tex_name += '.tex'
+
     with open(latex_template_file, 'r') as f:
         latex_template = f.read()
     for key in sub_dict:
         latex_key = '%%%%%s%%%%' % key
         latex_template = latex_template.replace( latex_key, sub_dict[key] )
 
-    with open( os.path.join( latex_output_dir, os.path.basename( latex_template_file ) ), 'w') as f:
+    with open( os.path.join( latex_output_dir, out_tex_name ), 'w') as f:
         f.write( latex_template )
 
 def compile_latex():
@@ -439,12 +444,15 @@ def steps_vs_corr( output_figure_name, mut_type_subsets ):
     mae_min = float('inf')
     mae_max = float('-inf')
 
+    ns = []
+
     for ax_i, mut_type_subset in enumerate( mut_type_subsets ):
         ax = fig.add_subplot( 2, 2, ax_i + 1 )
         ax.set_title( mut_types[mut_type_subset] )
         ax.set_ylabel("Pearson's R")
         ax.yaxis.label.set_color(current_palette[0] )
         ax.set_xlabel("Backrub Step")
+        ns.append( len(df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) & (df['ScoreMethodID'] == df['ScoreMethodID'].drop_duplicates().values[0]) ]) )
         rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
         maes = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
 
@@ -479,6 +487,18 @@ def steps_vs_corr( output_figure_name, mut_type_subsets ):
         ax.set_ylim( [mae_min, mae_max] )
 
     out_path = os.path.join( output_fig_path, '%s.pdf' % output_figure_name )
+    sub_dict = {
+        'panel-a' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[0] ].capitalize(),  ns[0] ),
+        'panel-b' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[1] ].capitalize(),  ns[1] ),
+        'panel-c' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[2] ].capitalize(),  ns[2] ),
+        'panel-d' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[3] ].capitalize(),  ns[3] ),
+        'fig-label' : output_figure_name,
+        'fig-path' : os.path.relpath(out_path, latex_output_dir),
+    }
+
+    fig.savefig( out_path )
+    save_latex( 'latex_templates/steps-vs-corr.tex', sub_dict, out_tex_name = output_figure_name )
+
     fig.savefig( out_path )
     print out_path
 
@@ -665,8 +685,8 @@ if __name__ == '__main__':
     table_1()
     table_2( results_df )
     figure_2()
-    compile_latex()
     steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'ala'] )
     steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
     steps_vs_corr( 'fig3_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
+    compile_latex()
     figure_4()
