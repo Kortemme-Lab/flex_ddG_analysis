@@ -8,6 +8,7 @@ import shutil
 from stats import fraction_correct, mae as calc_mae, bootstrap_xy_stat
 import scipy
 import json
+import subprocess
 
 csv_paths = [
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-t14-id_50.csv.gz' ),
@@ -17,9 +18,13 @@ csv_paths = [
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-values-id_01.csv.gz' ),
 ]
 output_dir = 'output'
+latex_output_dir = os.path.join( output_dir, 'latex' )
 output_fig_path = os.path.join( output_dir, 'figures_and_tables' )
+main_template_latex_file = os.path.join( 'latex_templates', 'figs_and_tables.tex' )
 if not os.path.isdir( output_fig_path ):
     os.makedirs( output_fig_path )
+if not os.path.isdir( latex_output_dir ):
+    os.makedirs( latex_output_dir )
 
 # Import subsets
 with open('subsets.json') as f:
@@ -41,12 +46,12 @@ display_mut_types = [
 ]
 
 mut_types = {
-    'complete' : 'Complete',
-    'sing_mut' : 'Single',
-    'mult_mut' : 'Multiple',
-    's2l' : 'Small-To-Large',
+    'complete' : 'Complete dataset',
+    'sing_mut' : 'Single mutation',
+    'mult_mut' : 'Multiple mutations',
+    's2l' : 'Small-To-Large Mutation(s)',
     'l2s' : 'Large-To-Small',
-    'ala' : 'Alanine',
+    'ala' : 'Mutation(s) to Alanine',
     'res_gte25' : 'Res. >= 2.5$\AA$',
     'res_lte15' : 'Res. <= 1.5$\AA$',
     'res_gt15_lt25' : '1.5$\AA$ < Res. < 2.5$\AA$',
@@ -70,6 +75,8 @@ def load_df():
     if cached_loaded_df_initialized:
         return cached_loaded_df.copy()
 
+    print 'Performing initial .csv load'
+
     df = pd.read_csv( csv_paths[0] )
     for csv_path in csv_paths[1:]:
         df = df.append( pd.read_csv( csv_path ) )
@@ -77,6 +84,7 @@ def load_df():
     df = df.drop_duplicates( ['PredictionRunName', 'DataSetID', 'PredictionID', 'ScoreMethodID', 'MutType', 'total', 'ExperimentalDDG', 'StructureOrder'] )
     cached_loaded_df_initialized = True
     cached_loaded_df = df.copy()
+    print 'Done loading csvs\n'
     return df
 
 def add_score_categories(df):
@@ -101,6 +109,22 @@ def add_score_categories(df):
         df = df.append( subset_df )
 
     return df
+
+def save_latex( latex_template_file, sub_dict ):
+    with open(latex_template_file, 'r') as f:
+        latex_template = f.read()
+    for key in sub_dict:
+        latex_key = '%%%%%s%%%%' % key
+        latex_template = latex_template.replace( latex_key, sub_dict[key] )
+
+    with open( os.path.join( latex_output_dir, os.path.basename( latex_template_file ) ), 'w') as f:
+        f.write( latex_template )
+
+def compile_latex():
+    shutil.copy( main_template_latex_file, latex_output_dir )
+
+    for i in xrange( 0, 3 ):
+        output = subprocess.check_output( ['xelatex', os.path.basename( main_template_latex_file )[:-4] ], cwd = latex_output_dir )
 
 def make_results_df( generate_plots = False, print_statistics = False ):
     df = load_df()
@@ -350,28 +374,23 @@ def table_1():
     control_df = df.loc[ (df['PredictionRunName'] == 'zemu_control') & (df['ScoreMethodID'] == 8 ) ]
 
     ns = []
-    descriptions = mut_types
-    description_rows = []
     mut_type_names = []
 
     for mut_type in display_mut_types:
         ns.append( len( control_df.loc[ control_df['MutType'] == mut_type ] ) )
         mut_type_names.append( mut_types[mut_type] )
-        description_rows.append( descriptions[mut_type] )
 
     table_df = pd.DataFrame( {
         'Name' : mut_type_names,
         'n' : ns,
-        'Description' : description_rows,
     } )
 
-    # Remove name column for now
-    table_df = table_df[ ['n', 'Description'] ] # Order columns correctly
+    table_df = table_df[ ['n', 'Name'] ] # Order columns correctly
     table_df.sort_values( 'n', inplace = True, ascending = False )
 
     print 'Table 1:'
     print table_df.head( n = 20 )
-    print
+    save_latex( 'latex_templates/table-1.tex', { 'table-1' : table_df.to_latex( index=False ) } )
     table_df.to_csv( os.path.join(output_fig_path, 'table_1.csv') )
 
 def steps_vs_corr( output_figure_name, mut_type_subsets ):
@@ -556,13 +575,14 @@ def table_2( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     display_columns = {
-        'PredictionRun' : 'Benchmark Run',
+        'PredictionRun' : 'Prediction Method',
         'N' : 'N',
         'MutTypes' : 'Mutation Category',
         'R' : 'R',
         'MAE' : 'MAE',
         'FractionCorrect' : 'FC',
     }
+    display_column_order = ['PredictionRun', 'MutTypes', 'R', 'MAE', 'FractionCorrect']
 
     results_subset = pd.DataFrame()
     for mut_type in display_mut_types:
@@ -578,8 +598,45 @@ def table_2( results_df ):
                 results_subset = results_subset.append( new_row )
 
     out_path = os.path.join( output_fig_path, 'table_2.csv' )
-    beautified_results = results_subset[ display_columns.keys() ].rename( columns = display_columns ).replace( run_names ).replace( mut_types )
+    beautified_results = results_subset[ display_column_order ].rename( columns = display_columns ).replace( run_names ).replace( mut_types )
     beautified_results.to_csv(out_path, float_format = '%.2f' )
+
+    # Generate latex and add hlines
+    latex_lines = beautified_results.to_latex( index=False, float_format = '%.2f' ).split('\n')
+    header_lines = []
+    group_rows = [ [] ]
+    footer_lines = []
+    in_group_lines = 0
+    for line in latex_lines:
+        if in_group_lines == 0:
+            header_lines.append( line )
+            if line.startswith( '\midrule' ):
+                in_group_lines = 1
+        elif in_group_lines == 1:
+            if line.startswith( '\bottomrule' ):
+                footer_lines.append( line )
+            else:
+                group_rows[-1].append( line )
+                if len( group_rows[-1] ) >= len(display_runs):
+                    group_rows.append( [] )
+        elif in_group_lines == 2:
+            footer_lines.append( line )
+
+    if len(group_rows[-1]) == 0:
+        group_rows.pop()
+
+    new_lines = []
+    new_lines.extend( header_lines )
+    for i, rows in enumerate(group_rows):
+        new_lines.extend( rows )
+        if i < len(group_rows) - 1:
+            new_lines.append( '\hline' )
+    new_lines.extend( footer_lines )
+
+    save_latex( 'latex_templates/table-2.tex', {
+        'table-2' : '\n'.join(new_lines),
+    } )
+
     print 'Table 2:'
     print beautified_results.head( n = 30 )
     print
@@ -589,6 +646,8 @@ if __name__ == '__main__':
     results_df = make_results_df()
     table_1()
     table_2( results_df )
+    compile_latex()
+    sys.exit()
     figure_2()
     steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'ala'] )
     steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
