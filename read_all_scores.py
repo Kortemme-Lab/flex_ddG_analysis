@@ -63,6 +63,7 @@ mut_types = {
 
 run_names = {
     'zemu_1.2-60000_rscript_validated-t14' : 'ddG backrub',
+    'zemu-brub_1.6-nt10000' : 'ddG backrub (1.6 kT)',
     'ddg_monomer_16_003-zemu-2' : 'ddG monomer',
     'zemu_control' : 'minimization only control',
     'zemu-values' : 'ZEMu paper',
@@ -650,11 +651,32 @@ def table_2( results_df ):
         ('FractionCorrect', 'FC'),
    ] )
 
-    subset_table( 'table-2', results_df, display_runs, display_columns )
+    caption_text = "Main results table. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-def subset_table( table_name, results_df, display_runs, display_columns ):
+    subset_table( 'table-2', results_df, display_runs, display_columns, caption_text )
+
+def backrub_temp_table( results_df ):
+    # PredictionRun, Step, StructureOrder
+    display_runs = [
+        ('zemu_1.2-60000_rscript_validated-t14', 10000, 'id_50'),
+        ('zemu-brub_1.6-nt10000', 10000, 'id_50'),
+    ]
+    display_columns = collections.OrderedDict( [
+        ('PredictionRun', 'Prediction Method'),
+        ('N', 'N'),
+        ('MutTypes', 'Mutation Category'),
+        ('R', 'R'),
+        ('MAE', 'MAE'),
+        ('FractionCorrect', 'FC'),
+   ] )
+
+    caption_text = "Comparison of backrub temperature results. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+
+    subset_table( 'table-temperature', results_df, display_runs, display_columns, caption_text )
+
+def subset_table( table_name, results_df, display_runs, display_columns, caption_text ):
     results_subset = pd.DataFrame()
-    for mut_type in display_mut_types:
+    for mut_type_i, mut_type in enumerate(display_mut_types):
         for run_name, step, structure_order in display_runs:
             new_row = results_df.loc[ (results_df['PredictionRun'] == run_name) & (results_df['Step'] == step) & (results_df['StructureOrder'] == structure_order ) & (results_df['MutTypes'] == mut_type) ]
             if len(new_row) != 1:
@@ -665,6 +687,10 @@ def subset_table( table_name, results_df, display_runs, display_columns ):
                 results_subset = new_row
             else:
                 results_subset = results_subset.append( new_row )
+
+            # Caption text (only for first loop through mut_types)
+            if step >= 50 and mut_type_i == 0:
+                caption_text += ' %s backrub steps = %d.' % ( run_names[run_name], step )
 
     out_path = os.path.join( output_fig_path, '%s.csv' % table_name.replace('-', '_') )
     beautified_results = results_subset[ display_columns.keys() ].rename( columns = display_columns ).replace( run_names ).replace( mut_types )
@@ -677,12 +703,16 @@ def subset_table( table_name, results_df, display_runs, display_columns ):
     footer_lines = []
     in_group_lines = 0
     for line in latex_lines:
+        line = line.strip()
+        if len(line) == 0:
+            continue
+
         if in_group_lines == 0:
             header_lines.append( line )
-            if line.startswith( '\midrule' ):
+            if 'midrule' in line:
                 in_group_lines = 1
         elif in_group_lines == 1:
-            if line.startswith( '\bottomrule' ):
+            if 'bottomrule' in line or 'end{tabular}' in line:
                 footer_lines.append( line )
             else:
                 group_rows[-1].append( line )
@@ -702,9 +732,15 @@ def subset_table( table_name, results_df, display_runs, display_columns ):
             new_lines.append( '\hline' )
     new_lines.extend( footer_lines )
 
-    save_latex( 'latex_templates/%s.tex' % table_name, {
-        table_name : '\n'.join(new_lines),
-    } )
+    save_latex(
+        'latex_templates/subset-table.tex',
+        {
+            'table-text' : '\n'.join(new_lines),
+            'caption' : caption_text,
+            'table-label' : table_name
+        },
+        out_tex_name = table_name,
+    )
 
     print table_name
     print beautified_results.head( n = 30 )
@@ -721,5 +757,6 @@ if __name__ == '__main__':
 
     results_df = make_results_df()
     table_2( results_df )
+    backrub_temp_table( results_df )
 
     compile_latex()
