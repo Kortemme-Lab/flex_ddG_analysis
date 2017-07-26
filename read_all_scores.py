@@ -17,7 +17,6 @@ csv_paths = [
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-values-id_01.csv.gz' ),
 ]
 output_dir = 'output'
-print_statistics = False
 output_fig_path = os.path.join( output_dir, 'figures_and_tables' )
 if not os.path.isdir( output_fig_path ):
     os.makedirs( output_fig_path )
@@ -37,9 +36,14 @@ for csv_path in csv_paths:
 if not os.path.isdir(output_dir):
     os.makedirs(output_dir)
 
+display_mut_types = [
+    'complete', 'ala', 'sing_mut', 'mult_mut', 's2l',
+]
+
 mut_types = {
     'complete' : 'Complete',
     'sing_mut' : 'Single',
+    'mult_mut' : 'Multiple',
     's2l' : 'Small-To-Large',
     'l2s' : 'Large-To-Small',
     'ala' : 'Alanine',
@@ -50,13 +54,29 @@ mut_types = {
     'some_l2s' : 'Some Large-To-Small',
 }
 
+run_names = {
+    'zemu_1.2-60000_rscript_validated-t14' : 'ddG backrub',
+    'ddg_monomer_16_003-zemu-2' : 'ddG monomer',
+    'zemu_control' : 'minimization only control',
+    'zemu-values' : 'ZEMu paper',
+}
 
+
+cached_loaded_df_initialized = False
+cached_loaded_df = None
 def load_df():
+    global cached_loaded_df_initialized
+    global cached_loaded_df
+    if cached_loaded_df_initialized:
+        return cached_loaded_df.copy()
+
     df = pd.read_csv( csv_paths[0] )
     for csv_path in csv_paths[1:]:
         df = df.append( pd.read_csv( csv_path ) )
     df = add_score_categories( df )
     df = df.drop_duplicates( ['PredictionRunName', 'DataSetID', 'PredictionID', 'ScoreMethodID', 'MutType', 'total', 'ExperimentalDDG', 'StructureOrder'] )
+    cached_loaded_df_initialized = True
+    cached_loaded_df = df.copy()
     return df
 
 def add_score_categories(df):
@@ -82,7 +102,7 @@ def add_score_categories(df):
 
     return df
 
-def make_results_df( generate_plots = False ):
+def make_results_df( generate_plots = False, print_statistics = False ):
     df = load_df()
 
     # Add 'complete' to front of list so scaling is calculated first
@@ -205,7 +225,7 @@ def make_results_df( generate_plots = False ):
     ascendings = [False, False, True]
     for sort_col, asc in zip(sort_cols, ascendings):
         results_df.sort_values( sort_col, inplace = True, ascending = asc )
-        print results_df[ ['PredictionRun', 'MutTypes', 'StructureOrder', 'Step', sort_col] ].head(n=20)
+        # print results_df[ ['PredictionRun', 'MutTypes', 'StructureOrder', 'Step', sort_col] ].head(n=20)
     results_csv_path = os.path.join(output_dir, 'results.csv')
     new_column_order = [
         'PredictionRun', 'N', 'MutTypes', 'Step', 'StructureOrder',
@@ -215,7 +235,9 @@ def make_results_df( generate_plots = False ):
     assert( set(new_column_order) == set(results_df.columns) )
     results_df = results_df[new_column_order]
     results_df.sort_values('R', ascending = False).to_csv( results_csv_path )
-    print results_csv_path
+    if print_statistics:
+        print results_csv_path
+        print
 
     return results_df
 
@@ -319,6 +341,7 @@ def figure_2():
 
     out_path = os.path.join( output_fig_path, 'fig2.pdf' )
     fig.savefig( out_path )
+    print out_path
 
 def table_1():
     # Dataset composition
@@ -331,7 +354,7 @@ def table_1():
     description_rows = []
     mut_type_names = []
 
-    for mut_type in mut_types.keys():
+    for mut_type in display_mut_types:
         ns.append( len( control_df.loc[ control_df['MutType'] == mut_type ] ) )
         mut_type_names.append( mut_types[mut_type] )
         description_rows.append( descriptions[mut_type] )
@@ -420,6 +443,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets ):
 
     out_path = os.path.join( output_fig_path, '%s.pdf' % output_figure_name )
     fig.savefig( out_path )
+    print out_path
 
 def figure_4():
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
@@ -521,6 +545,7 @@ def figure_4():
 
         out_path = os.path.join( output_fig_path, 'fig4-%s.pdf' % sorting_type )
         fig.savefig( out_path )
+        print out_path
 
 def table_2( results_df ):
     # PredictionRun, Step, StructureOrder
@@ -530,9 +555,14 @@ def table_2( results_df ):
         ('zemu_control', 8, 'id_50'),
         ('zemu-values', 11, 'id_01'),
     ]
-    display_mut_types = [
-        'complete', 'ala', 'sing_mut', 'mult_mut', 's2l',
-    ]
+    display_columns = {
+        'PredictionRun' : 'Benchmark Run',
+        'N' : 'N',
+        'MutTypes' : 'Mutation Category',
+        'R' : 'R',
+        'MAE' : 'MAE',
+        'FractionCorrect' : 'FC',
+    }
 
     results_subset = pd.DataFrame()
     for mut_type in display_mut_types:
@@ -548,16 +578,19 @@ def table_2( results_df ):
                 results_subset = results_subset.append( new_row )
 
     out_path = os.path.join( output_fig_path, 'table_2.csv' )
-    results_subset.to_csv(out_path)
+    beautified_results = results_subset[ display_columns.keys() ].rename( columns = display_columns ).replace( run_names ).replace( mut_types )
+    beautified_results.to_csv(out_path, float_format = '%.2f' )
+    print 'Table 2:'
+    print beautified_results.head( n = 30 )
+    print
 
 
 if __name__ == '__main__':
     results_df = make_results_df()
     table_1()
     table_2( results_df )
-    sys.exit()
     figure_2()
-    steps_vs_corr( 'fig3', ['complete', 's2l', 'sing_mut', 'ala'] )
+    steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'ala'] )
     steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
     steps_vs_corr( 'fig3_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
     figure_4()
