@@ -364,8 +364,25 @@ def figure_2():
     ax3.set_title( '(c) Backrub (%d steps) - %s' % (best_step_c, mut_types[bottom_subset]) )
     ax4.set_title( '(d) Control - %s' % (mut_types[bottom_subset]) )
 
+    # Assert that these lengths are equal since N is displayed for top and bottom together
+    assert( len(df_a) == len(df_b) )
+    assert( len(df_c) == len(df_d) )
+
     out_path = os.path.join( output_fig_path, 'fig2.pdf' )
+    sub_dict = {
+        'exp-method-name' : run_names[exp_run_name].capitalize(),
+        'numsteps-a' : str( best_step_a ),
+        'numsteps-c' : str( best_step_c ),
+        'top-subset' : mut_types[top_subset].capitalize(),
+        'top-n' : str( len(df_a) ),
+        'control-method-name' : run_names[control_run_name].capitalize(),
+        'bottom-subset' : mut_types[bottom_subset].capitalize(),
+        'bottom-n' : str( len(df_c) ),
+        'fig-path' : os.path.relpath(out_path, latex_output_dir),
+    }
+
     fig.savefig( out_path )
+    save_latex( 'latex_templates/figure-2.tex', sub_dict )
     print out_path
 
 def table_1():
