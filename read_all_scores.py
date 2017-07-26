@@ -32,6 +32,7 @@ with open('subsets.json') as f:
 
 # Import here as they can be slow, and are unneeded if plots aren't going to be made
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 current_palette = sns.color_palette()
