@@ -265,7 +265,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
                 mutants_all_ala = False
 
             if not mutants_any_ala and mutation[-1] == 'A':
-                mutation_any_ala = True
+                mutants_any_ala = True
 
             if  amino_acid_details[mutation[0]]['van_der_Waals_volume'] < amino_acid_details[mutation[-1]]['van_der_Waals_volume']:
                 mutants_some_s2l = True
