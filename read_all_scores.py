@@ -833,8 +833,18 @@ def subset_table( table_name, results_df, display_runs, caption_text ):
     print beautified_results.head( n = 30 )
     print
 
+def prediction_error():
+    # Outputs individual errors for other figure purposes
+    df = load_df()
+    df = df.loc[ df['MutType'] == 'complete' ]
+    df['Error'] = df['total'] - df['ExperimentalDDG']
+    df['AbsError'] = np.abs( df['Error'] )
+    df.sort_values( ['AbsError'], inplace = True )
+    df.to_csv( os.path.join(output_fig_path, 'prediction_error.csv') )
 
 if __name__ == '__main__':
+    prediction_error()
+
     table_1()
     figure_2()
     steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'ala'] )
