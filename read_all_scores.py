@@ -676,14 +676,39 @@ def ddg_monomer_table( results_df ):
     subset_table( 'table-temperature', results_df, display_runs, caption_text )
 
 def subset_table( table_name, results_df, display_runs, caption_text ):
-    display_columns = collections.OrderedDict( [
-        ('PredictionRun', 'Prediction Method'),
-        ('N', 'N'),
-        ('MutTypes', 'Mutation Category'),
-        ('R', 'R'),
-        ('MAE', 'MAE'),
-        ('FractionCorrect', 'FC'),
-    ] )
+    # Determine if StructureOrder needs to be included as a column
+    unique_structure_orders = {}
+    for run_name, step, structure_order in display_runs:
+        key_tup = (run_name, step)
+        if key_tup not in unique_structure_orders:
+            unique_structure_orders[key_tup] = set()
+        unique_structure_orders[key_tup].add( structure_order )
+    include_structure_order_column = False
+    for s in unique_structure_orders.values():
+        if len( s ) > 1:
+            include_structure_order_column = True
+            break
+
+    if include_structure_order_column:
+        display_columns = collections.OrderedDict( [
+            ('PredictionRun', 'Prediction Method'),
+            ('N', 'N'),
+            ('MutTypes', 'Mutation Category'),
+            ('StructureOrder', 'Num/Sorting of Structs'),
+            ('R', 'R'),
+            ('MAE', 'MAE'),
+            ('FractionCorrect', 'FC'),
+        ] )
+    else:
+        display_columns = collections.OrderedDict( [
+            ('PredictionRun', 'Prediction Method'),
+            ('N', 'N'),
+            ('MutTypes', 'Mutation Category'),
+            ('R', 'R'),
+            ('MAE', 'MAE'),
+            ('FractionCorrect', 'FC'),
+        ] )
+
 
     # These run names will have step explanations added in, if appropriate
     annotated_run_names = copy.copy( run_names )
@@ -753,10 +778,10 @@ def subset_table( table_name, results_df, display_runs, caption_text ):
     # Bold best numeric in each column of each set of group rows
 
     # better_columns are a hacky way to determine which metric is "best", since a higher R is better, whereas a lower MAE is better
-    # These and first_numeric_column will need to be changed if display_columns is changed
-    lower_better_columns = [4]
-    higher_better_columns = [3, 5]
-    first_numeric_column = 3
+    # These and first_numeric_columns will need to be changed if display_columns is changed
+    lower_better_columns = [ display_columns.keys().index('MAE') ]
+    higher_better_columns = [ display_columns.keys().index('R'), display_columns.keys().index('FractionCorrect') ]
+    first_numeric_column = display_columns.keys().index('R')
     new_group_rows = []
     for rows in group_rows:
         new_rows = []
