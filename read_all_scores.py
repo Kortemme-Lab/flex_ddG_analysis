@@ -53,6 +53,8 @@ mut_types = {
     'complete' : 'Complete dataset',
     'sing_mut' : 'Single mutation',
     'mult_mut' : 'Multiple mutations',
+    'mult_all_ala' : 'Multiple, all alanine',
+    'mult_none_ala' : 'Multiple, none alanine',
     's2l' : 'Small-To-Large Mutation(s)',
     'l2s' : 'Large-To-Small',
     'ala' : 'Mutation(s) to Alanine',
@@ -848,6 +850,7 @@ if __name__ == '__main__':
     table_1()
     figure_2()
     steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'ala'] )
+    steps_vs_corr( 'fig3_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
     steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
     steps_vs_corr( 'fig3_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
     figure_4()
