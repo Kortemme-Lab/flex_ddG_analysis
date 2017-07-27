@@ -644,18 +644,10 @@ def table_2( results_df ):
         ('zemu_control', 8, 'id_50'),
         ('zemu-values', 11, 'id_01'),
     ]
-    display_columns = collections.OrderedDict( [
-        ('PredictionRun', 'Prediction Method'),
-        ('N', 'N'),
-        ('MutTypes', 'Mutation Category'),
-        ('R', 'R'),
-        ('MAE', 'MAE'),
-        ('FractionCorrect', 'FC'),
-   ] )
 
     caption_text = "Main results table. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-    subset_table( 'table-2', results_df, display_runs, display_columns, caption_text )
+    subset_table( 'table-2', results_df, display_runs, caption_text )
 
 def backrub_temp_table( results_df ):
     # PredictionRun, Step, StructureOrder
@@ -663,18 +655,10 @@ def backrub_temp_table( results_df ):
         ('zemu_1.2-60000_rscript_validated-t14', 10000, 'id_50'),
         ('zemu-brub_1.6-nt10000', 10000, 'id_50'),
     ]
-    display_columns = collections.OrderedDict( [
-        ('PredictionRun', 'Prediction Method'),
-        ('N', 'N'),
-        ('MutTypes', 'Mutation Category'),
-        ('R', 'R'),
-        ('MAE', 'MAE'),
-        ('FractionCorrect', 'FC'),
-   ] )
 
     caption_text = "Comparison of backrub temperature results. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-    subset_table( 'table-temperature', results_df, display_runs, display_columns, caption_text )
+    subset_table( 'table-temperature', results_df, display_runs, caption_text )
 
 def ddg_monomer_table( results_df ):
     # PredictionRun, Step, StructureOrder
@@ -685,6 +669,13 @@ def ddg_monomer_table( results_df ):
         ('ddg_monomer_16_003-zemu-2', 7, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
+
+
+    caption_text = "ddG monomer results. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+
+    subset_table( 'table-temperature', results_df, display_runs, caption_text )
+
+def subset_table( table_name, results_df, display_runs, caption_text ):
     display_columns = collections.OrderedDict( [
         ('PredictionRun', 'Prediction Method'),
         ('N', 'N'),
@@ -692,13 +683,8 @@ def ddg_monomer_table( results_df ):
         ('R', 'R'),
         ('MAE', 'MAE'),
         ('FractionCorrect', 'FC'),
-   ] )
+    ] )
 
-    caption_text = "ddg_monomer results. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
-
-    subset_table( 'table-temperature', results_df, display_runs, display_columns, caption_text )
-
-def subset_table( table_name, results_df, display_runs, display_columns, caption_text ):
     # These run names will have step explanations added in, if appropriate
     annotated_run_names = copy.copy( run_names )
 
@@ -763,6 +749,42 @@ def subset_table( table_name, results_df, display_runs, display_columns, caption
 
     if len(group_rows[-1]) == 0:
         group_rows.pop()
+
+    # Bold best numeric in each column of each set of group rows
+
+    # better_columns are a hacky way to determine which metric is "best", since a higher R is better, whereas a lower MAE is better
+    # These and first_numeric_column will need to be changed if display_columns is changed
+    lower_better_columns = [4]
+    higher_better_columns = [3, 5]
+    first_numeric_column = 3
+    new_group_rows = []
+    for rows in group_rows:
+        new_rows = []
+
+        best_row_results = {}
+        # First pass to find best
+        for row in rows:
+            for i, result in enumerate( [x.strip('\\').strip() for x in row.split('&')]):
+                if i >= first_numeric_column and (
+                        ( i in lower_better_columns and (i not in best_row_results or float(result) <= float(best_row_results[i])) )
+                        or
+                        ( i in higher_better_columns and (i not in best_row_results or float(result) >= float(best_row_results[i])) )
+                ):
+                    best_row_results[i] = result
+
+        # Second pass to add bolding
+        for row in rows:
+            row_data = row.split('&')
+            new_row_data = []
+            for i, cell in enumerate( row_data ):
+                if i in best_row_results and best_row_results[i] in cell:
+                    new_row_data.append( cell.replace( best_row_results[i], '\\textbf{' + best_row_results[i] + '}' ) )
+                else:
+                    new_row_data.append( cell )
+            new_rows.append( '&'.join( new_row_data ) )
+        new_group_rows.append( new_rows )
+
+    group_rows = new_group_rows
 
     new_lines = []
     new_lines.extend( header_lines )
