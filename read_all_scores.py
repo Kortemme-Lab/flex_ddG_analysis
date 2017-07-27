@@ -840,7 +840,7 @@ def prediction_error():
     df['Error'] = df['total'] - df['ExperimentalDDG']
     df['AbsError'] = np.abs( df['Error'] )
     df.sort_values( ['AbsError'], inplace = True )
-    df.to_csv( os.path.join(output_fig_path, 'prediction_error.csv') )
+    df.loc[ np.abs(df['ExperimentalDDG']) >= 1.0 ].to_csv( os.path.join(output_fig_path, 'prediction_error.csv') )
 
 if __name__ == '__main__':
     prediction_error()
