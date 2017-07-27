@@ -10,11 +10,13 @@ import scipy
 import json
 import subprocess
 import collections
+import copy
 
 csv_paths = [
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-t14-id_50.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-id_50.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-WildTypeComplex_03.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-WildTypeComplex_50.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-brub_1.6-nt10000-id_50.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-values-id_01.csv.gz' ),
 ]
@@ -674,11 +676,47 @@ def backrub_temp_table( results_df ):
 
     subset_table( 'table-temperature', results_df, display_runs, display_columns, caption_text )
 
+def ddg_monomer_table( results_df ):
+    # PredictionRun, Step, StructureOrder
+    display_runs = [
+        ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_03'),
+        ('ddg_monomer_16_003-zemu-2', 7, 'WildTypeComplex_03'),
+        ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
+        ('ddg_monomer_16_003-zemu-2', 7, 'WildTypeComplex_50'),
+        ('zemu-values', 11, 'id_01'),
+    ]
+    display_columns = collections.OrderedDict( [
+        ('PredictionRun', 'Prediction Method'),
+        ('N', 'N'),
+        ('MutTypes', 'Mutation Category'),
+        ('R', 'R'),
+        ('MAE', 'MAE'),
+        ('FractionCorrect', 'FC'),
+   ] )
+
+    caption_text = "ddg_monomer results. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+
+    subset_table( 'table-temperature', results_df, display_runs, display_columns, caption_text )
+
 def subset_table( table_name, results_df, display_runs, display_columns, caption_text ):
+    # These run names will have step explanations added in, if appropriate
+    annotated_run_names = copy.copy( run_names )
+
     results_subset = pd.DataFrame()
     for mut_type_i, mut_type in enumerate(display_mut_types):
         for run_name, step, structure_order in display_runs:
             new_row = results_df.loc[ (results_df['PredictionRun'] == run_name) & (results_df['Step'] == step) & (results_df['StructureOrder'] == structure_order ) & (results_df['MutTypes'] == mut_type) ]
+
+            # Annotate run name further if necessary
+            if 'ddg_monomer' in run_name and step == 7:
+                new_run_name = run_name + '-7'
+                annotated_run_names[new_run_name] = annotated_run_names[run_name] + ' (soft rescore)'
+                new_row = new_row.replace( { run_name : new_run_name } )
+            elif 'ddg_monomer' in run_name and step == 8:
+                new_run_name = run_name + '-8'
+                annotated_run_names[new_run_name] = annotated_run_names[run_name] + ' (hard rescore)'
+                new_row = new_row.replace( { run_name : new_run_name } )
+
             if len(new_row) != 1:
                 print run_name, step, structure_order, mut_type
                 print new_row.head()
@@ -688,12 +726,14 @@ def subset_table( table_name, results_df, display_runs, display_columns, caption
             else:
                 results_subset = results_subset.append( new_row )
 
-            # Caption text (only for first loop through mut_types)
-            if step >= 50 and mut_type_i == 0:
-                caption_text += ' %s backrub steps = %d.' % ( run_names[run_name], step )
+            # Extra caption text (only for first loop through mut_types)
+            if mut_type_i == 0:
+                if step >= 50:
+                    caption_text += ' %s backrub steps = %d.' % ( run_names[run_name], step )
+
 
     out_path = os.path.join( output_fig_path, '%s.csv' % table_name.replace('-', '_') )
-    beautified_results = results_subset[ display_columns.keys() ].rename( columns = display_columns ).replace( run_names ).replace( mut_types )
+    beautified_results = results_subset[ display_columns.keys() ].rename( columns = display_columns ).replace( annotated_run_names ).replace( mut_types )
     beautified_results.to_csv(out_path, float_format = '%.2f' )
 
     # Generate latex and add hlines
@@ -758,5 +798,6 @@ if __name__ == '__main__':
     results_df = make_results_df()
     table_2( results_df )
     backrub_temp_table( results_df )
+    ddg_monomer_table( results_df )
 
     compile_latex()
