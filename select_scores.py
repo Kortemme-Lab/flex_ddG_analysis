@@ -223,6 +223,8 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
 
     single = set()
     multiple = set()
+    multiple_all_ala = set()
+    multiple_none_ala = set()
     all_ala = set()
     all_s2l = set()
     all_l2s = set()
@@ -250,6 +252,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
             multiple.add( dataset_id )
 
         mutants_all_ala = True
+        mutants_any_ala = False
 
         mutants_some_s2l = False
         mutants_all_s2l = True
@@ -261,6 +264,8 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
             if mutants_all_ala and mutation[-1] != 'A':
                 mutants_all_ala = False
 
+            if not mutants_any_ala and mutation[-1] == 'A':
+                mutation_any_ala = True
 
             if  amino_acid_details[mutation[0]]['van_der_Waals_volume'] < amino_acid_details[mutation[-1]]['van_der_Waals_volume']:
                 mutants_some_s2l = True
@@ -269,8 +274,13 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
                 mutants_all_s2l = False
                 mutants_some_l2s = True
 
+        if not mutants_any_ala and len(mutations) > 1:
+            multiple_none_ala.add( dataset_id )
+
         if mutants_all_ala:
             all_ala.add( dataset_id )
+            if len(mutations) > 1:
+                multiple_all_ala.add( dataset_id )
 
         if mutants_all_s2l:
             all_s2l.add( dataset_id )
@@ -288,6 +298,8 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
         print 'Summary:'
         print 'Single mutations:', len(single)
         print 'Multiple mutations:', len(multiple)
+        print 'Multiple (none ala):', len(multiple_none_ala)
+        print 'Multiple (all ala):', len(multiple_all_ala)
         print 'All alanines:', len(all_ala)
         print 'All small to large:', len(all_s2l)
         print 'All large to small:', len(all_l2s)
@@ -300,6 +312,8 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
 
     subsets_dict = {}
     subsets_dict['mult_mut'] = sorted(multiple)
+    subsets_dict['mult_all_ala'] = sorted(multiple_all_ala)
+    subsets_dict['mult_none_ala'] = sorted(multiple_none_ala)
     subsets_dict['sing_mut'] = sorted(single)
     subsets_dict['s2l'] = sorted(all_s2l)
     subsets_dict['some_s2l'] = sorted(some_s2l)
