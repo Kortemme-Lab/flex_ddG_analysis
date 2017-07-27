@@ -379,9 +379,9 @@ def figure_2():
     # ax2.set_yticklabels([])
     ax4.set_ylabel('')
 
-    ax1.set_title( '(a) Backrub (%d steps) - %s' % (best_step_a, mut_types[top_subset]) )
+    ax1.set_title( '(a) Backrub - %s' % (mut_types[top_subset]) )
     ax2.set_title( '(b) Control - %s' % (mut_types[top_subset] ) )
-    ax3.set_title( '(c) Backrub (%d steps) - %s' % (best_step_c, mut_types[bottom_subset]) )
+    ax3.set_title( '(c) Backrub - %s' % (mut_types[bottom_subset]) )
     ax4.set_title( '(d) Control - %s' % (mut_types[bottom_subset]) )
 
     # Assert that these lengths are equal since N is displayed for top and bottom together
@@ -677,7 +677,20 @@ def ddg_monomer_table( results_df ):
 
     subset_table( 'table-temperature', results_df, display_runs, caption_text )
 
-def subset_table( table_name, results_df, display_runs, caption_text ):
+def multiple_table( results_df ):
+    # PredictionRun, Step, StructureOrder
+    display_runs = [
+        ('zemu_1.2-60000_rscript_validated-t14', 35000, 'id_50'),
+        ('zemu-values', 11, 'id_01'),
+    ]
+    caption_text = "Multiple mutations results. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+
+    subset_table( 'table-mult', results_df, display_runs, caption_text, table_mut_types = ['mult_mut', 'mult_all_ala', 'mult_none_ala', 'ala'] )
+
+def subset_table( table_name, results_df, display_runs, caption_text, table_mut_types = None ):
+    if table_mut_types == None:
+        table_mut_types = display_mut_types
+
     # Determine if StructureOrder needs to be included as a column
     unique_structure_orders = {}
     for run_name, step, structure_order in display_runs:
@@ -716,7 +729,7 @@ def subset_table( table_name, results_df, display_runs, caption_text ):
     annotated_run_names = copy.copy( run_names )
 
     results_subset = pd.DataFrame()
-    for mut_type_i, mut_type in enumerate(display_mut_types):
+    for mut_type_i, mut_type in enumerate(table_mut_types):
         for run_name, step, structure_order in display_runs:
             new_row = results_df.loc[ (results_df['PredictionRun'] == run_name) & (results_df['Step'] == step) & (results_df['StructureOrder'] == structure_order ) & (results_df['MutTypes'] == mut_type) ]
 
@@ -859,5 +872,6 @@ if __name__ == '__main__':
     table_2( results_df )
     backrub_temp_table( results_df )
     ddg_monomer_table( results_df )
+    multiple_table( results_df )
 
     compile_latex()
