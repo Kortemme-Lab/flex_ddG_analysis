@@ -738,11 +738,11 @@ def subset_table( table_name, results_df, display_runs, caption_text, table_mut_
             # Annotate run name further if necessary
             if 'ddg_monomer' in run_name and step == 7:
                 new_run_name = run_name + '-7'
-                annotated_run_names[new_run_name] = annotated_run_names[run_name] + ' (soft rescore)'
+                annotated_run_names[new_run_name] = annotated_run_names[run_name] + ' (soft-rep)'
                 new_row = new_row.replace( { run_name : new_run_name } )
             elif 'ddg_monomer' in run_name and step == 8:
                 new_run_name = run_name + '-8'
-                annotated_run_names[new_run_name] = annotated_run_names[run_name] + ' (hard rescore)'
+                annotated_run_names[new_run_name] = annotated_run_names[run_name] + ' (hard-rep)'
                 new_row = new_row.replace( { run_name : new_run_name } )
 
             if len(new_row) != 1:
