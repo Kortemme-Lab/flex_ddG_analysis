@@ -14,6 +14,8 @@ import copy
 
 csv_paths = [
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-t14-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-ref-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-ref-WildTypeComplex_50.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-id_50.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-WildTypeComplex_03.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-WildTypeComplex_50.csv.gz' ),

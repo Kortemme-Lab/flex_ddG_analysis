@@ -34,10 +34,10 @@ temp_16 = ddg_benchmark_run(
 )
 
 all_runs = [
-    ### zemu_values,
-    ### ddg_monomer_run,
-    ### talaris_control_run,
-    ### talaris_60k_run,
+    ref_run,
+    zemu_values,
+    ddg_monomer_run,
+    talaris_control_run,
+    talaris_60k_run,
     temp_16,
-    # ref_run,
 ]
