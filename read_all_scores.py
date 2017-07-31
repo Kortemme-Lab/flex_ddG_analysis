@@ -689,6 +689,17 @@ def multiple_table( results_df ):
 
     subset_table( 'table-mult', results_df, display_runs, caption_text, table_mut_types = ['mult_mut', 'mult_all_ala', 'mult_none_ala', 'ala'] )
 
+def antibodies_table( results_df ):
+    # PredictionRun, Step, StructureOrder
+    display_runs = [
+        ('zemu_1.2-60000_rscript_validated-t14', 32500, 'id_50'),
+        ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
+        ('zemu-values', 11, 'id_01'),
+    ]
+    caption_text = "Antibodies. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+
+    subset_table( 'table-antibodies', results_df, display_runs, caption_text, table_mut_types = ['complete', 'antibodies'] )
+
 def subset_table( table_name, results_df, display_runs, caption_text, table_mut_types = None ):
     if table_mut_types == None:
         table_mut_types = display_mut_types
@@ -875,5 +886,6 @@ if __name__ == '__main__':
     backrub_temp_table( results_df )
     ddg_monomer_table( results_df )
     multiple_table( results_df )
+    antibodies_table( results_df )
 
     compile_latex()

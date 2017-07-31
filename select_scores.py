@@ -221,6 +221,8 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
 
     df = pd.read_sql_query( dataset_query, mysql_con)
 
+    antibody_pdbs = [ x.upper() for x in pd.read_csv( 'antibodies.csv', sep = '\t' )['pdb'].values ]
+
     single = set()
     multiple = set()
     multiple_all_ala = set()
@@ -235,9 +237,14 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
     res_gt15_lt25 = set()
     res_lte15 = set()
 
+    antibodies = set()
+
     for index, row in df.iterrows():
         mutations = [ x.split()[1] for x in row['Mutations'].split(';') ] # Split, and throw away chains
         dataset_id = row['DataSetID']
+
+        if row['PDBFileID'] in antibody_pdbs:
+            antibodies.add( dataset_id )
 
         if row['Resolution'] <= 1.5:
             res_lte15.add( dataset_id )
@@ -308,6 +315,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
         print 'High res (res_lte15):', len(res_lte15)
         print 'Med res (res_gt15_lt25):', len(res_gt15_lt25)
         print 'Low res(res_gte25):', len(res_gte25)
+        print 'Antibodies:', len(antibodies)
         print
 
     subsets_dict = {}
@@ -323,6 +331,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
     subsets_dict['res_lte15'] = sorted(res_lte15)
     subsets_dict['res_gt15_lt25'] = sorted(res_gt15_lt25)
     subsets_dict['res_gte25'] = sorted(res_gte25)
+    subsets_dict['antibodies'] = sorted(antibodies)
 
     with open('subsets.json', 'w') as f:
         json.dump(subsets_dict, f)
