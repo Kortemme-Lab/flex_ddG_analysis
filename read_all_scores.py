@@ -73,7 +73,7 @@ run_names = {
     'zemu_1.2-60000_rscript_validated-t14' : 'ddG backrub',
     'zemu-brub_1.6-nt10000' : 'ddG backrub (1.6 kT)',
     'ddg_monomer_16_003-zemu-2' : 'ddG monomer',
-    'zemu_control' : 'minimization only control',
+    'zemu_control' : 'no backrub control',
     'zemu-values' : 'ZEMu paper',
 }
 
@@ -246,10 +246,10 @@ def make_results_df( generate_plots = False, print_statistics = False ):
                     if generate_plots:
                         fig = plt.figure(figsize=(8.5, 8.5), dpi=600)
                         ax = fig.add_subplot(1, 1, 1)
-                        sns.regplot(x="total", y="ExperimentalDDG", data = sub_df, ax=ax, scatter_kws = { 's' : 4.5 } )
+                        sns.regplot(y="total", x="ExperimentalDDG", data = sub_df, ax=ax, scatter_kws = { 's' : 4.5 } )
 
                         sns.regplot(
-                            x="total", y="ExperimentalDDG", data = sub_df, ax=outer_ax,
+                            y="total", x="ExperimentalDDG", data = sub_df, ax=outer_ax,
                             color = ( float(num_steps - step_i) / num_steps, 0, ( float(step_i) / num_steps ) ),
                             scatter_kws = { 's' : 2 },
                         )
@@ -307,7 +307,7 @@ def figure_2():
     line_kws = { 'linewidth' : 0.9 }
 
     df = load_df()
-    exp_colname = 'Experimental DDG'
+    exp_colname = 'Experimental ddG'
     pred_colname = 'Rosetta Score'
     top_subset = 'complete'
     bottom_subset = 's2l'
@@ -338,6 +338,11 @@ def figure_2():
     df_d = df.loc[ (df['PredictionRunName'] == control_run_name) & (df['MutType'] == bottom_subset) & (df['ScoreMethodID'] == best_step_d) ]
     ax4 = fig.add_subplot( 2, 2, 4 )
 
+    # Override b, c, d best steps to just be the same as a
+    best_step_b = best_step_a
+    best_step_c = best_step_a
+    best_step_d = best_step_a
+
     xmin = min( df_a[pred_colname].min(), df_b[pred_colname].min(), df_c[pred_colname].min(), df_d[pred_colname].min() )
     xmax = max( df_a[pred_colname].max(), df_b[pred_colname].max(), df_c[pred_colname].max(), df_d[pred_colname].max() )
     ymin = min( df_a[exp_colname].min(), df_b[exp_colname].min(), df_c[exp_colname].min(), df_d[exp_colname].min() )
@@ -352,7 +357,7 @@ def figure_2():
     ax4.set_ylim( ymin, ymax )
 
     sns.regplot(
-        x = pred_colname, y = exp_colname,
+        y = pred_colname, x = exp_colname,
         data = df_a, ax = ax1,
         scatter_kws = scatter_kws,
         line_kws = line_kws,
@@ -360,7 +365,7 @@ def figure_2():
         color = sns.color_palette()[0],
     )
     sns.regplot(
-        x = pred_colname, y = exp_colname,
+        y = pred_colname, x = exp_colname,
         data = df_b, ax = ax2,
         scatter_kws = scatter_kws,
         line_kws = line_kws,
@@ -368,7 +373,7 @@ def figure_2():
         color = sns.color_palette()[0],
     )
     sns.regplot(
-        x = pred_colname, y = exp_colname,
+        y = pred_colname, x = exp_colname,
         data = df_c, ax = ax3,
         scatter_kws = scatter_kws,
         line_kws = line_kws,
@@ -376,7 +381,7 @@ def figure_2():
         color = sns.color_palette()[0],
     )
     sns.regplot(
-        x = pred_colname, y = exp_colname,
+        y = pred_colname, x = exp_colname,
         data = df_d, ax = ax4,
         scatter_kws = scatter_kws,
         line_kws = line_kws,
@@ -451,7 +456,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets ):
     line_kws = { 'linewidth' : 0.9 }
 
     df = load_df()
-    exp_colname = 'Experimental DDG'
+    exp_colname = 'Experimental ddG'
     pred_colname = 'Rosetta Score'
     df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
     df = df.rename( columns = {'total' : pred_colname} )
@@ -483,9 +488,9 @@ def steps_vs_corr( output_figure_name, mut_type_subsets ):
         rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
         maes = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
 
-        ax.plot( rs['ScoreMethodID'], rs['Experimental DDG'], 'o', color = current_palette[0] )
-        r_min = min( r_min, min(rs['Experimental DDG']) )
-        r_max = max( r_max, max(rs['Experimental DDG']) )
+        ax.plot( rs['ScoreMethodID'], rs['Experimental ddG'], 'o', color = current_palette[0] )
+        r_min = min( r_min, min(rs['Experimental ddG']) )
+        r_max = max( r_max, max(rs['Experimental ddG']) )
 
         ax2 = ax.twinx()
         ax2.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
@@ -561,7 +566,7 @@ def figure_4():
         scatter_kws = { 's' : point_size, 'alpha' : alpha }
         line_kws = { 'linewidth' : 0.9 }
 
-        exp_colname = 'Experimental DDG'
+        exp_colname = 'Experimental ddG'
         pred_colname = 'Rosetta Score'
         df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
         df = df.rename( columns = {'total' : pred_colname} )
@@ -593,7 +598,7 @@ def figure_4():
             rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby(['StructureOrder', 'ScoreMethodID'])[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
 
             # Determine best correlation step
-            argmax = rs['Experimental DDG'].argmax()
+            argmax = rs['Experimental ddG'].argmax()
             best_step_id = rs.ix[argmax]['ScoreMethodID']
             best_step_ids.append( best_step_id )
             ax.set_title( '%s' % (mut_types[mut_type_subset]) )
@@ -605,9 +610,9 @@ def figure_4():
             assert( len( n.drop_duplicates() ) == 1 )
             ns.append( n.drop_duplicates().values[0] )
 
-            ax.plot( rs['StructureOrder'], rs['Experimental DDG'], 'o', color = current_palette[0] )
-            r_min = min( r_min, min(rs['Experimental DDG']) )
-            r_max = max( r_max, max(rs['Experimental DDG']) )
+            ax.plot( rs['StructureOrder'], rs['Experimental ddG'], 'o', color = current_palette[0] )
+            r_min = min( r_min, min(rs['Experimental ddG']) )
+            r_max = max( r_max, max(rs['Experimental ddG']) )
 
             ax2 = ax.twinx()
             ax2.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
