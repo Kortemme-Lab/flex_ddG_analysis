@@ -48,7 +48,7 @@ if not os.path.isdir(output_dir):
     os.makedirs(output_dir)
 
 display_mut_types = [
-    'complete', 'ala', 'sing_mut', 'mult_mut', 's2l',
+    'complete', 'sing_ala', 'mult_mut', 's2l',
 ]
 
 mut_types = {
@@ -59,12 +59,14 @@ mut_types = {
     'mult_none_ala' : 'Multiple, none alanine',
     's2l' : 'Small-To-Large Mutation(s)',
     'l2s' : 'Large-To-Small',
-    'ala' : 'Mutation(s) to Alanine',
+    'ala' : 'Mutation(s) to alanine',
+    'sing_ala' : 'Single mutation to alanine',
     'res_gte25' : 'Res. >= 2.5$\AA$',
     'res_lte15' : 'Res. <= 1.5$\AA$',
     'res_gt15_lt25' : '1.5$\AA$ < Res. < 2.5$\AA$',
     'some_s2l' : 'Some Small-To-Large',
     'some_l2s' : 'Some Large-To-Small',
+    'antibodies' : 'Antibodies',
 }
 
 run_names = {
@@ -142,6 +144,14 @@ def save_latex( latex_template_file, sub_dict, out_tex_name = None ):
 
     with open( os.path.join( latex_output_dir, out_tex_name ), 'w') as f:
         f.write( latex_template )
+
+def isfloat(x):
+    try:
+        x = float(x)
+    except ValueError:
+        return False
+
+    return True
 
 def compile_latex():
     shutil.copy( main_template_latex_file, latex_output_dir )
@@ -524,7 +534,7 @@ def figure_4():
     sorting_types = ['WildTypeComplex', 'id']
     base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
     number_of_structures = 50
-    mut_type_subsets = ['complete', 's2l', 'sing_mut', 'ala']
+    mut_type_subsets = ['complete', 's2l', 'sing_mut', 'sing_ala']
 
     for sorting_type in sorting_types:
         structure_orders = []
@@ -719,9 +729,9 @@ def subset_table( table_name, results_df, display_runs, caption_text, table_mut_
 
     if include_structure_order_column:
         display_columns = collections.OrderedDict( [
+            ('MutTypes', 'Mutation Category'),
             ('PredictionRun', 'Prediction Method'),
             ('N', 'N'),
-            ('MutTypes', 'Mutation Category'),
             ('StructureOrder', 'Num/Sorting of Structs'),
             ('R', 'R'),
             ('MAE', 'MAE'),
@@ -729,9 +739,9 @@ def subset_table( table_name, results_df, display_runs, caption_text, table_mut_
         ] )
     else:
         display_columns = collections.OrderedDict( [
+            ('MutTypes', 'Mutation Category'),
             ('PredictionRun', 'Prediction Method'),
             ('N', 'N'),
-            ('MutTypes', 'Mutation Category'),
             ('R', 'R'),
             ('MAE', 'MAE'),
             ('FractionCorrect', 'FC'),
@@ -768,7 +778,7 @@ def subset_table( table_name, results_df, display_runs, caption_text, table_mut_
             # Extra caption text (only for first loop through mut_types)
             if mut_type_i == 0:
                 if step >= 50:
-                    caption_text += ' %s backrub steps = %d.' % ( run_names[run_name], step )
+                    caption_text += ' %s steps = %d.' % ( run_names[run_name], step )
 
 
     out_path = os.path.join( output_fig_path, '%s.csv' % table_name.replace('-', '_') )
@@ -815,26 +825,36 @@ def subset_table( table_name, results_df, display_runs, caption_text, table_mut_
         new_rows = []
 
         best_row_results = {}
+        col_vals = {}
         # First pass to find best
         for row in rows:
-            for i, result in enumerate( [x.strip('\\').strip() for x in row.split('&')]):
+            for i, result in enumerate( [x.strip().replace('\\', '').strip() for x in row.split('&')]):
                 if i >= first_numeric_column and (
                         ( i in lower_better_columns and (i not in best_row_results or float(result) <= float(best_row_results[i])) )
                         or
                         ( i in higher_better_columns and (i not in best_row_results or float(result) >= float(best_row_results[i])) )
                 ):
                     best_row_results[i] = result
+                if i not in col_vals:
+                    col_vals[i] = set()
+                col_vals[i].add( result )
 
         # Second pass to add bolding
-        for row in rows:
-            row_data = row.split('&')
+        for row_i, row in enumerate(rows):
+            row_data = [x.strip().replace('\\', '').strip() for x in row.split('&')]
             new_row_data = []
             for i, cell in enumerate( row_data ):
-                if i in best_row_results and best_row_results[i] in cell:
-                    new_row_data.append( cell.replace( best_row_results[i], '\\textbf{' + best_row_results[i] + '}' ) )
+                if i < first_numeric_column and len( col_vals[i] ) == 1:
+                    if row_i == 0:
+                        new_row_data.append( ' \multirow{ %d}{*}{%s} ' % (len(rows), cell) )
+                    else:
+                        new_row_data.append( ' ' )
                 else:
-                    new_row_data.append( cell )
-            new_rows.append( '&'.join( new_row_data ) )
+                    if i in best_row_results and best_row_results[i] in cell:
+                        new_row_data.append(' %s ' % cell.replace( best_row_results[i], '\\textbf{' + best_row_results[i] + '}' ) )
+                    else:
+                        new_row_data.append( ' %s ' %cell )
+            new_rows.append( '&'.join( new_row_data ).replace('_', '\\_') + ' \\\\' )
         new_group_rows.append( new_rows )
 
     group_rows = new_group_rows
@@ -875,7 +895,7 @@ if __name__ == '__main__':
 
     table_1()
     figure_2()
-    steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'ala'] )
+    steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'sing_ala'] )
     steps_vs_corr( 'fig3_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
     steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
     steps_vs_corr( 'fig3_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
