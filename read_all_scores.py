@@ -48,7 +48,7 @@ if not os.path.isdir(output_dir):
     os.makedirs(output_dir)
 
 display_mut_types = [
-    'complete', 'sing_ala', 'mult_mut', 's2l',
+    'complete', 's2l', 'sing_ala', 'mult_mut',
 ]
 
 mut_types = {
