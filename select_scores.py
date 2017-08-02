@@ -330,6 +330,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
     subsets_dict['s2l'] = sorted(all_s2l)
     subsets_dict['some_s2l'] = sorted(some_s2l)
     subsets_dict['ala'] = sorted(all_ala)
+    subsets_dict['sing_ala'] = sorted(sing_ala)
     subsets_dict['l2s'] = sorted(all_l2s)
     subsets_dict['some_l2s'] = sorted(some_l2s)
     subsets_dict['res_lte15'] = sorted(res_lte15)
@@ -338,7 +339,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
     subsets_dict['antibodies'] = sorted(antibodies)
 
     with open('subsets.json', 'w') as f:
-        json.dump(subsets_dict, f, sort_keys=False)
+        json.dump(subsets_dict, f, sort_keys = True, indent = 2)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some integers.')
