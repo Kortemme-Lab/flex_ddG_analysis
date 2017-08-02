@@ -228,6 +228,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
     multiple_all_ala = set()
     multiple_none_ala = set()
     all_ala = set()
+    sing_ala = set()
     all_s2l = set()
     all_l2s = set()
     some_s2l = set()
@@ -288,6 +289,8 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
             all_ala.add( dataset_id )
             if len(mutations) > 1:
                 multiple_all_ala.add( dataset_id )
+            elif len(mutations) == 1:
+                sing_ala.add( dataset_id )
 
         if mutants_all_s2l:
             all_s2l.add( dataset_id )
@@ -308,6 +311,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
         print 'Multiple (none ala):', len(multiple_none_ala)
         print 'Multiple (all ala):', len(multiple_all_ala)
         print 'All alanines:', len(all_ala)
+        print 'Single alanines:', len(sing_ala)
         print 'All small to large:', len(all_s2l)
         print 'All large to small:', len(all_l2s)
         print 'Some small to large:', len(some_s2l)
@@ -334,7 +338,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
     subsets_dict['antibodies'] = sorted(antibodies)
 
     with open('subsets.json', 'w') as f:
-        json.dump(subsets_dict, f)
+        json.dump(subsets_dict, f, sort_keys=False)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some integers.')
