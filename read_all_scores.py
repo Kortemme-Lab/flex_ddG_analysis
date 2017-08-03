@@ -11,6 +11,7 @@ import json
 import subprocess
 import collections
 import copy
+import string
 
 csv_paths = [
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-t14-id_50.csv.gz' ),
@@ -634,7 +635,7 @@ def figure_structs_vs_corr():
             best_step_id = rs.ix[argmax]['ScoreMethodID']
             best_step_ids.append( best_step_id )
 
-            ax.set_title( '%s' % (mut_types[mut_type_subset]) )
+            ax.set_title( '(%s) - %s' % (string.ascii_lowercase[ax_i], mut_types[mut_type_subset]) )
             rs = rs.loc[ rs['ScoreMethodID'] == best_step_id ]
 
             maes = df.loc[ (df['ScoreMethodID'] == best_step_id) & (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('StructureOrder')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
