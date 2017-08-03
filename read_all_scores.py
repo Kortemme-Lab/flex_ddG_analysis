@@ -43,7 +43,9 @@ import seaborn as sns
 current_palette = sns.color_palette()
 
 for csv_path in csv_paths:
-    assert( os.path.isfile(csv_path) )
+    if not os.path.isfile(csv_path):
+        print csv_path
+        assert( os.path.isfile(csv_path) )
 if not os.path.isdir(output_dir):
     os.makedirs(output_dir)
 
