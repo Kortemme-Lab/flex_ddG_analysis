@@ -454,6 +454,9 @@ def table_composition():
     save_latex( 'latex_templates/table-composition.tex', { 'table-comp' : table_df.to_latex( index=False ) } )
     table_df.to_csv( os.path.join(output_fig_path, 'table_comp.csv') )
 
+def table_versions():
+    save_latex( 'latex_templates/table-versions.tex', run_names )
+
 def steps_vs_corr( output_figure_name, mut_type_subsets ):
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
     point_size = 4.5
@@ -905,8 +908,9 @@ if __name__ == '__main__':
     prediction_error()
 
     table_composition()
+    table_versions()
     figure_scatter()
-    steps_vs_corr( 'steps-v-corr', ['complete', 's2l', 'mult_mut', 'sing_ala'] )
+    steps_vs_corr( 'steps-v-corr', ['complete', 's2l', 'mult_none_ala', 'sing_ala'] )
     steps_vs_corr( 'steps-v-corr_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
     steps_vs_corr( 'steps-v-corr_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
     steps_vs_corr( 'steps-v-corr_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
