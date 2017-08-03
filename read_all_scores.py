@@ -457,7 +457,7 @@ def table_composition():
 def table_versions():
     save_latex( 'latex_templates/table-versions.tex', run_names )
 
-def steps_vs_corr( output_figure_name, mut_type_subsets ):
+def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_control', force_control_in_axes = True ):
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
     point_size = 4.5
     alpha = 0.6
@@ -510,6 +510,23 @@ def steps_vs_corr( output_figure_name, mut_type_subsets ):
 
         ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
         ax2.yaxis.label.set_color(current_palette[1] )
+
+        # Get control performance values
+        control_rs = df.loc[ (df['PredictionRunName'] == control_run) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
+        assert( len(control_rs) == 1 )
+        control_r = control_rs['Experimental ddG'][0]
+        ax.plot( [0], [control_r], marker = 'X', color = current_palette[0] )
+
+        control_maes = df.loc[ (df['PredictionRunName'] == control_run) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
+        assert( len(control_maes.values) == 1 )
+        control_mae = control_maes.values[0]
+        ax2.plot( [0], [control_mae], marker = 'X', color = current_palette[1] )
+
+        if force_control_in_axes:
+            r_min = min( r_min, control_r )
+            r_max = max( r_max, control_r )
+            mae_min = min( mae_min, control_mae )
+            mae_max = max( mae_max, control_mae )
 
         r_axes.append( ax )
         mae_axes.append( ax2 )
