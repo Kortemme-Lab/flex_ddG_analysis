@@ -2,8 +2,8 @@ SHELL := /bin/bash
 
 SOURCES = Makefile
 
-all: fig1.pdf
-fig1.pdf: fig1.dot $(SOURCES)
-	dot -Tpdf -o fig1.pdf fig1.dot
+all: fig-overview.pdf
+fig-overview.pdf: fig-overview.dot $(SOURCES)
+	dot -Tpdf -o fig-overview.pdf fig-overview.dot
 clean:
-	rm fig1.pdf
+	rm fig-overview.pdf

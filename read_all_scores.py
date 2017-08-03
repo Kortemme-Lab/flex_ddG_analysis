@@ -302,7 +302,7 @@ def make_results_df( generate_plots = False, print_statistics = False ):
 
     return results_df
 
-def figure_2():
+def figure_scatter():
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
     control_run_name = 'zemu_control'
     point_size = 4.5
@@ -409,7 +409,7 @@ def figure_2():
     assert( len(df_a) == len(df_b) )
     assert( len(df_c) == len(df_d) )
 
-    out_path = os.path.join( output_fig_path, 'fig2.pdf' )
+    out_path = os.path.join( output_fig_path, 'fig-scatter.pdf' )
     sub_dict = {
         'exp-method-name' : run_names[exp_run_name].capitalize(),
         'numsteps-a' : str( best_step_a ),
@@ -423,10 +423,10 @@ def figure_2():
     }
 
     fig.savefig( out_path )
-    save_latex( 'latex_templates/figure-2.tex', sub_dict )
+    save_latex( 'latex_templates/figure-scatter.tex', sub_dict )
     print out_path
 
-def table_1():
+def table_composition():
     # Dataset composition
     df = load_df()
     df = df.drop_duplicates( ['PredictionRunName', 'DataSetID', 'PredictionID', 'ScoreMethodID', 'MutType', 'total', 'ExperimentalDDG', 'StructureOrder'] )
@@ -449,8 +449,8 @@ def table_1():
 
     print 'Table 1:'
     print table_df.head( n = 20 )
-    save_latex( 'latex_templates/table-1.tex', { 'table-1' : table_df.to_latex( index=False ) } )
-    table_df.to_csv( os.path.join(output_fig_path, 'table_1.csv') )
+    save_latex( 'latex_templates/table-composition.tex', { 'table-comp' : table_df.to_latex( index=False ) } )
+    table_df.to_csv( os.path.join(output_fig_path, 'table_comp.csv') )
 
 def steps_vs_corr( output_figure_name, mut_type_subsets ):
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
@@ -538,7 +538,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets ):
     fig.savefig( out_path )
     print out_path
 
-def figure_4():
+def figure_structs_vs_corr():
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
     sorting_types = ['WildTypeComplex', 'id']
     base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
@@ -644,7 +644,7 @@ def figure_4():
         for ax in mae_axes:
             ax.set_ylim( [mae_min, mae_max] )
 
-        output_figure_name = 'fig4-%s' % sorting_type
+        output_figure_name = 'structs-v-corr-%s' % sorting_type
         out_path = os.path.join( output_fig_path, output_figure_name + '.pdf' )
         sub_dict = {
             'panel-a' : '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[0] ].capitalize(),  ns[0], best_step_ids[0] ),
@@ -659,7 +659,7 @@ def figure_4():
         save_latex( 'latex_templates/structs-vs-corr.tex', sub_dict, out_tex_name = output_figure_name )
         print out_path
 
-def table_2( results_df ):
+def table_main( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', 35000, 'id_50'),
@@ -670,7 +670,7 @@ def table_2( results_df ):
 
     caption_text = "Main results table. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-    subset_table( 'table-2', results_df, display_runs, caption_text )
+    subset_table( 'table-main', results_df, display_runs, caption_text )
 
 def backrub_temp_table( results_df ):
     # PredictionRun, Step, StructureOrder
@@ -902,16 +902,16 @@ def prediction_error():
 if __name__ == '__main__':
     prediction_error()
 
-    table_1()
-    figure_2()
-    steps_vs_corr( 'fig3', ['complete', 's2l', 'mult_mut', 'sing_ala'] )
-    steps_vs_corr( 'fig3_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
-    steps_vs_corr( 'fig3_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
-    steps_vs_corr( 'fig3_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
-    figure_4()
+    table_composition()
+    figure_scatter()
+    steps_vs_corr( 'steps-v-corr', ['complete', 's2l', 'mult_mut', 'sing_ala'] )
+    steps_vs_corr( 'steps-v-corr_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
+    steps_vs_corr( 'steps-v-corr_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
+    steps_vs_corr( 'steps-v-corr_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
+    figure_structs_vs_corr()
 
     results_df = make_results_df()
-    table_2( results_df )
+    table_main( results_df )
     backrub_temp_table( results_df )
     ddg_monomer_table( results_df )
     multiple_table( results_df )
