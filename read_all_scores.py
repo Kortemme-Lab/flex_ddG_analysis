@@ -564,8 +564,10 @@ def figure_structs_vs_corr():
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
     sorting_types = ['WildTypeComplex', 'id']
     base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
+    control_base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
     number_of_structures = 50
-    mut_type_subsets = ['complete', 's2l', 'sing_mut', 'sing_ala']
+    mut_type_subsets = ['complete', 's2l', 'mult_none_ala', 'sing_ala']
+    control_run = 'zemu_control'
 
     for sorting_type in sorting_types:
         structure_orders = []
@@ -578,6 +580,9 @@ def figure_structs_vs_corr():
                 df = pd.read_csv( csv_path )
             else:
                 df = df.append( pd.read_csv( csv_path ) )
+
+            control_csv_path = control_base_path % (control_run, sorting_type, struct_id)
+            df = df.append( pd.read_csv( control_csv_path ) )
 
             structure_orders.append( '%s_%02d' % (sorting_type, struct_id) )
 
@@ -622,30 +627,37 @@ def figure_structs_vs_corr():
             ax.yaxis.label.set_color(current_palette[0] )
             ax.set_xlabel("Number of Structures")
             rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby(['StructureOrder', 'ScoreMethodID'])[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
+            control_rs = df.loc[ (df['PredictionRunName'] == control_run) & (df['MutType'] == mut_type_subset ) ].groupby(['StructureOrder'])[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
 
             # Determine best correlation step
             argmax = rs['Experimental ddG'].argmax()
             best_step_id = rs.ix[argmax]['ScoreMethodID']
             best_step_ids.append( best_step_id )
+
             ax.set_title( '%s' % (mut_types[mut_type_subset]) )
             rs = rs.loc[ rs['ScoreMethodID'] == best_step_id ]
 
             maes = df.loc[ (df['ScoreMethodID'] == best_step_id) & (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('StructureOrder')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
+            control_maes = df.loc[ (df['PredictionRunName'] == control_run) & (df['MutType'] == mut_type_subset ) ].groupby('StructureOrder')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
 
             n = df.loc[ (df['ScoreMethodID'] == best_step_id) & (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('StructureOrder')[[pred_colname, exp_colname]].apply( lambda x: len( x[exp_colname] ) )
             assert( len( n.drop_duplicates() ) == 1 )
             ns.append( n.drop_duplicates().values[0] )
 
-            ax.plot( rs['StructureOrder'], rs['Experimental ddG'], 'o', color = current_palette[0] )
-            r_min = min( r_min, min(rs['Experimental ddG']) )
-            r_max = max( r_max, max(rs['Experimental ddG']) )
+            r_min = min( r_min, min(rs['Experimental ddG']), min(control_rs['Experimental ddG']) )
+            r_max = max( r_max, max(rs['Experimental ddG']), max(control_rs['Experimental ddG']) )
 
             ax2 = ax.twinx()
             ax2.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
             ax2.set_ylabel("MAE")
+
+            ax2.plot( control_maes.index, control_maes.values, 's', color = (1.0 + np.array( current_palette[1] )) / 2.0 )
             ax2.plot( maes.index, maes.values, 's', color = current_palette[1] )
-            mae_min = min( mae_min, min(maes.values) )
-            mae_max = max( mae_max, max(maes.values) )
+            ax.plot( control_rs['StructureOrder'], control_rs['Experimental ddG'], 'o', color = (1.0 + np.array( current_palette[0] )) / 2.0 )
+            ax.plot( rs['StructureOrder'], rs['Experimental ddG'], 'o', color = current_palette[0] )
+
+            mae_min = min( mae_min, min(maes.values), min(control_maes.values) )
+            mae_max = max( mae_max, max(maes.values), max(control_maes.values) )
 
             ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
             ax2.yaxis.label.set_color(current_palette[1] )
@@ -675,6 +687,8 @@ def figure_structs_vs_corr():
             'panel-d' : '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[3] ].capitalize(),  ns[3], best_step_ids[3] ),
             'fig-label' : output_figure_name,
             'fig-path' : out_path,
+            'exp-run-name' : run_names[exp_run_name],
+            'control-name' : run_names[control_run],
         }
 
         fig.savefig( out_path )
