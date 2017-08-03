@@ -131,6 +131,10 @@ def add_score_categories(df, mut_type_subsets = None):
     return df
 
 def save_latex( latex_template_file, sub_dict, out_tex_name = None ):
+    if 'fig-path' in sub_dict:
+        shutil.copy( sub_dict['fig-path'], latex_output_dir )
+        sub_dict['fig-path'] = os.path.basename( sub_dict['fig-path'] )
+
     if out_tex_name == None:
         out_tex_name = os.path.basename( latex_template_file )
     if not out_tex_name.endswith( '.tex' ):
@@ -415,7 +419,7 @@ def figure_2():
         'control-method-name' : run_names[control_run_name].capitalize(),
         'bottom-subset' : mut_types[bottom_subset].capitalize(),
         'bottom-n' : str( len(df_c) ),
-        'fig-path' : os.path.relpath(out_path, latex_output_dir),
+        'fig-path' : out_path,
     }
 
     fig.savefig( out_path )
@@ -525,7 +529,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets ):
         'panel-c' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[2] ].capitalize(),  ns[2] ),
         'panel-d' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[3] ].capitalize(),  ns[3] ),
         'fig-label' : output_figure_name,
-        'fig-path' : os.path.relpath(out_path, latex_output_dir),
+        'fig-path' : out_path,
     }
 
     fig.savefig( out_path )
@@ -648,7 +652,7 @@ def figure_4():
             'panel-c' : '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[2] ].capitalize(),  ns[2], best_step_ids[2] ),
             'panel-d' : '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[3] ].capitalize(),  ns[3], best_step_ids[3] ),
             'fig-label' : output_figure_name,
-            'fig-path' : os.path.relpath(out_path, latex_output_dir),
+            'fig-path' : out_path,
         }
 
         fig.savefig( out_path )
