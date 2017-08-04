@@ -64,9 +64,9 @@ mut_types = {
     'l2s' : 'Large-To-Small',
     'ala' : 'Mutation(s) to alanine',
     'sing_ala' : 'Single mutation to alanine',
-    'res_gte25' : 'Res. >= 2.5$\AA$',
-    'res_lte15' : 'Res. <= 1.5$\AA$',
-    'res_gt15_lt25' : '1.5$\AA$ < Res. < 2.5$\AA$',
+    'res_gte25' : 'Res. >= 2.5 Ang.',
+    'res_lte15' : 'Res. <= 1.5 Ang.',
+    'res_gt15_lt25' : '1.5 Ang. < Res. < 2.5 Ang.',
     'some_s2l' : 'Some Small-To-Large',
     'some_l2s' : 'Some Large-To-Small',
     'antibodies' : 'Antibodies',
@@ -74,6 +74,7 @@ mut_types = {
 
 run_names = {
     'zemu_1.2-60000_rscript_validated-t14' : 'ddG backrub',
+    'zemu_1.2-60000_rscript_validated-ref' : 'ddG backrub (REF energy)',
     'zemu-brub_1.6-nt10000' : 'ddG backrub (1.6 kT)',
     'ddg_monomer_16_003-zemu-2' : 'ddG monomer',
     'zemu_control' : 'no backrub control',
@@ -710,6 +711,24 @@ def table_main( results_df ):
 
     subset_table( 'table-main', results_df, display_runs, caption_text )
 
+def table_ref( results_df ):
+    # PredictionRun, Step, StructureOrder
+    display_runs = [
+        ('zemu_1.2-60000_rscript_validated-t14', 35000, 'id_50'),
+        ('zemu_1.2-60000_rscript_validated-ref', 35000, 'id_50'),
+        ('zemu_1.2-60000_rscript_validated-t14', 10000, 'id_50'),
+        ('zemu_1.2-60000_rscript_validated-ref', 10000, 'id_50'),
+    ]
+
+    caption_text = "REF results. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+
+    table_mut_types = [
+        'complete', 's2l', 'sing_ala', 'mult_mut',
+        'res_lte15', 'res_gte25',
+    ]
+
+    subset_table( 'table-ref', results_df, display_runs, caption_text, table_mut_types = table_mut_types )
+
 def backrub_temp_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
@@ -951,6 +970,7 @@ if __name__ == '__main__':
     figure_structs_vs_corr( 'ddg_monomer_16_003-zemu-2' )
 
     results_df = make_results_df()
+    table_ref( results_df )
     table_main( results_df )
     backrub_temp_table( results_df )
     ddg_monomer_table( results_df )
