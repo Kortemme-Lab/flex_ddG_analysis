@@ -561,8 +561,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
     fig.savefig( out_path )
     print out_path
 
-def figure_structs_vs_corr():
-    exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
+def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14' ):
     sorting_types = ['WildTypeComplex', 'id']
     base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
     control_base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
@@ -679,18 +678,20 @@ def figure_structs_vs_corr():
         for ax in mae_axes:
             ax.set_ylim( [mae_min, mae_max] )
 
-        output_figure_name = 'structs-v-corr-%s' % sorting_type
+        output_figure_name = 'structs-v-corr-%s-%s' % (sorting_type, exp_run_name)
+        output_figure_name = output_figure_name.replace('_', '-').replace('.', '')
         out_path = os.path.join( output_fig_path, output_figure_name + '.pdf' )
         sub_dict = {
-            'panel-a' : '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[0] ].capitalize(),  ns[0], best_step_ids[0] ),
-            'panel-b' : '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[1] ].capitalize(),  ns[1], best_step_ids[1] ),
-            'panel-c' : '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[2] ].capitalize(),  ns[2], best_step_ids[2] ),
-            'panel-d' : '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[3] ].capitalize(),  ns[3], best_step_ids[3] ),
             'fig-label' : output_figure_name,
             'fig-path' : out_path,
             'exp-run-name' : run_names[exp_run_name],
             'control-name' : run_names[control_run],
         }
+        for alpha_i, alpha in enumerate( string.ascii_lowercase[:4] ):
+            if best_step_ids[alpha_i] >= 10:
+                sub_dict[ 'panel-' + alpha ] = '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i], best_step_ids[alpha_i] )
+            else:
+                sub_dict[ 'panel-' + alpha ] = '%s (n = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i] )
 
         fig.savefig( out_path )
         save_latex( 'latex_templates/structs-vs-corr.tex', sub_dict, out_tex_name = output_figure_name )
@@ -947,6 +948,7 @@ if __name__ == '__main__':
     steps_vs_corr( 'steps-v-corr_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
     steps_vs_corr( 'steps-v-corr_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
     figure_structs_vs_corr()
+    figure_structs_vs_corr( 'ddg_monomer_16_003-zemu-2' )
 
     results_df = make_results_df()
     table_main( results_df )
