@@ -716,8 +716,6 @@ def table_ref( results_df ):
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', 35000, 'id_50'),
         ('zemu_1.2-60000_rscript_validated-ref', 35000, 'id_50'),
-        ('zemu_1.2-60000_rscript_validated-t14', 10000, 'id_50'),
-        ('zemu_1.2-60000_rscript_validated-ref', 10000, 'id_50'),
     ]
 
     caption_text = "REF results. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
