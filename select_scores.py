@@ -24,7 +24,7 @@ desired_summed_and_averaged_columns = [
 
 global_score_columns = [
     'total',
-    'fa_atr', 'fa_dun', 'fa_elec', 'fa_intra_rep', 'fa_rep', 'fa_sol', 'hbond_bb_sc', 'hbond_lr_bb', 'hbond_sc', 'hbond_sr_bb', 'omega', 'p_aa_pp', 'pro_close', 'rama', 'ref', 'yhh_planarity', 'fa_dun_dev', 'fa_dun_rot', 'fa_dun_semi', 'fa_intra_atr_xover4', 'fa_intra_elec', 'fa_intra_rep_xover4', 'fa_intra_sol_xover4', 'hxl_tors', 'lk_ball', 'lk_ball_bridge', 'lk_ball_bridge_uncpl', 'lk_ball_iso', 'rama_prepro',
+    'fa_atr', 'fa_dun', 'fa_elec', 'fa_intra_rep', 'fa_rep', 'fa_sol', 'hbond_bb_sc', 'hbond_lr_bb', 'hbond_sc', 'hbond_sr_bb', 'omega', 'p_aa_pp', 'pro_close', 'rama', 'ref', 'yhh_planarity', 'fa_dun_dev', 'fa_dun_rot', 'fa_dun_semi', 'fa_intra_atr_xover4', 'fa_intra_elec', 'fa_intra_rep_xover4', 'fa_intra_sol_xover4', 'hxl_tors', 'lk_ball', 'lk_ball_bridge', 'lk_ball_bridge_uncpl', 'lk_ball_iso', 'rama_prepro', 'lk_ball_wtd',
     'cart_bonded',
 ]
 
@@ -163,6 +163,9 @@ def sum_and_average():
     output_dir = os.path.join( dataframe_cache, 'summed_and_averaged' )
     if not os.path.isdir( output_dir ):
         os.makedirs( output_dir )
+    partial_output_dir = os.path.join( dataframe_cache, 'partial_summed_and_averaged' )
+    if not os.path.isdir( partial_output_dir ):
+        os.makedirs( partial_output_dir )
 
     for benchmark_run, structure_order, df_path in paths_to_analyze:
         print 'Summing and averaging:', df_path
@@ -181,6 +184,7 @@ def sum_and_average():
         )
         complex_scores_df = complex_scores_df.sort_index() #( columns = ['PredictionID', 'StructureID', ] )
         summed_df_noindex = complex_scores_df.groupby(id_columns[:-1], as_index = False)[this_score_columns].sum()
+        # Check that each group of ScoreTypes has no null values
         desired_group_length = len( df['ScoreType'].drop_duplicates() )
         for name, group in complex_scores_df.groupby(id_columns[:-1]):
             if len(group) != desired_group_length:
@@ -200,12 +204,31 @@ def sum_and_average():
         for num_structs in xrange( 1, max_struct_id + 1 ):
             new_structure_order = structure_order + '_%02d' % num_structs
             csv_path = os.path.join( output_dir, '%s-%s.csv.gz' % (benchmark_run.prediction_set_name, new_structure_order) )
-            if os.path.isfile( csv_path ):
-                continue
+            partial_csv_path = os.path.join( partial_output_dir, '%s-%s-%s-partial.csv.gz' % (benchmark_run.prediction_set_name, new_structure_order, '%05d' ) )
 
             subset_summed_df = summed_df.loc[ summed_df['StructureID'] <= num_structs ]
             avg_df = subset_summed_df.groupby(id_columns[:-2])[this_score_columns].mean().round(decimals=4).reset_index()
             avg_df = avg_df.assign( StructureOrder = new_structure_order )
+
+            # Write csv with partial score terms
+            partial_columns = list( set( desired_summed_and_averaged_columns ).union( set(global_score_columns) ) )
+            for backrub_step in sorted( avg_df['ScoreMethodID'].drop_duplicates() ):
+                if backrub_step < 100 or int(backrub_step) % 10000 == 0 and ( (num_structs == 1) or (num_structs % 10 == 0) ):
+                    inner_partial_csv_path = partial_csv_path % int(backrub_step)
+                    if os.path.isfile( inner_partial_csv_path ):
+                        continue
+                    partial_avg_df = avg_df.loc[ avg_df['ScoreMethodID'] == backrub_step ][partial_columns].round(4)
+                    partial_avg_df.sort_values(
+                        ['PredictionRunName', 'DataSetID', 'ScoreMethodID'],
+                        inplace = True,
+                    )
+                    partial_avg_df.to_csv( inner_partial_csv_path, compression = 'gzip' )
+                    print 'Saved:', inner_partial_csv_path
+
+            if os.path.isfile( csv_path ):
+                continue
+
+            # Write csv with only total score terms
             avg_df = avg_df[desired_summed_and_averaged_columns].round(4)
             avg_df.sort_values(
                 ['PredictionRunName', 'DataSetID', 'ScoreMethodID'],
