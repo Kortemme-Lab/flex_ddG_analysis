@@ -770,7 +770,7 @@ def antibodies_table( results_df ):
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
-    caption_text = "Antibodies. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of complexes containing an antibody binding partner. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
     subset_table( 'table-antibodies', results_df, display_runs, caption_text, table_mut_types = ['complete', 'antibodies'] )
 
