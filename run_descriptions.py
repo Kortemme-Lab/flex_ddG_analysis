@@ -18,6 +18,11 @@ ref_run = ddg_benchmark_run(
     5 # Step multiplication factor
 )
 
+ref_run_cart = ddg_benchmark_run(
+    'zemu_1.2-60000_rscript_validated-ref-cart', # Predicton run name
+    5 # Step multiplication factor
+)
+
 ddg_monomer_run = ddg_benchmark_run(
     'ddg_monomer_16_003-zemu-2',
     1
@@ -34,6 +39,7 @@ temp_16 = ddg_benchmark_run(
 )
 
 all_runs = [
+    ref_run_cart,
     ref_run,
     zemu_values,
     ddg_monomer_run,
