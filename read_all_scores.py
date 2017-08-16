@@ -707,9 +707,10 @@ def table_main( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
 
-    caption_text = "Main results table. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    short_caption = "Main results table"
+    caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-    subset_table( 'table-main', results_df, display_runs, caption_text )
+    subset_table( 'table-main', results_df, display_runs, caption_text, short_captio )
 
 def table_ref( results_df ):
     # PredictionRun, Step, StructureOrder
@@ -718,14 +719,15 @@ def table_ref( results_df ):
         ('zemu_1.2-60000_rscript_validated-ref', 35000, 'id_50'),
     ]
 
-    caption_text = "REF results. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    short_caption = "REF results"
+    caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
     table_mut_types = [
         'complete', 's2l', 'sing_ala', 'mult_mut',
         'res_lte15', 'res_gte25',
     ]
 
-    subset_table( 'table-ref', results_df, display_runs, caption_text, table_mut_types = table_mut_types )
+    subset_table( 'table-ref', results_df, display_runs, caption_text, short_caption, table_mut_types = table_mut_types )
 
 def backrub_temp_table( results_df ):
     # PredictionRun, Step, StructureOrder
@@ -734,9 +736,10 @@ def backrub_temp_table( results_df ):
         ('zemu-brub_1.6-nt10000', 10000, 'id_50'),
     ]
 
-    caption_text = "Comparison of backrub temperature results. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    short_caption = "Comparison of backrub temperature results"
+    caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-    subset_table( 'table-temperature', results_df, display_runs, caption_text )
+    subset_table( 'table-temperature', results_df, display_runs, caption_text, short_caption )
 
 def ddg_monomer_table( results_df ):
     # PredictionRun, Step, StructureOrder
@@ -749,9 +752,10 @@ def ddg_monomer_table( results_df ):
     ]
 
 
-    caption_text = "ddG monomer results. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    short_caption = 'ddG monomer results'
+    caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-    subset_table( 'table-temperature', results_df, display_runs, caption_text )
+    subset_table( 'table-temperature', results_df, display_runs, caption_text, short_caption )
 
 def multiple_table( results_df ):
     # PredictionRun, Step, StructureOrder
@@ -759,9 +763,10 @@ def multiple_table( results_df ):
         ('zemu_1.2-60000_rscript_validated-t14', 35000, 'id_50'),
         ('zemu-values', 11, 'id_01'),
     ]
-    caption_text = "Multiple mutations results. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    short_caption = 'Multiple mutations results'
+    caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-    subset_table( 'table-mult', results_df, display_runs, caption_text, table_mut_types = ['mult_mut', 'mult_all_ala', 'mult_none_ala', 'ala'] )
+    subset_table( 'table-mult', results_df, display_runs, caption_text, short_caption, table_mut_types = ['mult_mut', 'mult_all_ala', 'mult_none_ala', 'ala'] )
 
 def antibodies_table( results_df ):
     # PredictionRun, Step, StructureOrder
@@ -770,11 +775,12 @@ def antibodies_table( results_df ):
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
+    short_caption = 'Flex ddG performance on antibodies'
     caption_text = "Performance of the Rosetta flex ddG method on the subset of complexes containing an antibody binding partner. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-    subset_table( 'table-antibodies', results_df, display_runs, caption_text, table_mut_types = ['complete', 'antibodies'] )
+    subset_table( 'table-antibodies', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'antibodies'] )
 
-def subset_table( table_name, results_df, display_runs, caption_text, table_mut_types = None ):
+def subset_table( table_name, results_df, display_runs, caption_text, short_caption, table_mut_types = None ):
     if table_mut_types == None:
         table_mut_types = display_mut_types
 
@@ -936,6 +942,7 @@ def subset_table( table_name, results_df, display_runs, caption_text, table_mut_
         {
             'table-text' : '\n'.join(new_lines),
             'caption' : caption_text,
+            'short-caption' : short_caption,
             'table-label' : table_name
         },
         out_tex_name = table_name,
