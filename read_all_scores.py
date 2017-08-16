@@ -710,7 +710,7 @@ def table_main( results_df ):
     short_caption = "Main results table"
     caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-    subset_table( 'table-main', results_df, display_runs, caption_text, short_captio )
+    subset_table( 'table-main', results_df, display_runs, caption_text, short_caption )
 
 def table_ref( results_df ):
     # PredictionRun, Step, StructureOrder
