@@ -74,9 +74,9 @@ mut_types = {
 }
 
 run_names = {
-    'zemu_1.2-60000_rscript_validated-t14' : 'ddG backrub',
-    'zemu_1.2-60000_rscript_validated-ref' : 'ddG backrub (REF energy)',
-    'zemu-brub_1.6-nt10000' : 'ddG backrub (1.6 kT)',
+    'zemu_1.2-60000_rscript_validated-t14' : 'flex ddG',
+    'zemu_1.2-60000_rscript_validated-ref' : 'flex ddG (REF energy)',
+    'zemu-brub_1.6-nt10000' : 'flex ddG (1.6 kT)',
     'ddg_monomer_16_003-zemu-2' : 'ddG monomer',
     'zemu_control' : 'no backrub control',
     'zemu-values' : 'ZEMu paper',
