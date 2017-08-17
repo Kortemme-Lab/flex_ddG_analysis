@@ -21,7 +21,7 @@ Optimize side chains globally<BR/>
 on <B>wild-type</B> structure
 </FONT> >, shape=box, width = 2.9, height = 0.9];
 
-step3b [label=< <B>Step 3b- Design</B> <BR/><FONT POINT-SIZE="10">
+step3b [label=< <B>Step 3b- Mutate and Pack</B> <BR/><FONT POINT-SIZE="10">
 Optimize side chains globally<BR/>
 on <B>mutant</B> structure<BR/>
 (using the mutant sequence)
