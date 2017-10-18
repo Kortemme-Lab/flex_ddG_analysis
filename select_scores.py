@@ -367,7 +367,9 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
     subsets_dict['res_gte25'] = sorted(res_gte25)
     subsets_dict['antibodies'] = sorted(antibodies)
     for pdb in sorted(by_structure.keys()):
-        subsets_dict[ 'pdb-' + pdb ] = sorted(by_structure[pdb])
+        pdb_dataset_ids = sorted(by_structure[pdb])
+        if len(pdb_dataset_ids) >= 5:
+            subsets_dict[ 'pdb-' + pdb ] = pdb_dataset_ids
 
     with open('subsets.json', 'w') as f:
         json.dump(subsets_dict, f, sort_keys = True, indent = 2)
