@@ -263,12 +263,18 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
 
     antibodies = set()
 
+    by_structure = {}
+
     for index, row in df.iterrows():
         mutations = [ x.split()[1] for x in row['Mutations'].split(';') ] # Split, and throw away chains
         dataset_id = row['DataSetID']
 
         if row['PDBFileID'] in antibody_pdbs:
             antibodies.add( dataset_id )
+
+        if row['PDBFileID'] not in by_structure:
+            by_structure[ row['PDBFileID'] ] = set()
+        by_structure[ row['PDBFileID'] ].add( dataset_id )
 
         if row['Resolution'] <= 1.5:
             res_lte15.add( dataset_id )
@@ -360,6 +366,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
     subsets_dict['res_gt15_lt25'] = sorted(res_gt15_lt25)
     subsets_dict['res_gte25'] = sorted(res_gte25)
     subsets_dict['antibodies'] = sorted(antibodies)
+    subsets_dict['by_structure'] = { pdb : sorted(by_structure[pdb]) for pdb in sorted(by_structure.keys()) }
 
     with open('subsets.json', 'w') as f:
         json.dump(subsets_dict, f, sort_keys = True, indent = 2)
