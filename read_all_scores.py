@@ -71,6 +71,7 @@ mut_types = {
     'some_s2l' : 'Some Small-To-Large',
     'some_l2s' : 'Some Large-To-Small',
     'antibodies' : 'Antibodies',
+    'stabilizing' : 'Stabilizing'
 }
 
 run_names = {
@@ -113,7 +114,7 @@ def add_score_categories(df, mut_type_subsets = None):
         df = df.assign( MutType = 'complete' )
 
     if mut_type_subsets == None or 'stabilizing' in mut_type_subsets:
-        stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
+        stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] < 0) ].copy()
         stabilizing.loc[:,'MutType'] = 'stabilizing'
         df = df.append( stabilizing )
 
@@ -789,9 +790,9 @@ def stabilizing_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on stabilizing mutations'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta$G < 0). R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-    subset_table( 'table-stabilizing', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'stablizing'] )
+    subset_table( 'table-stabilizing', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'stabilizing'] )
 
 def subset_table( table_name, results_df, display_runs, caption_text, short_caption, table_mut_types = None ):
     if table_mut_types == None:
@@ -837,6 +838,10 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
     results_subset = pd.DataFrame()
     for mut_type_i, mut_type in enumerate(table_mut_types):
         for run_name, step, structure_order in display_runs:
+            print run_name, results_df.loc[results_df['PredictionRun'] == run_name].head()
+            print step, results_df.loc[results_df['Step'] == step].head()
+            print structure_order, results_df.loc[ results_df['StructureOrder'] == structure_order ].head()
+            print mut_type, results_df.loc[results_df['MutTypes'] == mut_type].head()
             new_row = results_df.loc[ (results_df['PredictionRun'] == run_name) & (results_df['Step'] == step) & (results_df['StructureOrder'] == structure_order ) & (results_df['MutTypes'] == mut_type) ]
 
             # Annotate run name further if necessary
