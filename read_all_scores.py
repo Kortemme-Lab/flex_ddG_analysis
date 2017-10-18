@@ -701,28 +701,30 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
         print out_path
 
 def table_main( results_df ):
+    backrub_steps = 35000
     # PredictionRun, Step, StructureOrder
     display_runs = [
-        ('zemu_1.2-60000_rscript_validated-t14', 35000, 'id_50'),
+        ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_03'),
         ('zemu_control', 8, 'id_50'),
         ('zemu-values', 11, 'id_01'),
     ]
 
     short_caption = "Main results table"
-    caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    caption_text = short_caption + ". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-main', results_df, display_runs, caption_text, short_caption )
 
 def table_ref( results_df ):
+    backrub_steps = 35000
     # PredictionRun, Step, StructureOrder
     display_runs = [
-        ('zemu_1.2-60000_rscript_validated-t14', 35000, 'id_50'),
-        ('zemu_1.2-60000_rscript_validated-ref', 35000, 'id_50'),
+        ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
+        ('zemu_1.2-60000_rscript_validated-ref', backrub_steps, 'id_50'),
     ]
 
     short_caption = "REF results"
-    caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    caption_text = short_caption + ". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     table_mut_types = [
         'complete', 's2l', 'sing_ala', 'mult_mut',
@@ -732,14 +734,15 @@ def table_ref( results_df ):
     subset_table( 'table-ref', results_df, display_runs, caption_text, short_caption, table_mut_types = table_mut_types )
 
 def backrub_temp_table( results_df ):
+    backrub_steps = 10000
     # PredictionRun, Step, StructureOrder
     display_runs = [
-        ('zemu_1.2-60000_rscript_validated-t14', 10000, 'id_50'),
-        ('zemu-brub_1.6-nt10000', 10000, 'id_50'),
+        ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
+        ('zemu-brub_1.6-nt10000', backrub_steps, 'id_50'),
     ]
 
     short_caption = "Comparison of backrub temperature results"
-    caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    caption_text = short_caption + ". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-temperature', results_df, display_runs, caption_text, short_caption )
 
@@ -760,41 +763,92 @@ def ddg_monomer_table( results_df ):
     subset_table( 'table-temperature', results_df, display_runs, caption_text, short_caption )
 
 def multiple_table( results_df ):
+    backrub_steps = 35000
     # PredictionRun, Step, StructureOrder
     display_runs = [
-        ('zemu_1.2-60000_rscript_validated-t14', 35000, 'id_50'),
+        ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Multiple mutations results'
-    caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    caption_text = short_caption + " (backrub steps = %d). R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-mult', results_df, display_runs, caption_text, short_caption, table_mut_types = ['mult_mut', 'mult_all_ala', 'mult_none_ala', 'ala'] )
 
 def antibodies_table( results_df ):
+    backrub_steps = 32500
     # PredictionRun, Step, StructureOrder
     display_runs = [
-        ('zemu_1.2-60000_rscript_validated-t14', 32500, 'id_50'),
+        ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on antibodies'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of complexes containing an antibody binding partner. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of complexes containing an antibody binding partner (backrub steps = %d). R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-antibodies', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'antibodies'] )
 
 def stabilizing_table( results_df ):
+    backrub_steps = 32500
     # PredictionRun, Step, StructureOrder
     display_runs = [
-        ('zemu_1.2-60000_rscript_validated-t14', 32500, 'id_50'),
+        ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on stabilizing mutations'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta$G < 0). R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta$G < 0). Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-stabilizing', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'stabilizing'] )
 
-def subset_table( table_name, results_df, display_runs, caption_text, short_caption, table_mut_types = None ):
+def by_pdb_table( results_df ):
+    backrub_steps = 32500
+    # PredictionRun, Step, StructureOrder
+    display_runs = [
+        ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
+        ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
+        ('zemu-values', 11, 'id_01'),
+    ]
+    short_caption = 'Flex ddG performance on PDB '
+    caption_text = ". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+
+    display_columns = collections.OrderedDict( [
+        ('MutTypes', 'PDB'),
+        ('PredictionRun', 'Prediction Method'),
+        ('N', 'N'),
+        # ('StructureOrder', 'Num/Sorting of Structs'),
+        ('R', 'R'),
+        ('MAE', 'MAE'),
+        ('FractionCorrect', 'FC'),
+    ] )
+
+    all_middle_lines = []
+    for pdb_mut_type in sorted( [ m for m in results_df['MutTypes'].drop_duplicates().values if m.startswith('pdb-') ] ):
+        filled_short_caption = short_caption + pdb_mut_type[4:]
+        header_lines, group_rows_lines, footer_lines = subset_table( 'table-' + pdb_mut_type, results_df, display_runs, filled_short_caption + caption_text, filled_short_caption, table_mut_types = [pdb_mut_type] )
+        all_middle_lines.append( group_rows_lines )
+
+    new_lines = []
+    new_lines.extend( header_lines )
+    for i, rows in enumerate(all_middle_lines):
+        new_lines.extend( rows )
+        if i < len(all_middle_lines) - 1:
+            new_lines.append( '\hline' )
+    new_lines.extend( footer_lines )
+
+    short_caption = 'Flex ddG performance by structure'
+    table_name = 'table-by-structure'
+    save_latex(
+        'latex_templates/subset-table.tex',
+        {
+            'table-text' : '\n'.join(new_lines),
+            'caption' : short_caption + caption_text,
+            'short-caption' : short_caption,
+            'table-label' : table_name,
+        },
+        out_tex_name = table_name,
+    )
+
+def subset_table( table_name, results_df, display_runs, caption_text, short_caption, table_mut_types = None, display_columns = None ):
     if table_mut_types == None:
         table_mut_types = display_mut_types
 
@@ -811,25 +865,26 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
             include_structure_order_column = True
             break
 
-    if include_structure_order_column:
-        display_columns = collections.OrderedDict( [
-            ('MutTypes', 'Mutation Category'),
-            ('PredictionRun', 'Prediction Method'),
-            ('N', 'N'),
-            ('StructureOrder', 'Num/Sorting of Structs'),
-            ('R', 'R'),
-            ('MAE', 'MAE'),
-            ('FractionCorrect', 'FC'),
-        ] )
-    else:
-        display_columns = collections.OrderedDict( [
-            ('MutTypes', 'Mutation Category'),
-            ('PredictionRun', 'Prediction Method'),
-            ('N', 'N'),
-            ('R', 'R'),
-            ('MAE', 'MAE'),
-            ('FractionCorrect', 'FC'),
-        ] )
+    if display_columns == None:
+        if include_structure_order_column:
+            display_columns = collections.OrderedDict( [
+                ('MutTypes', 'Mutation Category'),
+                ('PredictionRun', 'Prediction Method'),
+                ('N', 'N'),
+                ('StructureOrder', 'Num/Sorting of Structs'),
+                ('R', 'R'),
+                ('MAE', 'MAE'),
+                ('FractionCorrect', 'FC'),
+            ] )
+        else:
+            display_columns = collections.OrderedDict( [
+                ('MutTypes', 'Mutation Category'),
+                ('PredictionRun', 'Prediction Method'),
+                ('N', 'N'),
+                ('R', 'R'),
+                ('MAE', 'MAE'),
+                ('FractionCorrect', 'FC'),
+            ] )
 
 
     # These run names will have step explanations added in, if appropriate
@@ -903,7 +958,7 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
 
     # Bold best numeric in each column of each set of group rows
 
-    # better_columns are a hacky way to determine which metric is "best", since a higher R is better, whereas a lower MAE is better
+    # better_columns defines which metric is "best", since a higher R is better, whereas a lower MAE is better
     # These and first_numeric_columns will need to be changed if display_columns is changed
     lower_better_columns = [ display_columns.keys().index('MAE') ]
     higher_better_columns = [ display_columns.keys().index('R'), display_columns.keys().index('FractionCorrect') ]
@@ -948,11 +1003,14 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
     group_rows = new_group_rows
 
     new_lines = []
+    group_rows_lines = []
     new_lines.extend( header_lines )
     for i, rows in enumerate(group_rows):
         new_lines.extend( rows )
+        group_rows_lines.extend( rows )
         if i < len(group_rows) - 1:
             new_lines.append( '\hline' )
+            group_rows_lines.append( '\hline' )
     new_lines.extend( footer_lines )
 
     save_latex(
@@ -969,6 +1027,7 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
     print table_name
     print beautified_results.head( n = 30 )
     print
+    return (header_lines, group_rows_lines, footer_lines)
 
 def prediction_error():
     # Outputs individual errors for other figure purposes
@@ -993,6 +1052,7 @@ if __name__ == '__main__':
     figure_structs_vs_corr( 'ddg_monomer_16_003-zemu-2' )
 
     results_df = make_results_df()
+    by_pdb_table( results_df )
     table_ref( results_df )
     table_main( results_df )
     backrub_temp_table( results_df )
