@@ -781,6 +781,18 @@ def antibodies_table( results_df ):
 
     subset_table( 'table-antibodies', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'antibodies'] )
 
+def stabilizing_table( results_df ):
+    # PredictionRun, Step, StructureOrder
+    display_runs = [
+        ('zemu_1.2-60000_rscript_validated-t14', 32500, 'id_50'),
+        ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
+        ('zemu-values', 11, 'id_01'),
+    ]
+    short_caption = 'Flex ddG performance on stabilizing mutations'
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+
+    subset_table( 'table-stabilizing', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'stablizing'] )
+
 def subset_table( table_name, results_df, display_runs, caption_text, short_caption, table_mut_types = None ):
     if table_mut_types == None:
         table_mut_types = display_mut_types
@@ -982,5 +994,6 @@ if __name__ == '__main__':
     ddg_monomer_table( results_df )
     multiple_table( results_df )
     antibodies_table( results_df )
+    stabilizing_table( results_df )
 
     compile_latex()
