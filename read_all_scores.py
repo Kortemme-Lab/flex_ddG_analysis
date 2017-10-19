@@ -169,7 +169,12 @@ def compile_latex():
     for i in xrange( 0, 3 ):
         output = subprocess.check_output( ['xelatex', os.path.basename( main_template_latex_file )[:-4] ], cwd = latex_output_dir )
 
-def make_results_df( generate_plots = False, print_statistics = False ):
+def make_results_df( generate_plots = False, print_statistics = False, use_cached_if_available = True ):
+    results_csv_path = os.path.join(output_dir, 'results.csv')
+    if use_cached_if_available and os.path.isfile( results_csv_path ):
+        results_df = pd.read_csv( results_csv_path )
+        return results_df
+
     df = load_df()
 
     # Add 'complete' to front of list so scaling is calculated first
@@ -293,7 +298,6 @@ def make_results_df( generate_plots = False, print_statistics = False ):
     for sort_col, asc in zip(sort_cols, ascendings):
         results_df.sort_values( sort_col, inplace = True, ascending = asc )
         # print results_df[ ['PredictionRun', 'MutTypes', 'StructureOrder', 'Step', sort_col] ].head(n=20)
-    results_csv_path = os.path.join(output_dir, 'results.csv')
     new_column_order = [
         'PredictionRun', 'N', 'MutTypes', 'Step', 'StructureOrder',
         'R', 'MAE', 'MAE_unscaled', 'FractionCorrect', 'FractionCorrect_unscaled',
@@ -1029,14 +1033,26 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
     print
     return (header_lines, group_rows_lines, footer_lines)
 
-def prediction_error():
+def prediction_error( score_method_id = 35000, prediction_run = 'zemu_1.2-60000_rscript_validated-t14' ):
     # Outputs individual errors for other figure purposes
     df = load_df()
     df = df.loc[ df['MutType'] == 'complete' ]
     df['Error'] = df['total'] - df['ExperimentalDDG']
     df['AbsError'] = np.abs( df['Error'] )
-    df.sort_values( ['AbsError'], inplace = True )
-    df.loc[ np.abs(df['ExperimentalDDG']) >= 1.0 ].to_csv( os.path.join(output_fig_path, 'prediction_error.csv') )
+    df.sort_values( ['AbsError'], inplace = True, ascending = False )
+    df.to_csv( os.path.join(output_fig_path, 'prediction_error.csv') )
+
+    error_df = df.loc[ ( df['StructureOrder'] == 'id_50') & (df['ScoreMethodID'] == score_method_id)  & (df['PredictionRunName'] == prediction_run) ]
+    # print error_df.head()
+    print prediction_run, len(error_df)
+    error_by_subset = []
+    for subset, dataset_ids in subsets.iteritems():
+        if not subset.startswith('pdb-'):
+            mean_error = df.loc[ df['DataSetID'].isin(dataset_ids) ]['Error'].mean()
+            error_by_subset.append( ( mean_error, len( dataset_ids ), subset ) )
+    error_by_subset.sort()
+    for mean_error, dataset_ids_len, subset in error_by_subset:
+        print subset, dataset_ids_len, '%.2f' % mean_error
 
 if __name__ == '__main__':
     prediction_error()
