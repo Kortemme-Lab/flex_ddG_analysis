@@ -155,6 +155,12 @@ def sum_and_average():
             matching_path = None
             for df_path in df_paths:
                 if benchmark_run.prediction_set_name in df_path and structure_order + '.csv' in df_path:
+                    if matching_path != None:
+                        print
+                        print matching_path
+                        print df_path
+                        print benchmark_run.prediction_set_name, structure_order
+                        print
                     assert( matching_path == None )
                     matching_path = df_path
             assert( matching_path != None )
@@ -264,6 +270,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
     antibodies = set()
 
     by_structure = {}
+    by_mutant_type = {}
 
     for index, row in df.iterrows():
         mutations = [ x.split()[1] for x in row['Mutations'].split(';') ] # Split, and throw away chains
@@ -297,6 +304,8 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
         mutants_some_l2s = False
         mutants_all_l2s = True
 
+        mutant_all_aa = None
+
         for mutation in mutations:
             if mutants_all_ala and mutation[-1] != 'A':
                 mutants_all_ala = False
@@ -310,6 +319,16 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
             else:
                 mutants_all_s2l = False
                 mutants_some_l2s = True
+
+            if mutant_all_aa == None:
+                mutant_all_aa = mutation[-1]
+            elif mutant_all_aa != mutation[-1]:
+                mutant_all_aa = False
+
+        if mutant_all_aa:
+            if mutant_all_aa not in by_mutant_type:
+                by_mutant_type[mutant_all_aa] = set()
+            by_mutant_type[mutant_all_aa].add( dataset_id )
 
         if not mutants_any_ala and len(mutations) > 1:
             multiple_none_ala.add( dataset_id )
@@ -366,6 +385,9 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
     subsets_dict['res_gt15_lt25'] = sorted(res_gt15_lt25)
     subsets_dict['res_gte25'] = sorted(res_gte25)
     subsets_dict['antibodies'] = sorted(antibodies)
+    for mutant_all_aa in by_mutant_type:
+        subsets_dict[ 'all-mut-to-' + mutant_all_aa ] = sorted(by_mutant_type[mutant_all_aa])
+    subsets_dict
     for pdb in sorted(by_structure.keys()):
         pdb_dataset_ids = sorted(by_structure[pdb])
         if len(pdb_dataset_ids) >= 5:
