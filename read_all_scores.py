@@ -52,7 +52,7 @@ if not os.path.isdir(output_dir):
     os.makedirs(output_dir)
 
 display_mut_types = [
-    'complete', 's2l', 'sing_ala', 'mult_mut',
+    'complete', 's2l', 'sing_ala', 'mult_mut', 'mult_none_ala',
 ]
 
 mut_types = {
@@ -259,7 +259,7 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
                         print 'MAE:', '%.3f' % mae
                         print
                     if generate_plots:
-                        fig = plt.figure(figsize=(8.5, 8.5), dpi=600)
+                        fig = plt.figure(figsize=(8.5, 8.5), dpi=300)
                         ax = fig.add_subplot(1, 1, 1)
                         sns.regplot(y="total", x="ExperimentalDDG", data = sub_df, ax=ax, scatter_kws = { 's' : 4.5 } )
 
@@ -268,6 +268,9 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
                             color = ( float(num_steps - step_i) / num_steps, 0, ( float(step_i) / num_steps ) ),
                             scatter_kws = { 's' : 2 },
                         )
+
+                        ax.set_xlabel( 'Experimental ddG' )
+                        ax.set_ylabel( 'ddG prediction' )
 
                         fig_path = os.path.join(sub_output_dir, 'total_vs_experimental.pdf')
                         fig.savefig( fig_path )
