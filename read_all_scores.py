@@ -711,7 +711,7 @@ def table_main( results_df ):
     ]
 
     short_caption = ""
-    caption_text = short_caption + "Main results table". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = short_caption + "Main results table. Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-main', results_df, display_runs, caption_text, short_caption )
 
