@@ -710,7 +710,7 @@ def table_main( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
 
-    short_caption = "Main results table"
+    short_caption = ""
     caption_text = short_caption + ". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-main', results_df, display_runs, caption_text, short_caption )
