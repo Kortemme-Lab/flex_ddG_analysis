@@ -154,7 +154,7 @@ def sum_and_average():
         for structure_order in structure_orders:
             matching_path = None
             for df_path in df_paths:
-                if benchmark_run.prediction_set_name in df_path and structure_order + '.csv' in df_path:
+                if benchmark_run.prediction_set_name + '-' + structure_order + '.csv' == df_path:
                     if matching_path != None:
                         print
                         print matching_path
@@ -163,6 +163,11 @@ def sum_and_average():
                         print
                     assert( matching_path == None )
                     matching_path = df_path
+            if matching_path == None:
+                print
+                print benchmark_run.prediction_set_name + '-' + structure_order + '.csv'
+                print benchmark_run.prediction_set_name, structure_order
+                print
             assert( matching_path != None )
             paths_to_analyze.append( (benchmark_run, structure_order, os.path.join( dataframe_cache, matching_path ) ) )
 

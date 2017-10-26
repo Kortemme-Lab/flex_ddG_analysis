@@ -81,6 +81,7 @@ run_names = {
     'ddg_monomer_16_003-zemu-2' : 'ddG monomer',
     'zemu_control' : 'no backrub control',
     'zemu-values' : 'ZEMu paper',
+    'zemu_control-69aa526-noglypivot' : 'no backrub control',
 }
 
 sorting_type_descriptions = {
