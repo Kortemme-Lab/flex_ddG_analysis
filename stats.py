@@ -65,7 +65,7 @@ def fraction_correct_values(indices, x_values, y_values, x_cutoff = 1.0, y_cutof
     return correct
 
 
-def fraction_correct(x_values, y_values, x_cutoff = 1.0, y_cutoff = 1.0, ignore_null_values = False):
+def fraction_correct(x_values, y_values, x_cutoff = 1.0, y_cutoff = 1.0, ignore_null_values = False, verbose = False):
     '''My version of the metric used in the Kellogg et al. paper.
        "Role of conformational sampling in computing mutation-induced changes in protein structure and stability", Proteins, Volume 79, Issue 3, pages 830–838, March 2011.
        http://dx.doi.org/10.1002/prot.22921
@@ -90,7 +90,14 @@ def fraction_correct(x_values, y_values, x_cutoff = 1.0, y_cutoff = 1.0, ignore_
             correct += 1.0
         elif (-x_cutoff < x < x_cutoff) and (-y_cutoff < y < y_cutoff): # both neutral
             correct += 1.0
-    return correct / float(considered_points)
+
+    if verbose:
+        print 'FC:', correct, considered_points, correct / float(considered_points)
+    return (
+        correct / float(considered_points),
+        correct,
+        considered_points,
+    )
 
 def fraction_correct_pandas(dataframe, x_series, y_series, x_cutoff = 1.0, y_cutoff = 1.0, ignore_null_values = False):
     '''A faster, numpy implementations'''
