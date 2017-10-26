@@ -71,7 +71,9 @@ mut_types = {
     'some_s2l' : 'Some Small-To-Large',
     'some_l2s' : 'Some Large-To-Small',
     'antibodies' : 'Antibodies',
-    'stabilizing' : 'Stabilizing'
+    'stabilizing' : 'Stabilizing',
+    'neutral' : 'Neutral',
+    'positive' : 'Positive',
 }
 
 run_names = {
@@ -114,7 +116,7 @@ def add_score_categories(df, mut_type_subsets = None):
         df = df.assign( MutType = 'complete' )
 
     if mut_type_subsets == None or 'stabilizing' in mut_type_subsets:
-        stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] < 0) ].copy()
+        stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
         stabilizing.loc[:,'MutType'] = 'stabilizing'
         df = df.append( stabilizing )
 
@@ -185,6 +187,10 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
     fcs_unscaled = []
     maes_unscaled = []
     fcs = []
+    fcs_unscaled_correct = []
+    fcs_unscaled_considered = []
+    fcs_correct = []
+    fcs_considered = []
     maes = []
     rs = []
     slopes = []
@@ -229,16 +235,20 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
                     scaling_slopes.append( scaling_factors[(prediction_run, structure_order, step)][0] )
                     scaling_intercepts.append( scaling_factors[(prediction_run, structure_order, step)][1] )
 
-                    fc_unscaled = fraction_correct(
+                    fc_unscaled, fc_unscaled_correct, fc_unscaled_considered = fraction_correct(
                         sub_df['total'].values,
                         sub_df['ExperimentalDDG'].values,
                     )
                     fcs_unscaled.append(fc_unscaled)
-                    fc = fraction_correct(
+                    fcs_unscaled_correct.append(fc_unscaled_correct)
+                    fcs_unscaled_considered.append(fc_unscaled_considered)
+                    fc, fc_correct, fc_considered = fraction_correct(
                         sub_df['scaled_total'].values,
                         sub_df['ExperimentalDDG'].values,
                     )
                     fcs.append(fc)
+                    fcs_correct.append(fc_correct)
+                    fcs_considered.append(fc_considered)
 
                     mae_unscaled = calc_mae( sub_df['total'], sub_df['ExperimentalDDG'] )
                     maes_unscaled.append(mae_unscaled)
@@ -286,6 +296,10 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
         'StructureOrder' : df_structure_orders,
         'FractionCorrect' : fcs,
         'FractionCorrect_unscaled' : fcs_unscaled,
+        'FractionCorrect-count_correct' : fcs_correct,
+        'FractionCorrect-count_considered' : fcs_considered,
+        'FractionCorrect-count_correct-unscaled' : fcs_unscaled_correct,
+        'FractionCorrect-count_considered-unscaled' : fcs_unscaled_considered,
         'MAE' : maes,
         'MAE_unscaled' : maes_unscaled,
         'Slope' : slopes,
@@ -304,6 +318,7 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
     new_column_order = [
         'PredictionRun', 'N', 'MutTypes', 'Step', 'StructureOrder',
         'R', 'MAE', 'MAE_unscaled', 'FractionCorrect', 'FractionCorrect_unscaled',
+        'FractionCorrect-count_correct', 'FractionCorrect-count_considered', 'FractionCorrect-count_correct-unscaled', 'FractionCorrect-count_considered-unscaled',
         'Slope', 'ScalingIntercepts', 'ScalingSlopes',
     ]
     assert( set(new_column_order) == set(results_df.columns) )
@@ -460,8 +475,8 @@ def table_composition():
     table_df = table_df[ ['n', 'Name'] ] # Order columns correctly
     table_df.sort_values( 'n', inplace = True, ascending = False )
 
-    print 'Table 1:'
-    print table_df.head( n = 20 )
+    # print 'Table 1:'
+    # print table_df.head( n = 20 )
     save_latex( 'latex_templates/table-composition.tex', { 'table-comp' : table_df.to_latex( index=False ) } )
     table_df.to_csv( os.path.join(output_fig_path, 'table_comp.csv') )
 
@@ -720,7 +735,11 @@ def table_main( results_df ):
     short_caption = ""
     caption_text = short_caption + "Main results table. Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
-    subset_table( 'table-main', results_df, display_runs, caption_text, short_caption )
+    subset_table(
+        'table-main', results_df, display_runs, caption_text, short_caption, table_mut_types = [
+            'complete', 's2l', 'ala', 'sing_ala', 'mult_mut', 'mult_all_ala', 'mult_none_ala', 'antibodies',
+        ],
+    )
 
 def table_ref( results_df ):
     backrub_steps = 35000
@@ -782,7 +801,7 @@ def multiple_table( results_df ):
     subset_table( 'table-mult', results_df, display_runs, caption_text, short_caption, table_mut_types = ['mult_mut', 'mult_all_ala', 'mult_none_ala', 'ala'] )
 
 def antibodies_table( results_df ):
-    backrub_steps = 32500
+    backrub_steps = 35000
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
@@ -795,7 +814,7 @@ def antibodies_table( results_df ):
     subset_table( 'table-antibodies', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'antibodies'] )
 
 def stabilizing_table( results_df ):
-    backrub_steps = 32500
+    backrub_steps = 35000
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
@@ -803,9 +822,9 @@ def stabilizing_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on stabilizing mutations'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta$G < 0). Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta$G $< 0$). Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
-    subset_table( 'table-stabilizing', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'stabilizing'] )
+    subset_table( 'table-stabilizing', results_df, display_runs, caption_text, short_caption, table_mut_types = ['stabilizing', 'neutral', 'positive'] )
 
 def by_pdb_table( results_df ):
     backrub_steps = 32500
@@ -900,10 +919,10 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
     results_subset = pd.DataFrame()
     for mut_type_i, mut_type in enumerate(table_mut_types):
         for run_name, step, structure_order in display_runs:
-            print run_name, results_df.loc[results_df['PredictionRun'] == run_name].head()
-            print step, results_df.loc[results_df['Step'] == step].head()
-            print structure_order, results_df.loc[ results_df['StructureOrder'] == structure_order ].head()
-            print mut_type, results_df.loc[results_df['MutTypes'] == mut_type].head()
+            # print run_name, results_df.loc[results_df['PredictionRun'] == run_name].head()
+            # print step, results_df.loc[results_df['Step'] == step].head()
+            # print structure_order, results_df.loc[ results_df['StructureOrder'] == structure_order ].head()
+            # print mut_type, results_df.loc[results_df['MutTypes'] == mut_type].head()
             new_row = results_df.loc[ (results_df['PredictionRun'] == run_name) & (results_df['Step'] == step) & (results_df['StructureOrder'] == structure_order ) & (results_df['MutTypes'] == mut_type) ]
 
             # Annotate run name further if necessary
@@ -926,9 +945,9 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
                 results_subset = results_subset.append( new_row )
 
             # Extra caption text (only for first loop through mut_types)
-            if mut_type_i == 0:
-                if step >= 50:
-                    caption_text += ' %s steps = %d.' % ( run_names[run_name], step )
+            # if mut_type_i == 0:
+            #     if step >= 50:
+            #         caption_text += ' %s steps = %d.' % ( run_names[run_name], step )
 
 
     out_path = os.path.join( output_fig_path, '%s.csv' % table_name.replace('-', '_') )
@@ -1031,9 +1050,9 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
         out_tex_name = table_name,
     )
 
-    print table_name
-    print beautified_results.head( n = 30 )
-    print
+    # print table_name
+    # print beautified_results.head( n = 30 )
+    # print
     return (header_lines, group_rows_lines, footer_lines)
 
 def prediction_error( score_method_id = 35000, prediction_run = 'zemu_1.2-60000_rscript_validated-t14' ):
