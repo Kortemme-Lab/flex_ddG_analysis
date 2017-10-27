@@ -258,7 +258,7 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
                     fcs_correct.append(fc_correct)
                     fcs_considered.append(fc_considered)
                     fc_zero, fc_zero_correct, fc_zero_considered = fraction_correct(
-                        sub_df['scaled_total'].values,
+                        sub_df['total'].values,
                         sub_df['ExperimentalDDG'].values,
                         x_cutoff = 0.00000001,
                         y_cutoff = 0.00000001,
@@ -317,9 +317,9 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
         'FractionCorrect_unscaled' : fcs_unscaled,
         'FractionCorrect-count_correct-unscaled' : fcs_unscaled_correct,
         'FractionCorrect-count_considered-unscaled' : fcs_unscaled_considered,
-        'FractionCorrect-zero_boundary' : fc_zeros,
-        'FractionCorrect-count_correct-zero_boundary' : fc_zeros_correct,
-        'FractionCorrect-count_considered-zero_boundary' : fc_zeros_considered,
+        'FractionCorrect-zero_boundary-unscaled' : fc_zeros,
+        'FractionCorrect-count_correct-zero_boundary-unscaled' : fc_zeros_correct,
+        'FractionCorrect-count_considered-zero_boundary-unscaled' : fc_zeros_considered,
         'MAE' : maes,
         'MAE_unscaled' : maes_unscaled,
         'Slope' : slopes,
@@ -354,7 +354,7 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
 
 def figure_scatter():
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
-    control_run_name = 'zemu_control'
+    control_run_name = 'zemu_control-69aa526'
     point_size = 4.5
     alpha = 0.6
     scatter_kws = { 's' : point_size, 'alpha' : alpha }
@@ -480,7 +480,7 @@ def table_composition():
     # Dataset composition
     df = load_df()
     df = df.drop_duplicates( ['PredictionRunName', 'DataSetID', 'PredictionID', 'ScoreMethodID', 'MutType', 'total', 'ExperimentalDDG', 'StructureOrder'] )
-    control_df = df.loc[ (df['PredictionRunName'] == 'zemu_control') & (df['ScoreMethodID'] == 8 ) ]
+    control_df = df.loc[ (df['PredictionRunName'] == 'zemu_control-69aa526') & (df['ScoreMethodID'] == 8 ) ]
 
     ns = []
     mut_type_names = []
@@ -505,7 +505,7 @@ def table_composition():
 def table_versions():
     save_latex( 'latex_templates/table-versions.tex', run_names )
 
-def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_control', force_control_in_axes = True ):
+def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_control-69aa526', force_control_in_axes = True ):
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
     point_size = 4.5
     alpha = 0.6
@@ -614,7 +614,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
     control_base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
     number_of_structures = 50
     mut_type_subsets = ['complete', 's2l', 'mult_none_ala', 'sing_ala']
-    control_run = 'zemu_control'
+    control_run = 'zemu_control-69aa526'
 
     for sorting_type in sorting_types:
         structure_orders = []
@@ -752,7 +752,7 @@ def table_main( results_df ):
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_03'),
-        ('zemu_control', 8, 'id_50'),
+        ('zemu_control-69aa526', 8, 'id_50'),
         ('zemu-values', 11, 'id_01'),
     ]
 
@@ -817,7 +817,7 @@ def multiple_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
-        ('zemu_control', 8, 'id_50'),
+        ('zemu_control-69aa526', 8, 'id_50'),
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Multiple mutations results'
@@ -830,7 +830,7 @@ def antibodies_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
-        ('zemu_control', 8, 'id_50'),
+        ('zemu_control-69aa526', 8, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
@@ -844,7 +844,7 @@ def stabilizing_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
-        ('zemu_control', 8, 'id_50'),
+        ('zemu_control-69aa526', 8, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
@@ -858,7 +858,7 @@ def by_pdb_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
-        ('zemu_control', 8, 'id_50'),
+        ('zemu_control-69aa526', 8, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
