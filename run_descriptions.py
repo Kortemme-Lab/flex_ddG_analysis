@@ -18,6 +18,11 @@ control_run_69aa526_noglypivot = ddg_benchmark_run(
     1 # Step multiplication factor
 )
 
+control_run_69aa526 = ddg_benchmark_run(
+    'zemu_control-69aa526', # Predicton run name
+    1 # Step multiplication factor
+)
+
 ref_run = ddg_benchmark_run(
     'zemu_1.2-60000_rscript_validated-ref', # Predicton run name
     5 # Step multiplication factor
@@ -52,4 +57,5 @@ all_runs = [
     talaris_60k_run,
     temp_16,
     control_run_69aa526_noglypivot,
+    control_run_69aa526,
 ]
