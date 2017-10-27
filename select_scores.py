@@ -154,7 +154,7 @@ def sum_and_average():
         for structure_order in structure_orders:
             matching_path = None
             for df_path in df_paths:
-                if benchmark_run.prediction_set_name + '-' + structure_order + '.csv' == df_path:
+                if df_path.startswith( benchmark_run.prediction_set_name + '-' + structure_order + '.csv' ):
                     if matching_path != None:
                         print
                         print matching_path
