@@ -13,11 +13,14 @@ import collections
 import copy
 import string
 
+# TODO: move this into repository
 csv_paths = [
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-t14-id_50.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-ref-id_50.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-ref-WildTypeComplex_50.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-69aa526-noglypivot-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-69aa526-id_50.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-WildTypeComplex_03.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-WildTypeComplex_50.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-brub_1.6-nt10000-id_50.csv.gz' ),
@@ -84,6 +87,7 @@ run_names = {
     'zemu_control' : 'no backrub control',
     'zemu-values' : 'ZEMu paper',
     'zemu_control-69aa526-noglypivot' : 'no backrub control',
+    'zemu_control-69aa526' : 'no backrub control',
 }
 
 sorting_type_descriptions = {
@@ -185,13 +189,16 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
     mut_types.insert(0, mut_types.pop( mut_types.index('complete') ) )
 
     structure_orders = sorted( df['StructureOrder'].drop_duplicates().values )
-    fcs_unscaled = []
     maes_unscaled = []
-    fcs = []
+    fcs_unscaled = []
     fcs_unscaled_correct = []
     fcs_unscaled_considered = []
+    fcs = []
     fcs_correct = []
     fcs_considered = []
+    fc_zeros = []
+    fc_zeros_correct = []
+    fc_zeros_considered = []
     maes = []
     rs = []
     slopes = []
@@ -250,6 +257,15 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
                     fcs.append(fc)
                     fcs_correct.append(fc_correct)
                     fcs_considered.append(fc_considered)
+                    fc_zero, fc_zero_correct, fc_zero_considered = fraction_correct(
+                        sub_df['scaled_total'].values,
+                        sub_df['ExperimentalDDG'].values,
+                        x_cutoff = 0.00000001,
+                        y_cutoff = 0.00000001,
+                    )
+                    fc_zeros.append(fc_zero)
+                    fc_zeros_correct.append(fc_zero_correct)
+                    fc_zeros_considered.append(fc_zero_considered)
 
                     mae_unscaled = calc_mae( sub_df['total'], sub_df['ExperimentalDDG'] )
                     maes_unscaled.append(mae_unscaled)
@@ -296,11 +312,14 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
         'MutTypes' : df_mut_types,
         'StructureOrder' : df_structure_orders,
         'FractionCorrect' : fcs,
-        'FractionCorrect_unscaled' : fcs_unscaled,
         'FractionCorrect-count_correct' : fcs_correct,
         'FractionCorrect-count_considered' : fcs_considered,
+        'FractionCorrect_unscaled' : fcs_unscaled,
         'FractionCorrect-count_correct-unscaled' : fcs_unscaled_correct,
         'FractionCorrect-count_considered-unscaled' : fcs_unscaled_considered,
+        'FractionCorrect-zero_boundary' : fc_zeros,
+        'FractionCorrect-count_correct-zero_boundary' : fc_zeros_correct,
+        'FractionCorrect-count_considered-zero_boundary' : fc_zeros_considered,
         'MAE' : maes,
         'MAE_unscaled' : maes_unscaled,
         'Slope' : slopes,
@@ -318,10 +337,12 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
         # print results_df[ ['PredictionRun', 'MutTypes', 'StructureOrder', 'Step', sort_col] ].head(n=20)
     new_column_order = [
         'PredictionRun', 'N', 'MutTypes', 'Step', 'StructureOrder',
-        'R', 'MAE', 'MAE_unscaled', 'FractionCorrect', 'FractionCorrect_unscaled',
-        'FractionCorrect-count_correct', 'FractionCorrect-count_considered', 'FractionCorrect-count_correct-unscaled', 'FractionCorrect-count_considered-unscaled',
+        'R', 'MAE', 'MAE_unscaled',
         'Slope', 'ScalingIntercepts', 'ScalingSlopes',
     ]
+    for col in sorted(results_df.columns):
+        if col not in new_column_order:
+            new_column_order.append( col )
     assert( set(new_column_order) == set(results_df.columns) )
     results_df = results_df[new_column_order]
     results_df.sort_values('R', ascending = False).to_csv( results_csv_path )
@@ -587,7 +608,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
     fig.savefig( out_path )
     print out_path
 
-def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14' ):
+def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14', force_backrub_step = 35000 ):
     sorting_types = ['WildTypeComplex', 'id']
     base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
     control_base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
@@ -658,6 +679,8 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
             # Determine best correlation step
             argmax = rs['Experimental ddG'].argmax()
             best_step_id = rs.ix[argmax]['ScoreMethodID']
+            if force_backrub_step != None and best_step_id > 10:
+                best_step_id = force_backrub_step
             best_step_ids.append( best_step_id )
 
             ax.set_title( '(%s) - %s' % (string.ascii_lowercase[ax_i], mut_types[mut_type_subset]) )
@@ -794,6 +817,7 @@ def multiple_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
+        ('zemu_control', 8, 'id_50'),
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Multiple mutations results'
@@ -806,6 +830,7 @@ def antibodies_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
+        ('zemu_control', 8, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
@@ -819,6 +844,7 @@ def stabilizing_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
+        ('zemu_control', 8, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
@@ -832,6 +858,7 @@ def by_pdb_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
+        ('zemu_control', 8, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
@@ -1078,6 +1105,8 @@ def prediction_error( score_method_id = 35000, prediction_run = 'zemu_1.2-60000_
         print subset, dataset_ids_len, '%.2f' % mean_error
 
 if __name__ == '__main__':
+    results_df = make_results_df()
+
     prediction_error()
 
     table_composition()
@@ -1090,7 +1119,6 @@ if __name__ == '__main__':
     figure_structs_vs_corr()
     figure_structs_vs_corr( 'ddg_monomer_16_003-zemu-2' )
 
-    results_df = make_results_df()
     by_pdb_table( results_df )
     table_ref( results_df )
     table_main( results_df )
