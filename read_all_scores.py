@@ -45,7 +45,6 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
-sns.set( font_scale = 1.2 )
 current_palette = sns.color_palette()
 
 for csv_path in csv_paths:
@@ -368,13 +367,13 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
 
     return results_df
 
-def figure_scatter():
+def figure_scatter( force_backrub_step = 35000 ):
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
     control_run_name = 'zemu_control-69aa526-noglypivot'
-    point_size = 4.5
-    alpha = 0.6
+    point_size = 4.8
+    alpha = 0.55
     scatter_kws = { 's' : point_size, 'alpha' : alpha }
-    line_kws = { 'linewidth' : 0.9 }
+    line_kws = { 'linewidth' : 0.8 }
 
     df = load_df()
     exp_colname = 'Experimental ddG'
@@ -384,12 +383,13 @@ def figure_scatter():
     df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
     df = df.rename( columns = {'total' : pred_colname} )
 
+    sns.set_style("whitegrid")
     fig = plt.figure(
         figsize=(8.5, 8.5), dpi=600
     )
 
     complete_corrs = df.loc[ (df['MutType'] == top_subset) & (df['PredictionRunName'] == exp_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
-    best_step_a = complete_corrs.index[0][0]
+    best_step_a = force_backrub_step
     df_a = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == top_subset) & (df['ScoreMethodID'] == best_step_a) ]
     ax1 = fig.add_subplot( 2, 2, 1 )
 
@@ -399,7 +399,7 @@ def figure_scatter():
     ax2 = fig.add_subplot( 2, 2, 2 )
 
     complete_corrs = df.loc[ (df['MutType'] == bottom_subset) & (df['PredictionRunName'] == exp_run_name) ].groupby( 'ScoreMethodID' )[[pred_colname,exp_colname]].corr().ix[0::2,exp_colname].sort_values( ascending = False )
-    best_step_c = complete_corrs.index[0][0]
+    best_step_c = force_backrub_step
     df_c = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == bottom_subset) & (df['ScoreMethodID'] == best_step_c) ]
     ax3 = fig.add_subplot( 2, 2, 3 )
 
@@ -407,11 +407,6 @@ def figure_scatter():
     best_step_d = complete_corrs.index[0][0]
     df_d = df.loc[ (df['PredictionRunName'] == control_run_name) & (df['MutType'] == bottom_subset) & (df['ScoreMethodID'] == best_step_d) ]
     ax4 = fig.add_subplot( 2, 2, 4 )
-
-    # Override b, c, d best steps to just be the same as a
-    best_step_b = best_step_a
-    best_step_c = best_step_a
-    best_step_d = best_step_a
 
     xmin = min( df_a[pred_colname].min(), df_b[pred_colname].min(), df_c[pred_colname].min(), df_d[pred_colname].min() )
     xmax = max( df_a[pred_colname].max(), df_b[pred_colname].max(), df_c[pred_colname].max(), df_d[pred_colname].max() )
@@ -432,7 +427,7 @@ def figure_scatter():
         scatter_kws = scatter_kws,
         line_kws = line_kws,
         ci = None,
-        color = sns.color_palette()[0],
+        color = run_colors[exp_run_name],
     )
     sns.regplot(
         y = pred_colname, x = exp_colname,
@@ -440,7 +435,7 @@ def figure_scatter():
         scatter_kws = scatter_kws,
         line_kws = line_kws,
         ci = None,
-        color = sns.color_palette()[0],
+        color = run_colors[control_run_name],
     )
     sns.regplot(
         y = pred_colname, x = exp_colname,
@@ -448,7 +443,7 @@ def figure_scatter():
         scatter_kws = scatter_kws,
         line_kws = line_kws,
         ci = None,
-        color = sns.color_palette()[0],
+        color = run_colors[exp_run_name],
     )
     sns.regplot(
         y = pred_colname, x = exp_colname,
@@ -456,7 +451,7 @@ def figure_scatter():
         scatter_kws = scatter_kws,
         line_kws = line_kws,
         ci = None,
-        color = sns.color_palette()[0],
+        color = run_colors[control_run_name],
     )
 
     # ax2.set_xticklabels([])
@@ -1180,27 +1175,27 @@ def prediction_error( score_method_id = 35000, prediction_run = 'zemu_1.2-60000_
         print subset, dataset_ids_len, '%.2f' % mean_error
 
 if __name__ == '__main__':
-    # results_df = make_results_df()
+    results_df = make_results_df()
 
-    # prediction_error()
+    prediction_error()
 
-    # table_composition()
-    # table_versions()
-    # figure_scatter()
+    table_composition()
+    table_versions()
+    figure_scatter()
     steps_vs_corr( 'steps-v-corr', ['complete', 's2l', 'mult_none_ala', 'sing_ala'] )
     steps_vs_corr( 'steps-v-corr_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
     steps_vs_corr( 'steps-v-corr_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
     steps_vs_corr( 'steps-v-corr_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
-    # figure_structs_vs_corr()
-    # figure_structs_vs_corr( 'ddg_monomer_16_003-zemu-2' )
+    figure_structs_vs_corr()
+    figure_structs_vs_corr( 'ddg_monomer_16_003-zemu-2' )
 
-    # by_pdb_table( results_df )
-    # table_ref( results_df )
-    # table_main( results_df )
-    # backrub_temp_table( results_df )
-    # ddg_monomer_table( results_df )
-    # multiple_table( results_df )
-    # antibodies_table( results_df )
-    # stabilizing_table( results_df )
+    by_pdb_table( results_df )
+    table_ref( results_df )
+    table_main( results_df )
+    backrub_temp_table( results_df )
+    ddg_monomer_table( results_df )
+    multiple_table( results_df )
+    antibodies_table( results_df )
+    stabilizing_table( results_df )
 
     compile_latex()
