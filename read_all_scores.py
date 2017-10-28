@@ -95,8 +95,8 @@ run_colors = {
     for i, run_name in enumerate([
         'zemu_1.2-60000_rscript_validated-t14',
         'zemu_control-69aa526-noglypivot',
-        'ddg_monomer_16_003-zemu-2',
         'zemu-values',
+        'ddg_monomer_16_003-zemu-2',
     ])
 }
 
