@@ -851,7 +851,7 @@ def table_ref( results_df ):
     ]
 
     short_caption = "REF results"
-    caption_text = short_caption + ". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = 'Performance comparison of the standard flex ddG protocol (using Rosetta\'s Talaris energy function) with flex ddG run with the REF score function. "res $<=$ 1.5 Ang." indicates data points for which the resolution of the input wild-type crystal structure is less than or equal to 1.5 \AA. Backrub steps = %d. R = Pearson\'s R. MAE = Mean Absolute Error. FC = Fraction Correct.' % backrub_steps
 
     table_mut_types = [
         'complete', 's2l', 'sing_ala', 'mult_mut',
@@ -869,7 +869,7 @@ def backrub_temp_table( results_df ):
     ]
 
     short_caption = "Comparison of backrub temperature results"
-    caption_text = short_caption + ". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = "Flex ddG performance comparison, when backrub is run with a sampling temperature (kT) of 1.2 or 1.6. Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-temperature', results_df, display_runs, caption_text, short_caption )
 
@@ -887,7 +887,7 @@ def ddg_monomer_table( results_df ):
     short_caption = 'ddG monomer results'
     caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-    subset_table( 'table-temperature', results_df, display_runs, caption_text, short_caption )
+    subset_table( 'table-ddG-monomer', results_df, display_runs, caption_text, short_caption )
 
 def multiple_table( results_df ):
     backrub_steps = 35000
