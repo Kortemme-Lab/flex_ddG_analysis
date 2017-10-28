@@ -106,6 +106,11 @@ sorting_type_descriptions = {
     'WildTypeComplex' : 'Structures are sorted by their minimized wild-type complex energy. ',
 }
 
+sorting_type_descriptions_short = {
+    'id' : 'unsorted structures',
+    'WildTypeComplex' : 'structures sorted by wild-type complex energy',
+}
+
 
 cached_loaded_df_initialized = False
 cached_loaded_df = None
@@ -660,7 +665,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
             figsize = [10.0, 8.5], dpi=600
         )
         fig.subplots_adjust( wspace = 0.6, hspace = 0.3)
-        fig.suptitle('$\Delta\Delta G$ prediction performance vs. number of structural ensemble members', fontsize=20)
+        fig.suptitle('$\Delta\Delta G$ prediction performance vs. number of structural ensemble members,\n' + sorting_type_descriptions_short[sorting_type], fontsize=20)
 
         r_axes = []
         r_min = float('inf')
@@ -1143,27 +1148,27 @@ def prediction_error( score_method_id = 35000, prediction_run = 'zemu_1.2-60000_
         print subset, dataset_ids_len, '%.2f' % mean_error
 
 if __name__ == '__main__':
-    results_df = make_results_df()
+    # results_df = make_results_df()
 
-    prediction_error()
+    # prediction_error()
 
-    table_composition()
-    table_versions()
-    figure_scatter()
-    steps_vs_corr( 'steps-v-corr', ['complete', 's2l', 'mult_none_ala', 'sing_ala'] )
-    steps_vs_corr( 'steps-v-corr_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
-    steps_vs_corr( 'steps-v-corr_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
-    steps_vs_corr( 'steps-v-corr_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
+    # table_composition()
+    # table_versions()
+    # figure_scatter()
+    # steps_vs_corr( 'steps-v-corr', ['complete', 's2l', 'mult_none_ala', 'sing_ala'] )
+    # steps_vs_corr( 'steps-v-corr_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
+    # steps_vs_corr( 'steps-v-corr_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
+    # steps_vs_corr( 'steps-v-corr_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
     figure_structs_vs_corr()
     figure_structs_vs_corr( 'ddg_monomer_16_003-zemu-2' )
 
-    by_pdb_table( results_df )
-    table_ref( results_df )
-    table_main( results_df )
-    backrub_temp_table( results_df )
-    ddg_monomer_table( results_df )
-    multiple_table( results_df )
-    antibodies_table( results_df )
-    stabilizing_table( results_df )
+    # by_pdb_table( results_df )
+    # table_ref( results_df )
+    # table_main( results_df )
+    # backrub_temp_table( results_df )
+    # ddg_monomer_table( results_df )
+    # multiple_table( results_df )
+    # antibodies_table( results_df )
+    # stabilizing_table( results_df )
 
     compile_latex()
