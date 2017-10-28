@@ -102,8 +102,8 @@ run_colors = {
 }
 
 sorting_type_descriptions = {
-    'id' : 'no sorting of structures',
-    'WildTypeComplex' : 'structures sorted by minimized wild-type complex energy',
+    'id' : 'Structures are not sorted, and are randomly added to the ensemble. ',
+    'WildTypeComplex' : 'Structures are sorted by their minimized wild-type complex energy. ',
 }
 
 
