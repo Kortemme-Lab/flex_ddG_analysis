@@ -775,7 +775,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
         }
         for alpha_i, alpha in enumerate( string.ascii_lowercase[:4] ):
             if best_step_ids[alpha_i] >= 10:
-                sub_dict[ 'panel-' + alpha ] = '%s (n = %d, backrub step = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i], best_step_ids[alpha_i] )
+                sub_dict[ 'panel-' + alpha ] = '%s (n = %d, backrub steps = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i], best_step_ids[alpha_i] )
             else:
                 sub_dict[ 'panel-' + alpha ] = '%s (n = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i] )
 
