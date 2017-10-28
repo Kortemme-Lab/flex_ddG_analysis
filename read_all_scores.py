@@ -535,7 +535,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
         figsize=(10.0, 8.5), dpi=600
     )
     fig.subplots_adjust( wspace = 0.6, hspace = 0.3)
-
+    fig.suptitle('$\Delta\Delta G$ prediction performance vs. number of backrub sampling steps')
 
     r_axes = []
     r_min = float('inf')
@@ -546,6 +546,8 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
     mae_max = float('-inf')
 
     ns = []
+    legend_lines = []
+    legend_labels = []
 
     for ax_i, mut_type_subset in enumerate( mut_type_subsets ):
         ax = fig.add_subplot( 2, 2, ax_i + 1 )
@@ -556,36 +558,64 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
         rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
         maes = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
 
-        ax.plot( rs['ScoreMethodID'], rs['Experimental ddG'], 'o', color = current_palette[0] )
+        exp_rs_plot, = ax.plot(
+            rs['ScoreMethodID'], rs['Experimental ddG'],
+            'o',
+            linestyle = 'None',
+            color = run_colors[exp_run_name],
+        )
         r_min = min( r_min, min(rs['Experimental ddG']) )
         r_max = max( r_max, max(rs['Experimental ddG']) )
 
         ax2 = ax.twinx()
         ax2.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
         ax2.set_ylabel("MAE")
-        ax2.plot( maes.index, maes.values, 's', color = current_palette[1] )
+        exp_mae_plot, = ax2.plot(
+            maes.index, maes.values,
+            'P',
+            linestyle = 'None',
+            color = ( 1.0 + np.array(run_colors[exp_run_name]) ) / 2.0,
+        )
         mae_min = min( mae_min, min(maes.values) )
         mae_max = max( mae_max, max(maes.values) )
 
         ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
-        ax2.yaxis.label.set_color(current_palette[1] )
 
         # Get control performance values
         control_rs = df.loc[ (df['PredictionRunName'] == control_run) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
         assert( len(control_rs) == 1 )
         control_r = control_rs['Experimental ddG'][0]
-        ax.plot( [0], [control_r], marker = 'X', color = current_palette[0] )
+        control_rs_plot, = ax.plot(
+            [0], [control_r],
+            marker = 'o',
+            linestyle = 'None',
+            color = run_colors[control_run],
+        )
 
         control_maes = df.loc[ (df['PredictionRunName'] == control_run) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
         assert( len(control_maes.values) == 1 )
         control_mae = control_maes.values[0]
-        ax2.plot( [0], [control_mae], marker = 'X', color = current_palette[1] )
+        control_mae_plot, = ax2.plot(
+            [0], [control_mae],
+            marker = 'P',
+            linestyle = 'None',
+            color = ( 1.0 + np.array(run_colors[control_run]) ) / 2.0,
+        )
 
         if force_control_in_axes:
             r_min = min( r_min, control_r )
             r_max = max( r_max, control_r )
             mae_min = min( mae_min, control_mae )
             mae_max = max( mae_max, control_mae )
+
+        if ax_i == 0:
+            legend_lines.extend( [exp_rs_plot, control_rs_plot, exp_mae_plot, control_mae_plot] )
+            legend_labels.extend( [
+                'R - ' + run_names[exp_run_name].capitalize(),
+                'R - ' + run_names[control_run].capitalize(),
+                'MAE - ' + run_names[exp_run_name].capitalize(),
+                'MAE - ' + run_names[control_run].capitalize(),
+            ] )
 
         r_axes.append( ax )
         mae_axes.append( ax2 )
@@ -597,11 +627,11 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
     mae_min -= mae_range * 0.1
     mae_max += mae_range * 0.1
 
-    for ax in r_axes:
-        ax.set_ylim( [r_min, r_max] )
-
-    for ax in mae_axes:
-        ax.set_ylim( [mae_min, mae_max] )
+    for r_ax, mae_ax in zip(r_axes, mae_axes):
+        r_ax.set_ylim( [r_min, r_max] )
+        mae_ax.set_ylim( [mae_min, mae_max] )
+        r_ax.set_zorder( mae_ax.get_zorder() + 10 )
+        r_ax.patch.set_visible(False)
 
     out_path = os.path.join( output_fig_path, '%s.pdf' % output_figure_name )
     sub_dict = {
@@ -612,6 +642,8 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
         'fig-label' : output_figure_name,
         'fig-path' : out_path,
     }
+
+    leg = plt.figlegend( legend_lines, legend_labels, loc = 'lower center', ncol = 4, labelspacing=0.0 )
 
     fig.savefig( out_path )
     save_latex( 'latex_templates/steps-vs-corr.tex', sub_dict, out_tex_name = output_figure_name )
@@ -1155,12 +1187,12 @@ if __name__ == '__main__':
     # table_composition()
     # table_versions()
     # figure_scatter()
-    # steps_vs_corr( 'steps-v-corr', ['complete', 's2l', 'mult_none_ala', 'sing_ala'] )
-    # steps_vs_corr( 'steps-v-corr_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
-    # steps_vs_corr( 'steps-v-corr_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
-    # steps_vs_corr( 'steps-v-corr_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
-    figure_structs_vs_corr()
-    figure_structs_vs_corr( 'ddg_monomer_16_003-zemu-2' )
+    steps_vs_corr( 'steps-v-corr', ['complete', 's2l', 'mult_none_ala', 'sing_ala'] )
+    steps_vs_corr( 'steps-v-corr_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
+    steps_vs_corr( 'steps-v-corr_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
+    steps_vs_corr( 'steps-v-corr_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
+    # figure_structs_vs_corr()
+    # figure_structs_vs_corr( 'ddg_monomer_16_003-zemu-2' )
 
     # by_pdb_table( results_df )
     # table_ref( results_df )
