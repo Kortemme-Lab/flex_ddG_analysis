@@ -45,6 +45,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
+sns.set( font_scale = 1.2 )
 current_palette = sns.color_palette()
 
 for csv_path in csv_paths:
@@ -88,6 +89,16 @@ run_names = {
     'zemu-values' : 'ZEMu paper',
     'zemu_control-69aa526-noglypivot' : 'no backrub control',
     'zemu_control-69aa526' : 'no backrub control',
+}
+
+run_colors = {
+    run_name : current_palette[i]
+    for i, run_name in enumerate([
+        'zemu_1.2-60000_rscript_validated-t14',
+        'zemu_control-69aa526-noglypivot',
+        'ddg_monomer_16_003-zemu-2',
+        'zemu-values',
+    ])
 }
 
 sorting_type_descriptions = {
@@ -354,7 +365,7 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
 
 def figure_scatter():
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
-    control_run_name = 'zemu_control-69aa526'
+    control_run_name = 'zemu_control-69aa526-noglypivot'
     point_size = 4.5
     alpha = 0.6
     scatter_kws = { 's' : point_size, 'alpha' : alpha }
@@ -480,7 +491,7 @@ def table_composition():
     # Dataset composition
     df = load_df()
     df = df.drop_duplicates( ['PredictionRunName', 'DataSetID', 'PredictionID', 'ScoreMethodID', 'MutType', 'total', 'ExperimentalDDG', 'StructureOrder'] )
-    control_df = df.loc[ (df['PredictionRunName'] == 'zemu_control-69aa526') & (df['ScoreMethodID'] == 8 ) ]
+    control_df = df.loc[ (df['PredictionRunName'] == 'zemu_control-69aa526-noglypivot') & (df['ScoreMethodID'] == 8 ) ]
 
     ns = []
     mut_type_names = []
@@ -505,12 +516,8 @@ def table_composition():
 def table_versions():
     save_latex( 'latex_templates/table-versions.tex', run_names )
 
-def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_control-69aa526', force_control_in_axes = True ):
+def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_control-69aa526-noglypivot', force_control_in_axes = True ):
     exp_run_name = 'zemu_1.2-60000_rscript_validated-t14'
-    point_size = 4.5
-    alpha = 0.6
-    scatter_kws = { 's' : point_size, 'alpha' : alpha }
-    line_kws = { 'linewidth' : 0.9 }
 
     df = load_df()
     exp_colname = 'Experimental ddG'
@@ -539,7 +546,6 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
         ax = fig.add_subplot( 2, 2, ax_i + 1 )
         ax.set_title( mut_types[mut_type_subset] )
         ax.set_ylabel("Pearson's R")
-        ax.yaxis.label.set_color(current_palette[0] )
         ax.set_xlabel("Backrub Step")
         ns.append( len(df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) & (df['ScoreMethodID'] == df['ScoreMethodID'].drop_duplicates().values[0]) ]) )
         rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
@@ -614,7 +620,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
     control_base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
     number_of_structures = 50
     mut_type_subsets = ['complete', 's2l', 'mult_none_ala', 'sing_ala']
-    control_run = 'zemu_control-69aa526'
+    control_run = 'zemu_control-69aa526-noglypivot'
 
     for sorting_type in sorting_types:
         structure_orders = []
@@ -651,10 +657,10 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
 
         sns.set_style("white")
         fig = plt.figure(
-            figsize=(10.0, 8.5), dpi=600
+            figsize = [10.0, 8.5], dpi=600
         )
         fig.subplots_adjust( wspace = 0.6, hspace = 0.3)
-        fig.suptitle('Number of Structures Performance\n(%s)' % sorting_type_descriptions[sorting_type], fontsize=20)
+        fig.suptitle('$\Delta\Delta G$ prediction performance vs. number of structural ensemble members', fontsize=20)
 
         r_axes = []
         r_min = float('inf')
@@ -664,14 +670,14 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
         mae_min = float('inf')
         mae_max = float('-inf')
 
-        # Information for caption
+        # Information for caption/legend
         ns = []
         best_step_ids = []
-
+        legend_lines = []
+        legend_labels = []
         for ax_i, mut_type_subset in enumerate( mut_type_subsets ):
             ax = fig.add_subplot( 2, 2, ax_i + 1 )
-            ax.set_ylabel("Pearson's R")
-            ax.yaxis.label.set_color(current_palette[0] )
+            ax.set_ylabel(u"Pearson's R")
             ax.set_xlabel("Number of Structures")
             rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby(['StructureOrder', 'ScoreMethodID'])[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
             control_rs = df.loc[ (df['PredictionRunName'] == control_run) & (df['MutType'] == mut_type_subset ) ].groupby(['StructureOrder'])[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
@@ -700,16 +706,46 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
             ax2.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
             ax2.set_ylabel("MAE")
 
-            ax2.plot( control_maes.index, control_maes.values, 's', color = (1.0 + np.array( current_palette[1] )) / 2.0 )
-            ax2.plot( maes.index, maes.values, 's', color = current_palette[1] )
-            ax.plot( control_rs['StructureOrder'], control_rs['Experimental ddG'], 'o', color = (1.0 + np.array( current_palette[0] )) / 2.0 )
-            ax.plot( rs['StructureOrder'], rs['Experimental ddG'], 'o', color = current_palette[0] )
+            control_r, = ax.plot(
+                control_rs['StructureOrder'], control_rs['Experimental ddG'],
+                'o',
+                color = run_colors[control_run],
+                zorder = 1,
+            )
+            exp_r, = ax.plot(
+                rs['StructureOrder'], rs['Experimental ddG'],
+                'o',
+                color = run_colors[exp_run_name],
+                zorder = 2,
+            )
+            control_mae, = ax2.plot(
+                control_maes.index, control_maes.values,
+                'P',
+                color = ( 1.0 + np.array(run_colors[control_run]) ) / 2.0,
+                markersize = 5,
+                zorder = 1,
+            )
+            exp_mae, = ax2.plot(
+                maes.index, maes.values,
+                'P',
+                color = ( 1.0 + np.array(run_colors[exp_run_name]) ) / 2.0,
+                markersize = 5,
+                zorder = 2,
+            )
+
+            if ax_i == 0:
+                legend_lines.extend( [exp_r, control_r, exp_mae, control_mae] )
+                legend_labels.extend( [
+                    'R - ' + run_names[exp_run_name].capitalize(),
+                    'R - ' + run_names[control_run].capitalize(),
+                    'MAE - ' + run_names[exp_run_name].capitalize(),
+                    'MAE - ' + run_names[control_run].capitalize(),
+                ] )
 
             mae_min = min( mae_min, min(maes.values), min(control_maes.values) )
             mae_max = max( mae_max, max(maes.values), max(control_maes.values) )
 
             ax.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter('%.2f'))
-            ax2.yaxis.label.set_color(current_palette[1] )
 
             r_axes.append( ax )
             mae_axes.append( ax2 )
@@ -721,11 +757,11 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
         mae_min -= mae_range * 0.1
         mae_max += mae_range * 0.1
 
-        for ax in r_axes:
-            ax.set_ylim( [r_min, r_max] )
-
-        for ax in mae_axes:
-            ax.set_ylim( [mae_min, mae_max] )
+        for r_ax, mae_ax in zip(r_axes, mae_axes):
+            r_ax.set_ylim( [r_min, r_max] )
+            mae_ax.set_ylim( [mae_min, mae_max] )
+            r_ax.set_zorder( mae_ax.get_zorder() + 10 )
+            r_ax.patch.set_visible(False)
 
         output_figure_name = 'structs-v-corr-%s-%s' % (sorting_type, exp_run_name)
         output_figure_name = output_figure_name.replace('_', '-').replace('.', '')
@@ -735,6 +771,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
             'fig-path' : out_path,
             'exp-run-name' : run_names[exp_run_name],
             'control-name' : run_names[control_run],
+            'sorting-type' : sorting_type_descriptions[sorting_type],
         }
         for alpha_i, alpha in enumerate( string.ascii_lowercase[:4] ):
             if best_step_ids[alpha_i] >= 10:
@@ -742,6 +779,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
             else:
                 sub_dict[ 'panel-' + alpha ] = '%s (n = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i] )
 
+        leg = plt.figlegend( legend_lines, legend_labels, loc = 'lower center', ncol = 4, labelspacing=0.0 )
         fig.savefig( out_path )
         save_latex( 'latex_templates/structs-vs-corr.tex', sub_dict, out_tex_name = output_figure_name )
         print out_path
@@ -752,7 +790,7 @@ def table_main( results_df ):
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_03'),
-        ('zemu_control-69aa526', 8, 'id_50'),
+        ('zemu_control-69aa526-noglypivot', 8, 'id_50'),
         ('zemu-values', 11, 'id_01'),
     ]
 
@@ -817,7 +855,7 @@ def multiple_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
-        ('zemu_control-69aa526', 8, 'id_50'),
+        ('zemu_control-69aa526-noglypivot', 8, 'id_50'),
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Multiple mutations results'
@@ -830,7 +868,7 @@ def antibodies_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
-        ('zemu_control-69aa526', 8, 'id_50'),
+        ('zemu_control-69aa526-noglypivot', 8, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
@@ -844,7 +882,7 @@ def stabilizing_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
-        ('zemu_control-69aa526', 8, 'id_50'),
+        ('zemu_control-69aa526-noglypivot', 8, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
@@ -858,7 +896,7 @@ def by_pdb_table( results_df ):
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_validated-t14', backrub_steps, 'id_50'),
-        ('zemu_control-69aa526', 8, 'id_50'),
+        ('zemu_control-69aa526-noglypivot', 8, 'id_50'),
         ('ddg_monomer_16_003-zemu-2', 8, 'WildTypeComplex_50'),
         ('zemu-values', 11, 'id_01'),
     ]
