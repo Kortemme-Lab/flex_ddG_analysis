@@ -3,33 +3,49 @@
 % fref = zbrr.ros;
 % ftal = zbrt.ros;
 % fcon = zc.ros;
-%
-% %% backrub-ref
-%
-% Rref = sigmoidfit(zbrr.X,zbrr.y,50,1000);
-%
-% plotsigmoids(zbrr.X,Rref.phat, Rref.ps(1:100,:), zbrr.feats);
-% print('zemu_sigmoid2_ref_feats.png','-dpng','-r300');
-%
-% plotsample(Rref);
-% print('zemu_sigmoid2_ref_posterior.png','-dpng','-r300');
+
+talaris_table = readtable('../data/by_step/zemu-backrub-1.2-50-30000-t14.csv');
+ref_table = readtable('../data/by_step/zemu-backrub-1.2-50-30000-REF-v2.csv');
+control_table = readtable('../data/by_step/zemu_control-id_50-t14.csv');
+talaris_fields = {'fa_sol', 'hbond_sc', 'hbond_bb_sc', 'fa_rep', 'fa_elec', 'hbond_lr_bb', 'fa_atr'};
+ref_fields = {'fa_sol', 'hbond_sc', 'hbond_bb_sc', 'fa_rep', 'fa_elec', 'hbond_lr_bb', 'fa_atr', 'lk_ball_wtd'};
+
+%% backrub-ref
+
+[m,n] = size(ref_fields)
+ref_pred_data = zeros( 1240, n );
+for i = 1:n
+    field_name = char(ref_fields(i));
+    ref_pred_data(:,i) = ref_table.(field_name);
+end
+exp_data = ref_table.ExperimentalDDG;
+
+Rref = sigmoidfit(ref_pred_data, exp_data, 50, 1000);
+
+plotsigmoids(ref_pred_data, Rref.phat, Rref.ps(1:100,:), ref_fields);
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 12 10];
+print('zemu_sigmoid2_ref_feats.png','-dpng','-r300');
+
+plotsample(Rref);
+print('zemu_sigmoid2_ref_posterior.png','-dpng','-r300');
 
 
 %% backrub-talaris
 
-talaris_table = readtable('zemu-backrub-1.2-50-30000-t14.csv');
-talaris_fields = {'fa_sol', 'hbond_sc', 'hbond_bb_sc', 'fa_rep', 'fa_elec', 'hbond_lr_bb', 'fa_atr'};
 [m,n] = size(talaris_fields)
-pred_data = zeros( 1240, n );
+tal_pred_data = zeros( 1240, n );
 for i = 1:n
     field_name = char(talaris_fields(i));
-    pred_data(:,i) = talaris_table.(field_name);
+    tal_pred_data(:,i) = talaris_table.(field_name);
 end
+assert( isequal( exp_data, talaris_table.ExperimentalDDG ) );
 exp_data = talaris_table.ExperimentalDDG;
 
-Rtal = sigmoidfit(pred_data, exp_data, 50, 1000);
+Rtal = sigmoidfit(tal_pred_data, exp_data, 50, 1000);
 
-plotsigmoids(pred_data, Rtal.phat, Rtal.ps(1:100,:), talaris_fields);
+plotsigmoids(tal_pred_data, Rtal.phat, Rtal.ps(1:100,:), talaris_fields);
 fig = gcf;
 fig.PaperUnits = 'inches';
 fig.PaperPosition = [0 0 12 10];
@@ -38,72 +54,87 @@ print('zemu_sigmoid2_tal_feats.png','-dpng','-r300');
 plotsample(Rtal);
 print('zemu_sigmoid2_tal_posterior.png','-dpng','-r600');
 
-return
-
 %% control
 
-Rcon = sigmoidfit(zc.X,zc.y,50,1000);
+[m,n] = size(talaris_fields)
+control_pred_data = zeros( 1240, n );
+for i = 1:n
+    field_name = char(talaris_fields(i));
+    control_pred_data(:,i) = control_table.(field_name);
+end
+assert( isequal( exp_data, control_table.ExperimentalDDG ) );
+exp_data = control_table.ExperimentalDDG;
 
-plotsigmoids(zc.X,Rcon.phat, Rcon.ps(1:100,:), zc.feats);
+Rcon = sigmoidfit(control_pred_data, exp_data, 50, 1000);
+
+plotsigmoids(control_pred_data, Rcon.phat, Rcon.ps(1:100,:), talaris_fields);
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 12 10];
 print('zemu_sigmoid2_con_feats.png','-dpng','-r300');
 
 plotsample(Rcon);
 print('zemu_sigmoid2_con_posterior.png','-dpng','-r300');
 
 %% plot correlations from all
+current_palette = { [0.29803921568627451 0.44705882352941179 0.69019607843137254], [0.33333333333333331 0.6588235294117647 0.40784313725490196], [0.7686274509803922 0.30588235294117649 0.32156862745098042], [0.50588235294117645 0.44705882352941179 0.69803921568627447], [0.80000000000000004 0.72549019607843135 0.45490196078431372] };
 
 subplot(321);
-plot(zc.ros, zc.y,'r.');
-title(sprintf('Control, corr %.3f, MAE %.3f, MSE %.3f', corr(zc.ros,zc.y), mean(abs(zc.ros-zc.y)),mean((zc.ros-zc.y).^2) ));
-refline(1); xlim([-4 10]); ylim([-7 10]);
-
+plot(exp_data, control_table.total, 'r.', 'color', cell2mat( current_palette(2)));
+title(sprintf('No backrub control: R %.2f MAE %.2f', corr(exp_data,control_table.total), mean(abs(exp_data-control_table.total)) ));
+refline(1); xlim([-6 11]); ylim([-6 11]);
 
 subplot(323);
-plot(zbrt.ros, zbrt.y,'r.');
-title(sprintf('Backrub Talaris, corr %.3f, MAE %.3f, MSE %.3f', corr(zbrt.ros,zbrt.y), mean(abs(zbrt.ros-zbrt.y)),mean((zbrt.ros-zbrt.y).^2) ));
-refline(1); xlim([-4 10]); ylim([-7 10]);
+plot(exp_data, talaris_table.total, 'r.', 'color', cell2mat( current_palette(1)));
+title(sprintf('Flex ddG: R %.2f MAE %.2f', corr(exp_data, talaris_table.total), mean(abs(exp_data-talaris_table.total)) ));
+refline(1); xlim([-6 11]); ylim([-6 11]);
 
 
 subplot(325);
-plot(zbrr.ros, zbrr.y,'r.');
-title(sprintf('Backrub REF, corr %.3f, MAE %.3f, MSE %.3f', corr(zbrr.ros,zbrr.y), mean(abs(zbrr.ros-zbrr.y)),mean((zbrr.ros-zbrr.y).^2) ));
-refline(1); xlim([-4 10]); ylim([-7 10]);
+plot(exp_data, ref_table.total, 'r.', 'color', cell2mat( current_palette(5)));
+title(sprintf('Flex ddG (REF energy): R %.2f MAE %.2f', corr(exp_data, ref_table.total), mean(abs(exp_data-ref_table.total)) ));
+refline(1); xlim([-6 11]); ylim([-6 11]);
 
 
 subplot(322);
-plot(Rcon.fhat, zc.y,'r.');
+plot(exp_data, Rcon.fhat, 'r.', 'color', cell2mat( current_palette(2)));
 hold on;
-plot( [min(Rcon.fs')' max(Rcon.fs')']', [zc.y zc.y]', '-', 'color', 0.65*[1 1 1]);
-plot(Rcon.fhat, zc.y,'r.');
+plot( [exp_data exp_data]', [min(Rcon.fs')' max(Rcon.fs')']', '-', 'color', 0.65*[1 1 1]);
+plot( exp_data, Rcon.fhat, 'r.', 'color', cell2mat( current_palette(2)));
 hold off;
 
-title(sprintf('Control, corr %.3f, MAE %.3f, MSE %.3f', corr(Rcon.fhat,zc.y), mean(abs(Rcon.fhat-zc.y)),mean((Rcon.fhat-zc.y).^2) ));
-refline(1); xlim([-4 10]); ylim([-7 10]);
+title(sprintf('No backrub control: R %.2f MAE %.2f', corr(Rcon.fhat, exp_data), mean(abs(Rcon.fhat-exp_data)) ));
+refline(1); xlim([-6 11]); ylim([-6 11]);
 
 
 subplot(324);
-plot(Rtal.fhat, zbrt.y,'r.');
+plot( exp_data, Rtal.fhat, 'r.', 'color', cell2mat( current_palette(1)));
 hold on;
-plot( [min(Rtal.fs')' max(Rtal.fs')']', [zbrt.y zbrt.y]', '-', 'color', 0.65*[1 1 1]);
-plot(Rtal.fhat, zbrt.y,'r.');
+plot( [exp_data exp_data]', [min(Rtal.fs')' max(Rtal.fs')']', '-', 'color', 0.65*[1 1 1]);
+plot( exp_data, Rtal.fhat, 'r.', 'color', cell2mat( current_palette(1)));
 hold off;
 
-title(sprintf('Backrub Talaris, corr %.3f, MAE %.3f, MSE %.3f', corr(Rtal.fhat,zbrt.y), mean(abs(Rtal.fhat-zbrt.y)),mean((Rtal.fhat-zbrt.y).^2) ));
-refline(1); xlim([-4 10]); ylim([-7 10]);
+title(sprintf('flex ddG: R %.2f MAE %.2f', corr(Rtal.fhat,exp_data), mean(abs(Rtal.fhat-exp_data)) ));
+refline(1); xlim([-6 11]); ylim([-6 11]);
+
 
 subplot(326);
-plot(Rref.fhat, zbrr.y,'r.');
-title(sprintf('Backrub REF, corr %.3f, MAE %.3f, MSE %.3f', corr(Rref.fhat,zbrr.y), mean(abs(Rref.fhat-zbrr.y)),mean((Rref.fhat-zbrr.y).^2) ));
+plot( exp_data, Rref.fhat, 'r.', 'color', cell2mat( current_palette(5)));
+title(sprintf('flex ddG (REF): R %.2f MAE %.2f', corr(Rref.fhat, exp_data), mean(abs(Rref.fhat-exp_data)) ));
 hold on;
-plot( [min(Rref.fs')' max(Rref.fs')']', [zbrr.y zbrr.y]', '-', 'color', 0.65*[1 1 1]);
-plot(Rref.fhat, zbrr.y,'r.');
+plot( [exp_data exp_data]', [min(Rref.fs')' max(Rref.fs')']', '-', 'color', 0.65*[1 1 1]);
+plot( exp_data, Rref.fhat, 'r.', 'color', cell2mat( current_palette(5)));
 hold off;
-refline(1); xlim([-4 10]); ylim([-7 10]);
+refline(1); xlim([-6 11]); ylim([-6 11]);
 
+
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 10 14];
 print('zemu_sigmoid2_corrs.png','-dpng','-r300');
 
 
-
+return
 
 %% backrub-talaris 10-CV
 
