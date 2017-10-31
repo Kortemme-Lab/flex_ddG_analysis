@@ -1,16 +1,16 @@
 % load ../data/zemu.mat
-% 
+%
 % fref = zbrr.ros;
 % ftal = zbrt.ros;
-% fcon = zc.ros; 
-% 
+% fcon = zc.ros;
+%
 % %% backrub-ref
-% 
+%
 % Rref = sigmoidfit(zbrr.X,zbrr.y,50,1000);
-% 
+%
 % plotsigmoids(zbrr.X,Rref.phat, Rref.ps(1:100,:), zbrr.feats);
 % print('zemu_sigmoid2_ref_feats.png','-dpng','-r300');
-% 
+%
 % plotsample(Rref);
 % print('zemu_sigmoid2_ref_posterior.png','-dpng','-r300');
 
@@ -19,16 +19,19 @@
 
 talaris_table = readtable('zemu-backrub-1.2-50-30000-t14.csv');
 talaris_fields = {'fa_sol', 'hbond_sc', 'hbond_bb_sc', 'fa_rep', 'fa_elec', 'hbond_lr_bb', 'fa_atr'};
-pred_data = zeros(1240,numel(talaris_fields));
-for i = 1:numel(talaris_fields)
+[m,n] = size(talaris_fields)
+pred_data = zeros( 1240, n );
+exp_data = zeros( 1240, 1 );
+for i = 1:n
     field_name = char(talaris_fields(i));
     pred_data(:,i) = talaris_table.(field_name);
+    %% exp_data(:,i) = talaris_table.ExperimentalDDG(i);
 end
 exp_data = talaris_table.ExperimentalDDG;
 
 Rtal = sigmoidfit(pred_data, exp_data, 50, 1000);
 
-plotsigmoids(exp_data, Rtal.phat, Rtal.ps(1:100,:), talaris_fields);
+plotsigmoids(pred_data, Rtal.phat, Rtal.ps(1:100,:), talaris_fields);
 print('zemu_sigmoid2_tal_feats.png','-dpng','-r300');
 
 plotsample(Rtal);
@@ -106,10 +109,10 @@ print('zemu_sigmoid2_corrs.png','-dpng','-r300');
 folds = cvpartition(1240,'Kfold',10);
 fs = zeros(1240,1);
 for f=1:10
-	tr = folds.training(f);	
+	tr = folds.training(f);
 	ts = folds.test(f);
-	
-	% train 
+
+	% train
 	Rf = sigmoidfit(zbrt.X(tr,:),zbrt.y(tr));
 	% test
 	fs(ts) = sigmoid(zbrt.X(ts,:), Rf.phat);
@@ -119,5 +122,3 @@ end
 Rtal = sigmoidfit(zbrt.X,zbrt.y,50,1000);
 plotsigmoids(zbrt.X,Rtal.phat, Rtal.ps(1:100,:), zbrt.feats);
 plotsample(Rtal);
-
-
