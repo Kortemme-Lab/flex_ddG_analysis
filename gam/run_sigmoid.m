@@ -1,31 +1,40 @@
-
-
-load ../data/zemu.mat
-
-fref = zbrr.ros;
-ftal = zbrt.ros;
-fcon = zc.ros;
-
-%% backrub-ref
-
-Rref = sigmoidfit(zbrr.X,zbrr.y,50,1000);
-
-plotsigmoids(zbrr.X,Rref.phat, Rref.ps(1:100,:), zbrr.feats);
-print('zemu_sigmoid2_ref_feats.png','-dpng','-r300');
-
-plotsample(Rref);
-print('zemu_sigmoid2_ref_posterior.png','-dpng','-r300');
+% load ../data/zemu.mat
+% 
+% fref = zbrr.ros;
+% ftal = zbrt.ros;
+% fcon = zc.ros; 
+% 
+% %% backrub-ref
+% 
+% Rref = sigmoidfit(zbrr.X,zbrr.y,50,1000);
+% 
+% plotsigmoids(zbrr.X,Rref.phat, Rref.ps(1:100,:), zbrr.feats);
+% print('zemu_sigmoid2_ref_feats.png','-dpng','-r300');
+% 
+% plotsample(Rref);
+% print('zemu_sigmoid2_ref_posterior.png','-dpng','-r300');
 
 
 %% backrub-talaris
 
-Rtal = sigmoidfit(zbrt.X,zbrt.y,50,1000);
+talaris_table = readtable('zemu-backrub-1.2-50-30000-t14.csv');
+talaris_fields = {'fa_sol', 'hbond_sc', 'hbond_bb_sc', 'fa_rep', 'fa_elec', 'hbond_lr_bb', 'fa_atr'};
+pred_data = zeros(1240,numel(talaris_fields));
+for i = 1:numel(talaris_fields)
+    field_name = char(talaris_fields(i));
+    pred_data(:,i) = talaris_table.(field_name);
+end
+exp_data = talaris_table.ExperimentalDDG;
 
-plotsigmoids(zbrt.X,Rtal.phat, Rtal.ps(1:100,:), zbrt.feats);
+Rtal = sigmoidfit(pred_data, exp_data, 50, 1000);
+
+plotsigmoids(exp_data, Rtal.phat, Rtal.ps(1:100,:), talaris_fields);
 print('zemu_sigmoid2_tal_feats.png','-dpng','-r300');
 
 plotsample(Rtal);
 print('zemu_sigmoid2_tal_posterior.png','-dpng','-r300');
+
+return
 
 %% control
 
