@@ -82,19 +82,41 @@ current_palette = { [0.29803921568627451 0.44705882352941179 0.69019607843137254
 subplot(321);
 plot(exp_data, control_table.total, 'r.', 'color', cell2mat( current_palette(2)));
 title(sprintf('No backrub control: R %.2f MAE %.2f', corr(exp_data,control_table.total), mean(abs(exp_data-control_table.total)) ));
-refline(1); xlim([-6 11]); ylim([-6 11]);
+xlim([-6 11]); ylim([-6 11]);
+hold on;
+    coef_fit = polyfit( exp_data, control_table.total, 1 );
+    y_fit = polyval( coef_fit, xlim );
+    plot( xlim, y_fit, 'r', 'color', cell2mat( current_palette(2)) );
+hold off;
+grid on;
+xlabel( 'Experimental $\Delta\Delta G$', 'Interpreter', 'latex' );
+ylabel( 'Rosetta Score', 'Interpreter', 'latex' );
 
 subplot(323);
 plot(exp_data, talaris_table.total, 'r.', 'color', cell2mat( current_palette(1)));
 title(sprintf('Flex ddG: R %.2f MAE %.2f', corr(exp_data, talaris_table.total), mean(abs(exp_data-talaris_table.total)) ));
-refline(1); xlim([-6 11]); ylim([-6 11]);
-
+xlim([-6 11]); ylim([-6 11]);
+hold on;
+    coef_fit = polyfit( exp_data, talaris_table.total, 1 );
+    y_fit = polyval( coef_fit, xlim );
+    plot( xlim, y_fit, 'r', 'color', cell2mat( current_palette(1)) );
+hold off;
+grid on;
+xlabel( 'Experimental $\Delta\Delta G$', 'Interpreter', 'latex' );
+ylabel( 'Rosetta Score', 'Interpreter', 'latex' );
 
 subplot(325);
 plot(exp_data, ref_table.total, 'r.', 'color', cell2mat( current_palette(5)));
 title(sprintf('Flex ddG (REF energy): R %.2f MAE %.2f', corr(exp_data, ref_table.total), mean(abs(exp_data-ref_table.total)) ));
-refline(1); xlim([-6 11]); ylim([-6 11]);
-
+xlim([-6 11]); ylim([-6 11]);
+hold on;
+    coef_fit = polyfit( exp_data, ref_table.total, 1 );
+    y_fit = polyval( coef_fit, xlim );
+    plot( xlim, y_fit, 'r', 'color', cell2mat( current_palette(5)) );
+hold off;
+grid on;
+xlabel( 'Experimental $\Delta\Delta G$', 'Interpreter', 'latex' );
+ylabel( 'Rosetta Score', 'Interpreter', 'latex' );
 
 subplot(322);
 plot(exp_data, Rcon.fhat, 'r.', 'color', cell2mat( current_palette(2)));
@@ -102,10 +124,16 @@ hold on;
 plot( [exp_data exp_data]', [min(Rcon.fs')' max(Rcon.fs')']', '-', 'color', 0.65*[1 1 1]);
 plot( exp_data, Rcon.fhat, 'r.', 'color', cell2mat( current_palette(2)));
 hold off;
-
-title(sprintf('No backrub control: R %.2f MAE %.2f', corr(Rcon.fhat, exp_data), mean(abs(Rcon.fhat-exp_data)) ));
-refline(1); xlim([-6 11]); ylim([-6 11]);
-
+title(sprintf('GAM No backrub control: R %.2f MAE %.2f', corr(Rcon.fhat, exp_data), mean(abs(Rcon.fhat-exp_data)) ));
+xlim([-6 11]); ylim([-6 11]);
+hold on;
+    coef_fit = polyfit( exp_data, Rcon.fhat, 1 );
+    y_fit = polyval( coef_fit, xlim );
+    plot( xlim, y_fit, 'r', 'color', cell2mat( current_palette(2)) );
+hold off;
+grid on;
+xlabel( 'Experimental $\Delta\Delta G$', 'Interpreter', 'latex' );
+ylabel( 'GAM Score', 'Interpreter', 'latex' );
 
 subplot(324);
 plot( exp_data, Rtal.fhat, 'r.', 'color', cell2mat( current_palette(1)));
@@ -113,25 +141,39 @@ hold on;
 plot( [exp_data exp_data]', [min(Rtal.fs')' max(Rtal.fs')']', '-', 'color', 0.65*[1 1 1]);
 plot( exp_data, Rtal.fhat, 'r.', 'color', cell2mat( current_palette(1)));
 hold off;
-
-title(sprintf('flex ddG: R %.2f MAE %.2f', corr(Rtal.fhat,exp_data), mean(abs(Rtal.fhat-exp_data)) ));
-refline(1); xlim([-6 11]); ylim([-6 11]);
-
+title(sprintf('GAM flex ddG: R %.2f MAE %.2f', corr(Rtal.fhat,exp_data), mean(abs(Rtal.fhat-exp_data)) ));
+xlim([-6 11]); ylim([-6 11]);
+hold on;
+    coef_fit = polyfit( exp_data, Rtal.fhat, 1 );
+    y_fit = polyval( coef_fit, xlim );
+    plot( xlim, y_fit, 'r', 'color', cell2mat( current_palette(1)) );
+hold off;
+grid on;
+xlabel( 'Experimental $\Delta\Delta G$', 'Interpreter', 'latex' );
+ylabel( 'GAM Score', 'Interpreter', 'latex' );
 
 subplot(326);
 plot( exp_data, Rref.fhat, 'r.', 'color', cell2mat( current_palette(5)));
-title(sprintf('flex ddG (REF): R %.2f MAE %.2f', corr(Rref.fhat, exp_data), mean(abs(Rref.fhat-exp_data)) ));
+title(sprintf('GAM flex ddG (REF): R %.2f MAE %.2f', corr(Rref.fhat, exp_data), mean(abs(Rref.fhat-exp_data)) ));
 hold on;
 plot( [exp_data exp_data]', [min(Rref.fs')' max(Rref.fs')']', '-', 'color', 0.65*[1 1 1]);
 plot( exp_data, Rref.fhat, 'r.', 'color', cell2mat( current_palette(5)));
 hold off;
-refline(1); xlim([-6 11]); ylim([-6 11]);
+xlim([-6 11]); ylim([-6 11]);
+hold on;
+    coef_fit = polyfit( exp_data, Rref.fhat, 1 );
+    y_fit = polyval( coef_fit, xlim );
+    plot( xlim, y_fit, 'r', 'color', cell2mat( current_palette(5)) );
+hold off;
+grid on;
+xlabel( 'Experimental $\Delta\Delta G$', 'Interpreter', 'latex' );
+ylabel( 'GAM Score', 'Interpreter', 'latex' );
 
 
 fig = gcf;
 fig.PaperUnits = 'inches';
-fig.PaperPosition = [0 0 10 14];
-print('zemu_sigmoid2_corrs.png','-dpng','-r300');
+fig.PaperPosition = [0 0 8 9];
+print('zemu_sigmoid2_corrs.png','-dpng','-r600');
 
 
 return
