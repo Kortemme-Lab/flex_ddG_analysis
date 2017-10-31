@@ -45,7 +45,14 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
-current_palette = sns.color_palette()
+current_palette = [
+    (0.29803921568627451, 0.44705882352941179, 0.69019607843137254),
+    (0.33333333333333331, 0.6588235294117647, 0.40784313725490196),
+    (0.7686274509803922, 0.30588235294117649, 0.32156862745098042),
+    (0.50588235294117645, 0.44705882352941179, 0.69803921568627447),
+    (0.80000000000000004, 0.72549019607843135, 0.45490196078431372),
+    (0.39215686274509803, 0.70980392156862748, 0.80392156862745101),
+]
 
 for csv_path in csv_paths:
     if not os.path.isfile(csv_path):
@@ -844,7 +851,7 @@ def table_ref( results_df ):
     ]
 
     short_caption = "REF results"
-    caption_text = short_caption + ". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = 'Performance comparison of the standard flex ddG protocol (using Rosetta\'s Talaris energy function) with flex ddG run with the REF score function. "res $<=$ 1.5 Ang." indicates data points for which the resolution of the input wild-type crystal structure is less than or equal to 1.5 \AA. Backrub steps = %d. R = Pearson\'s R. MAE = Mean Absolute Error. FC = Fraction Correct.' % backrub_steps
 
     table_mut_types = [
         'complete', 's2l', 'sing_ala', 'mult_mut',
@@ -862,7 +869,7 @@ def backrub_temp_table( results_df ):
     ]
 
     short_caption = "Comparison of backrub temperature results"
-    caption_text = short_caption + ". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = "Flex ddG performance comparison, when backrub is run with a sampling temperature (kT) of 1.2 or 1.6. Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-temperature', results_df, display_runs, caption_text, short_caption )
 
@@ -880,7 +887,7 @@ def ddg_monomer_table( results_df ):
     short_caption = 'ddG monomer results'
     caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
-    subset_table( 'table-temperature', results_df, display_runs, caption_text, short_caption )
+    subset_table( 'table-ddG-monomer', results_df, display_runs, caption_text, short_caption )
 
 def multiple_table( results_df ):
     backrub_steps = 35000
