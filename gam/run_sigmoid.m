@@ -21,21 +21,22 @@ talaris_table = readtable('zemu-backrub-1.2-50-30000-t14.csv');
 talaris_fields = {'fa_sol', 'hbond_sc', 'hbond_bb_sc', 'fa_rep', 'fa_elec', 'hbond_lr_bb', 'fa_atr'};
 [m,n] = size(talaris_fields)
 pred_data = zeros( 1240, n );
-exp_data = zeros( 1240, 1 );
 for i = 1:n
     field_name = char(talaris_fields(i));
     pred_data(:,i) = talaris_table.(field_name);
-    %% exp_data(:,i) = talaris_table.ExperimentalDDG(i);
 end
 exp_data = talaris_table.ExperimentalDDG;
 
 Rtal = sigmoidfit(pred_data, exp_data, 50, 1000);
 
 plotsigmoids(pred_data, Rtal.phat, Rtal.ps(1:100,:), talaris_fields);
+fig = gcf;
+fig.PaperUnits = 'inches';
+fig.PaperPosition = [0 0 12 10];
 print('zemu_sigmoid2_tal_feats.png','-dpng','-r300');
 
 plotsample(Rtal);
-print('zemu_sigmoid2_tal_posterior.png','-dpng','-r300');
+print('zemu_sigmoid2_tal_posterior.png','-dpng','-r600');
 
 return
 
