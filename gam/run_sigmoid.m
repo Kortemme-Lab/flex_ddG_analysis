@@ -26,10 +26,13 @@ plotsigmoids(ref_pred_data, Rref.phat, Rref.ps(1:100,:), ref_fields);
 fig = gcf;
 fig.PaperUnits = 'inches';
 fig.PaperPosition = [0 0 12 10];
-print('zemu_sigmoid2_ref_feats.png','-dpng','-r300');
+print('zemu_sigmoid2_ref_feats.png','-dpng','-r400');
 
 plotsample(Rref);
 print('zemu_sigmoid2_ref_posterior.png','-dpng','-r300');
+
+fit_terms = fitterms(ref_pred_data, Rref.phat, ref_fields);
+writetable( fit_terms, 'ref_GAM_terms.csv' )
 
 
 %% backrub-talaris
@@ -54,6 +57,10 @@ print('zemu_sigmoid2_tal_feats.png','-dpng','-r300');
 plotsample(Rtal);
 print('zemu_sigmoid2_tal_posterior.png','-dpng','-r600');
 
+fit_terms = fitterms(tal_pred_data, Rtal.phat, talaris_fields);
+writetable( fit_terms, 'tal_GAM_terms.csv' )
+
+
 %% control
 
 [m,n] = size(talaris_fields)
@@ -75,6 +82,11 @@ print('zemu_sigmoid2_con_feats.png','-dpng','-r300');
 
 plotsample(Rcon);
 print('zemu_sigmoid2_con_posterior.png','-dpng','-r300');
+
+fit_terms = fitterms(control_pred_data, Rcon.phat, talaris_fields);
+writetable( fit_terms, 'control_GAM_terms.csv' )
+
+
 
 %% plot correlations from all
 current_palette = { [0.29803921568627451 0.44705882352941179 0.69019607843137254], [0.33333333333333331 0.6588235294117647 0.40784313725490196], [0.7686274509803922 0.30588235294117649 0.32156862745098042], [0.50588235294117645 0.44705882352941179 0.69803921568627447], [0.80000000000000004 0.72549019607843135 0.45490196078431372] };
@@ -172,8 +184,11 @@ ylabel( 'GAM Score', 'Interpreter', 'latex' );
 
 fig = gcf;
 fig.PaperUnits = 'inches';
-fig.PaperPosition = [0 0 8 9];
+fig.PaperPosition = [0 0 8.5 9.5];
 print('zemu_sigmoid2_corrs.png','-dpng','-r600');
+
+
+%% Output table of fit results
 
 
 return

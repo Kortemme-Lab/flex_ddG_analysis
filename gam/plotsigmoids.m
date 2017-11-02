@@ -8,7 +8,7 @@ function [] = plotsigmoids(X,pbest,ps,feats)
 		xs = linspace( min(X(:,i))-0.05*r, max(X(:,i))+0.05*r, 200)';
 
 		plot(xs, sigmoid(xs, pbest(1+(i-1)*2 : i*2)), 'r-');
-		
+
 		if ~isempty(ps)
 
 			hold on;
@@ -20,15 +20,15 @@ function [] = plotsigmoids(X,pbest,ps,feats)
 			end
 			plot(xs, sigmoid(xs, pbest(1+(i-1)*2 : i*2)), 'r-');
 			hold off;
-			
+
 			refline(1);
 			ry = max(fs(:))-min(fs(:));
 			ylim([min(min(fs(:))-0.05*ry,min(xs)) max(xs)]);
 		end
-		
+
 		xlim([min(xs) max(xs)]);
-		
-		title({feats{i}, sprintf('2 e^%.2f / (1 + e^%.2f x) - e^%.2f', pbest(i*2), exp(pbest(1+(i-1)*2)), pbest(i*2) )},'interpreter','none');
+
+		title({ strrep(feats{i},'_','\_'), sprintf(['$y=-e^{%.3f} + \\frac{2e^{%.3f}}{1+e^{-xe^{%.3f}}}$'], pbest(i*2), pbest(i*2), pbest(1+(i-1)*2) )},'interpreter','latex');
 %		title(feats{i}, 'interpreter','none');
 		xlabel('Rosetta score');
 		ylabel('Weighted score');
