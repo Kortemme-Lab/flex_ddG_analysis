@@ -12,7 +12,7 @@ for fpath in ['control_GAM_terms.csv', 'tal_GAM_terms.csv', 'ref_GAM_terms.csv']
     df['total_GAM'] = df[gam_columns].sum( axis = 1 )
 
     percent_df = pd.DataFrame()
-    for col in [x for x in df.columns if not x.startswith('total')]:
+    for col in [x for x in df.columns if (not x.startswith('total') and x != 'exp_data')]:
         if col.endswith('_GAM'):
             total_col = 'total_GAM'
         else:

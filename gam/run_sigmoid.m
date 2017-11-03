@@ -31,7 +31,7 @@ print('zemu_sigmoid2_ref_feats.png','-dpng','-r400');
 plotsample(Rref);
 print('zemu_sigmoid2_ref_posterior.png','-dpng','-r300');
 
-fit_terms = fitterms(ref_pred_data, Rref.phat, ref_fields);
+fit_terms = fitterms(ref_pred_data, Rref.phat, ref_fields, exp_data);
 writetable( fit_terms, 'ref_GAM_terms.csv' )
 
 
@@ -57,7 +57,7 @@ print('zemu_sigmoid2_tal_feats.png','-dpng','-r300');
 plotsample(Rtal);
 print('zemu_sigmoid2_tal_posterior.png','-dpng','-r600');
 
-fit_terms = fitterms(tal_pred_data, Rtal.phat, talaris_fields);
+fit_terms = fitterms(tal_pred_data, Rtal.phat, talaris_fields, exp_data);
 writetable( fit_terms, 'tal_GAM_terms.csv' )
 
 
@@ -83,7 +83,7 @@ print('zemu_sigmoid2_con_feats.png','-dpng','-r300');
 plotsample(Rcon);
 print('zemu_sigmoid2_con_posterior.png','-dpng','-r300');
 
-fit_terms = fitterms(control_pred_data, Rcon.phat, talaris_fields);
+fit_terms = fitterms(control_pred_data, Rcon.phat, talaris_fields, exp_data);
 writetable( fit_terms, 'control_GAM_terms.csv' )
 
 
