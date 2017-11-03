@@ -473,10 +473,12 @@ def figure_scatter( force_backrub_step = 35000 ):
     ax2.set_ylabel('')
     # ax2.set_yticklabels([])
     ax4.set_ylabel('')
+    ax3.set_xlabel('Experimental $\Delta\Delta G$')
+    ax4.set_xlabel('Experimental $\Delta\Delta G$')
 
-    ax1.set_title( '(a) Backrub - %s' % (mut_types[top_subset]) )
+    ax1.set_title( '(a) Flex ddG - %s' % (mut_types[top_subset]) )
     ax2.set_title( '(b) Control - %s' % (mut_types[top_subset] ) )
-    ax3.set_title( '(c) Backrub - %s' % (mut_types[bottom_subset]) )
+    ax3.set_title( '(c) Flex ddG - %s' % (mut_types[bottom_subset]) )
     ax4.set_title( '(d) Control - %s' % (mut_types[bottom_subset]) )
 
     # Assert that these lengths are equal since N is displayed for top and bottom together
@@ -705,7 +707,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
             figsize = [10.0, 8.5], dpi=600
         )
         fig.subplots_adjust( wspace = 0.6, hspace = 0.3)
-        fig.suptitle('$\Delta\Delta G$ prediction performance vs. number of structural ensemble members,\n' + sorting_type_descriptions_short[sorting_type], fontsize=20)
+        fig.suptitle('$\Delta\Delta G$ prediction performance vs. number of structural ensemble members', fontsize=20)
 
         r_axes = []
         r_min = float('inf')
