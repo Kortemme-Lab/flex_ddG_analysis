@@ -6,7 +6,7 @@
 
 talaris_table = readtable('../data/by_step/zemu-backrub-1.2-50-30000-t14.csv');
 ref_table = readtable('../data/by_step/zemu-backrub-1.2-50-30000-REF-v2.csv');
-control_table = readtable('../data/by_step/zemu_control-id_50-t14.csv');
+control_table = readtable('../data/by_step/zemu_control-69aa526-id_50-00008-partial.csv');
 talaris_fields = {'fa_sol', 'hbond_sc', 'hbond_bb_sc', 'fa_rep', 'fa_elec', 'hbond_lr_bb', 'fa_atr'};
 ref_fields = {'fa_sol', 'hbond_sc', 'hbond_bb_sc', 'fa_rep', 'fa_elec', 'hbond_lr_bb', 'fa_atr', 'lk_ball_wtd'};
 
