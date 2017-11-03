@@ -3,54 +3,57 @@ rankdir=TB;
 forcelabels=true;
 
 step0 [label=< <B>Step 0</B> <BR/><FONT POINT-SIZE="10">
-Input starting structure
+Input starting structure.<BR/>
+Generate pairwise atom constraints.
 </FONT> >, shape=box];
 
 step1 [label=< <B>Step 1 - Minimize</B> <BR/><FONT POINT-SIZE="10">
-Global minimization (to convergence) of backbone and side chain torsions<BR/>
-Pairwise atom constraints from Step 0
+Global minimization of backbone and side chain torsions.<BR/>
+Pairwise atom constraints from Step 0.
 </FONT> >, shape=box];
 
 step2 [label=< <B>Step 2 - Backrub</B> <BR/><FONT POINT-SIZE="10">
 Local sampling of backbone and side chain degrees of freedom of pivot residues,<BR/>
-defined as those with neighbor atoms within 8Å of mutation positions
+defined as those with neighbor atoms within 8Å of mutation positions.
 </FONT> >, shape=box];
 
 step3a [label=< <B>Step 3a - Pack</B> <BR/><FONT POINT-SIZE="10">
 Optimize side chains globally<BR/>
-on <B>wild-type</B> structure
+on <B>wild-type</B> structure.<BR/>
+Generate pairwise atom constraints.
 </FONT> >, shape=box, width = 2.9, height = 0.9];
 
 step3b [label=< <B>Step 3b- Mutate and Pack</B> <BR/><FONT POINT-SIZE="10">
 Optimize side chains globally<BR/>
 on <B>mutant</B> structure<BR/>
-(using the mutant sequence)
+(using the mutant sequence).<BR/>
+Generate pairwise atom constraints.
 </FONT> >, shape=box, width = 2.9, height = 0.9];
 
 step4a [label=< <B>Step 4a - Minimize</B> <BR/><FONT POINT-SIZE="10">
-Global minimization (to convergence)<BR/>
-of backbone and side chains torsions<BR/>
-Pairwise atom constraints from Step 3a
+Global minimization <BR/>
+of backbone and side chains torsions.<BR/>
+Pairwise atom constraints from Step 3a.
 </FONT> >, shape=box, width = 2.9, height = 0.9];
 
 step4b [label=< <B>Step 4b - Minimize</B> <BR/><FONT POINT-SIZE="10">
-Global minimization (to convergence)<BR/>
-of backbone and side chains torsions<BR/>
-Pairwise atom constraints from Step 3b
+Global minimization <BR/>
+of backbone and side chains torsions.<BR/>
+Pairwise atom constraints from Step 3b.
 </FONT> >, shape=box, width = 2.9, height = 0.9];
 
 step5a [label=< <B>Step 5a - Score</B> <BR/><FONT POINT-SIZE="10">
 Score wild type complex and unbound partners<BR/>
-using Rosetta's all-atom energy function
+using Rosetta's all-atom energy function.
 </FONT> >, shape=box, width = 2.9, height = 0.7];
 
 step5b [label=< <B>Step 5b - Score</B> <BR/><FONT POINT-SIZE="10">
 Score mutant complex and unbound partners<BR/>
-using Rosetta's all-atom energy function
+using Rosetta's all-atom energy function.
 </FONT> >, shape=box, width = 2.9, height = 0.7];
 
 step6 [label=< <B>Step 6</B> <BR/><FONT POINT-SIZE="10">
-Calculate interface ΔΔG score
+Calculate interface ΔΔG score.
 </FONT> >, shape=box];
 
 step0 -> step1 [label = " 1x"];

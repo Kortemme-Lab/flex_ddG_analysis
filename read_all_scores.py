@@ -69,21 +69,22 @@ mut_types = {
     'complete' : 'Complete dataset',
     'sing_mut' : 'Single mutation',
     'mult_mut' : 'Multiple mutations',
-    'mult_all_ala' : 'Multiple, all alanine',
-    'mult_none_ala' : 'Multiple, none alanine',
-    's2l' : 'Small-To-Large Mutation(s)',
-    'l2s' : 'Large-To-Small',
+    'mult_all_ala' : 'Multiple mutations, all alanine',
+    'mult_none_ala' : 'Multiple mutations, none alanine',
+    's2l' : 'Small-to-large mutation(s)',
+    'l2s' : 'Large-to-small',
     'ala' : 'Mutation(s) to alanine',
     'sing_ala' : 'Single mutation to alanine',
     'res_gte25' : 'Res. $>=$ 2.5 Ang.',
     'res_lte15' : 'Res. $<=$ 1.5 Ang.',
     'res_gt15_lt25' : '1.5 Ang. $<$ Res. $<$ 2.5 Ang.',
-    'some_s2l' : 'Some Small-To-Large',
-    'some_l2s' : 'Some Large-To-Small',
+    'some_s2l' : 'Some small-to-large',
+    'some_l2s' : 'Some large-to-small',
     'antibodies' : 'Antibodies',
     'stabilizing' : 'Stabilizing',
     'neutral' : 'Neutral',
     'positive' : 'Positive',
+    's2l_stabilizing' : 'Small-to-large and stabilizing',
 }
 
 run_names = {
@@ -146,6 +147,11 @@ def add_score_categories(df, mut_type_subsets = None):
         stabilizing = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] <= -1.0) ].copy()
         stabilizing.loc[:,'MutType'] = 'stabilizing'
         df = df.append( stabilizing )
+
+        # Add s2l_stabilizing
+        s2l_stabilizing = df.loc[ (df['MutType'] == 's2l') & (df['ExperimentalDDG'] <= -1.0) ].copy()
+        s2l_stabilizing.loc[:,'MutType'] = 's2l_stabilizing'
+        df = df.append( s2l_stabilizing )
 
     if mut_type_subsets == None or 'neutral' in mut_type_subsets:
         neutral = df.loc[ (df['MutType'] == 'complete') & (df['ExperimentalDDG'] > -1.0) & (df['ExperimentalDDG'] < 1.0) ].copy()
@@ -834,7 +840,7 @@ def table_main( results_df ):
     ]
 
     short_caption = ""
-    caption_text = short_caption + "Main results table. Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = short_caption + "Main results table. Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
 
     subset_table(
         'table-main', results_df, display_runs, caption_text, short_caption, table_mut_types = [
@@ -851,7 +857,7 @@ def table_ref( results_df ):
     ]
 
     short_caption = "REF results"
-    caption_text = 'Performance comparison of the standard flex ddG protocol (using Rosetta\'s Talaris energy function) with flex ddG run with the REF score function. "res $<=$ 1.5 Ang." indicates data points for which the resolution of the input wild-type crystal structure is less than or equal to 1.5 \AA. Backrub steps = %d. R = Pearson\'s R. MAE = Mean Absolute Error. FC = Fraction Correct.' % backrub_steps
+    caption_text = 'Performance comparison of the standard flex ddG protocol (using Rosetta\'s Talaris energy function) with flex ddG run with the REF score function. "res $<=$ 1.5 Ang." indicates data points for which the resolution of the input wild-type crystal structure is less than or equal to 1.5 \AA. Backrub steps = %d. R = Pearson\'s R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset.' % backrub_steps
 
     table_mut_types = [
         'complete', 's2l', 'sing_ala', 'mult_mut',
@@ -869,7 +875,7 @@ def backrub_temp_table( results_df ):
     ]
 
     short_caption = "Comparison of backrub temperature results"
-    caption_text = "Flex ddG performance comparison, when backrub is run with a sampling temperature (kT) of 1.2 or 1.6. Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = "Flex ddG performance comparison, when backrub is run with a sampling temperature (kT) of 1.2 or 1.6. Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
 
     subset_table( 'table-temperature', results_df, display_runs, caption_text, short_caption )
 
@@ -885,7 +891,7 @@ def ddg_monomer_table( results_df ):
 
 
     short_caption = 'ddG monomer results'
-    caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset."
 
     subset_table( 'table-ddG-monomer', results_df, display_runs, caption_text, short_caption )
 
@@ -898,7 +904,7 @@ def multiple_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Multiple mutations results'
-    caption_text = short_caption + " (backrub steps = %d). R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = short_caption + " (backrub steps = %d). R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
 
     subset_table( 'table-mult', results_df, display_runs, caption_text, short_caption, table_mut_types = ['mult_mut', 'mult_all_ala', 'mult_none_ala', 'ala'] )
 
@@ -912,7 +918,7 @@ def antibodies_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on antibodies'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of complexes containing an antibody binding partner (backrub steps = %d). R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of complexes containing an antibody binding partner (backrub steps = %d). R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
 
     subset_table( 'table-antibodies', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'antibodies'] )
 
@@ -926,7 +932,7 @@ def stabilizing_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on stabilizing mutations'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta$G $< 0$). Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta$G $< 0$). Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
 
     subset_table( 'table-stabilizing', results_df, display_runs, caption_text, short_caption, table_mut_types = ['stabilizing', 'neutral', 'positive'] )
 
@@ -940,7 +946,7 @@ def by_pdb_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on PDB '
-    caption_text = ". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = ". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
 
     display_columns = collections.OrderedDict( [
         ('MutTypes', 'PDB'),
