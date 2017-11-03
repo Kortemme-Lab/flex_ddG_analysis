@@ -14,7 +14,7 @@ Pairwise atom constraints from Step 0.
 
 step2 [label=< <B>Step 2 - Backrub</B> <BR/><FONT POINT-SIZE="10">
 Local sampling of backbone and side chain degrees of freedom of pivot residues,<BR/>
-defined as those with neighbor atoms within 8Å of mutation positions.
+defined as those with neighbor atoms (C-β) within 8Å of mutation positions.
 </FONT> >, shape=box];
 
 step3a [label=< <B>Step 3a - Pack</B> <BR/><FONT POINT-SIZE="10">
