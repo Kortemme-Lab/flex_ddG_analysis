@@ -69,8 +69,8 @@ mut_types = {
     'complete' : 'Complete dataset',
     'sing_mut' : 'Single mutation',
     'mult_mut' : 'Multiple mutations',
-    'mult_all_ala' : 'Multiple mutations, all alanine',
-    'mult_none_ala' : 'Multiple mutations, none alanine',
+    'mult_all_ala' : 'Multiple mutations, all to alanine',
+    'mult_none_ala' : 'Multiple mutations, none to alanine',
     's2l' : 'Small-to-large mutation(s)',
     'l2s' : 'Large-to-small',
     'ala' : 'Mutation(s) to alanine',
@@ -653,7 +653,12 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
         'fig-path' : out_path,
     }
 
-    leg = plt.figlegend( legend_lines, legend_labels, loc = 'lower center', ncol = 4, labelspacing=0.0 )
+    leg = plt.figlegend(
+        legend_lines, legend_labels, loc = 'lower center', labelspacing=0.0,
+        markerscale = 1.3,
+        fontsize = 13,
+        ncol = 2,
+    )
 
     fig.savefig( out_path )
     save_latex( 'latex_templates/steps-vs-corr.tex', sub_dict, out_tex_name = output_figure_name )
@@ -827,7 +832,12 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
             else:
                 sub_dict[ 'panel-' + alpha ] = '%s (n = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i] )
 
-        leg = plt.figlegend( legend_lines, legend_labels, loc = 'lower center', ncol = 4, labelspacing=0.0 )
+        leg = plt.figlegend(
+            legend_lines, legend_labels, loc = 'lower center', labelspacing=0.0,
+            markerscale = 1.3,
+            fontsize = 13,
+            ncol = 2,
+        )
         fig.savefig( out_path )
         save_latex( 'latex_templates/structs-vs-corr.tex', sub_dict, out_tex_name = output_figure_name )
         print out_path
@@ -935,7 +945,7 @@ def stabilizing_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on stabilizing mutations'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta$G $< 0$). Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta G <= -1$), neutral ($-1 < \Delta\Delta G < 1$), or destabilizing ($\Delta\Delta G >= 1$). Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
 
     subset_table( 'table-stabilizing', results_df, display_runs, caption_text, short_caption, table_mut_types = ['stabilizing', 'neutral', 'positive'] )
 
@@ -1046,7 +1056,7 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
                 new_row = new_row.replace( { run_name : new_run_name } )
             elif 'ddg_monomer' in run_name and step == 8:
                 new_run_name = run_name + '-8'
-                annotated_run_names[new_run_name] = annotated_run_names[run_name] + ' (hard-rep)'
+                annotated_run_names[new_run_name] = annotated_run_names[run_name]
                 new_row = new_row.replace( { run_name : new_run_name } )
 
             if len(new_row) != 1:
@@ -1191,8 +1201,6 @@ def prediction_error( score_method_id = 35000, prediction_run = 'zemu_1.2-60000_
         print subset, dataset_ids_len, '%.2f' % mean_error
 
 if __name__ == '__main__':
-    results_df = make_results_df()
-
     prediction_error()
 
     table_composition()
@@ -1204,6 +1212,8 @@ if __name__ == '__main__':
     steps_vs_corr( 'steps-v-corr_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
     figure_structs_vs_corr()
     figure_structs_vs_corr( 'ddg_monomer_16_003-zemu-2' )
+
+    results_df = make_results_df()
 
     by_pdb_table( results_df )
     table_ref( results_df )
