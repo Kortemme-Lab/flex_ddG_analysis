@@ -727,6 +727,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
             ax.set_ylabel(u"Pearson's R")
             ax.set_xlabel("Number of Structures")
             rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby(['StructureOrder', 'ScoreMethodID'])[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
+            # rs.to_csv( '/tmp/rs_structs-v-corr-%s-%s.csv' % (exp_run_name, mut_type_subset) )
             control_rs = df.loc[ (df['PredictionRunName'] == control_run) & (df['MutType'] == mut_type_subset ) ].groupby(['StructureOrder'])[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
 
             # Determine best correlation step

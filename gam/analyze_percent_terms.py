@@ -5,9 +5,11 @@ import matplotlib
 # matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
+from stats import fraction_correct
 
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
+# sns.set(font_scale=1.5, rc={'text.usetex' : True})
 
 total_score_abs_cutoff = 1.0
 exp_score_abs_cutoff = 1.0
@@ -23,12 +25,14 @@ for fpath in ['control_GAM_terms.csv', 'tal_GAM_terms.csv', 'ref_GAM_terms.csv']
     df['total_GAM'] = df[gam_columns].sum( axis = 1 )
     df['error'] = df['total'] - df['exp_data']
     df['error_GAM'] = df['total_GAM'] - df['exp_data']
-    print 'MAE: %.3f' % np.mean(np.abs(df['error']))
-    print 'MAE GAM: %.3f' % np.mean(np.abs(df['error_GAM']))
+    print 'MAE: %.2f' % np.mean(np.abs(df['error']))
+    print 'MAE GAM: %.2f' % np.mean(np.abs(df['error_GAM']))
     print df[['total', 'total_GAM', 'exp_data']].corr()
+    print 'FC: %.2f' % fraction_correct(df['total'], df['exp_data'])[0]
+    print 'FC GAM: %.2f' % fraction_correct(df['total_GAM'], df['exp_data'])[0]
     df = df.loc[ (np.abs(df['total']) >= total_score_abs_cutoff) & (np.abs(df['exp_data']) >= exp_score_abs_cutoff) & (np.abs(df['error']) >= error_abs_cutoff) ]
-    print 'MAE (outliers): %.3f' % np.mean(np.abs(df['error']))
-    print 'MAE (outliers) GAM: %.3f' % np.mean(np.abs(df['error_GAM']))
+    print 'MAE (outliers): %.2f' % np.mean(np.abs(df['error']))
+    print 'MAE (outliers) GAM: %.2f' % np.mean(np.abs(df['error_GAM']))
     print df[['total', 'total_GAM', 'exp_data']].corr()
     print
 
@@ -36,7 +40,7 @@ for fpath in ['control_GAM_terms.csv', 'tal_GAM_terms.csv', 'ref_GAM_terms.csv']
     for index, row in df.iterrows():
         for col_name, value in row.iteritems():
             if col_name == 'exp_data':
-                prediction_type = 'exp_data'
+                prediction_type = 'Exp. data'
                 score_term_name = 'total'
             elif col_name.endswith('_GAM'):
                 prediction_type = 'GAM'
@@ -46,20 +50,21 @@ for fpath in ['control_GAM_terms.csv', 'tal_GAM_terms.csv', 'ref_GAM_terms.csv']
                 score_term_name = col_name
             new_rows.append( (score_term_name, prediction_type, value) )
 
-    categorical_df =  pd.DataFrame.from_records(data = new_rows, columns = ['score_term', 'prediction_type', 'score'] )
+    categorical_df =  pd.DataFrame.from_records(data = new_rows, columns = ['Score Term', 'Prediction Type', 'Score'] )
     print categorical_df.head()
     fig = plt.figure(figsize=(16, 8.5), dpi=300)
     ax = fig.add_subplot(1, 1, 1)
-    ax.set_title(
-        'abs(total) >= %.1f ; abs(exp) >= %.1f ; abs(error) >= %.1f; GAM MAE %.2f ; Rosetta MAE %.2f' % (
-            total_score_abs_cutoff, exp_score_abs_cutoff, error_abs_cutoff,
-            np.mean(np.abs(df['error_GAM'])),
-            np.mean(np.abs(df['error'])),
-        )
-    )
+    # ax.set_title(
+    #     'abs(total) >= %.1f ; abs(exp) >= %.1f ; abs(error) >= %.1f; GAM MAE %.2f ; Rosetta MAE %.2f' % (
+    #         total_score_abs_cutoff, exp_score_abs_cutoff, error_abs_cutoff,
+    #         np.mean(np.abs(df['error_GAM'])),
+    #         np.mean(np.abs(df['error'])),
+    #     )
+    # )
+    ax.set_title( 'Experimental data $\Delta\Delta G$ values, Rosetta $\Delta\Delta G$ predictions by score term, and GAM-fit Rosetta $\Delta\Delta G$ predictions by score term' )
     ax.yaxis.grid(True)
     sns.swarmplot(
-        x = "score_term", y = "score", hue = "prediction_type",
+        x = "Score Term", y = "Score", hue = "Prediction Type",
         data = categorical_df,
         # jitter = 0.2,
         # palette = "Set2",
@@ -68,6 +73,7 @@ for fpath in ['control_GAM_terms.csv', 'tal_GAM_terms.csv', 'ref_GAM_terms.csv']
         size = 3.5,
         alpha = 0.95,
     )
+    ax.set_ylabel('$\Delta\Delta G$ Score')
     fig.savefig( fpath + '-mpl.png' )
 
     continue
@@ -103,7 +109,7 @@ for fpath in ['control_GAM_terms.csv', 'tal_GAM_terms.csv', 'ref_GAM_terms.csv']
         for col_name, value in row.sort_values( ascending = False ).iteritems():
             if col_name == 'sum':
                 continue
-            print index, col_name, '%.3f' % value
+            print index, col_name, '%.2f' % value
         print
 
     print '\n\n'
