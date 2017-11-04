@@ -93,7 +93,7 @@ current_palette = { [0.29803921568627451 0.44705882352941179 0.69019607843137254
 
 subplot(321);
 plot(exp_data, control_table.total, 'r.', 'color', cell2mat( current_palette(2)));
-title(sprintf('No backrub control: R %.2f MAE %.2f', corr(exp_data,control_table.total), mean(abs(exp_data-control_table.total)) ));
+title('No backrub control');
 xlim([-6 11]); ylim([-6 11]);
 hold on;
     coef_fit = polyfit( exp_data, control_table.total, 1 );
@@ -106,7 +106,7 @@ ylabel( 'Rosetta Score', 'Interpreter', 'latex' );
 
 subplot(323);
 plot(exp_data, talaris_table.total, 'r.', 'color', cell2mat( current_palette(1)));
-title(sprintf('Flex ddG: R %.2f MAE %.2f', corr(exp_data, talaris_table.total), mean(abs(exp_data-talaris_table.total)) ));
+title('Flex ddG');
 xlim([-6 11]); ylim([-6 11]);
 hold on;
     coef_fit = polyfit( exp_data, talaris_table.total, 1 );
@@ -119,7 +119,7 @@ ylabel( 'Rosetta Score', 'Interpreter', 'latex' );
 
 subplot(325);
 plot(exp_data, ref_table.total, 'r.', 'color', cell2mat( current_palette(5)));
-title(sprintf('Flex ddG (REF energy): R %.2f MAE %.2f', corr(exp_data, ref_table.total), mean(abs(exp_data-ref_table.total)) ));
+title('Flex ddG (REF energy)');
 xlim([-6 11]); ylim([-6 11]);
 hold on;
     coef_fit = polyfit( exp_data, ref_table.total, 1 );
