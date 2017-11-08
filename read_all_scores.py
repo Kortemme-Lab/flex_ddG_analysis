@@ -360,7 +360,11 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
         'N' : ns,
     } )
 
-    sort_cols = ['FractionCorrect', 'R', 'MAE']
+    sort_cols = [
+        'FractionCorrect_unscaled',
+        'R',
+        'MAE_unscaled',
+    ]
     ascendings = [False, False, True]
     for sort_col, asc in zip(sort_cols, ascendings):
         results_df.sort_values( sort_col, inplace = True, ascending = asc )
@@ -969,8 +973,8 @@ def by_pdb_table( results_df ):
         ('N', 'N'),
         # ('StructureOrder', 'Num/Sorting of Structs'),
         ('R', 'R'),
-        ('MAE', 'MAE'),
-        ('FractionCorrect', 'FC'),
+        ('MAE_unscaled', 'MAE'),
+        ('FractionCorrect_unscaled', 'FC'),
     ] )
 
     all_middle_lines = []
@@ -1025,8 +1029,8 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
                 ('N', 'N'),
                 ('StructureOrder', 'Num/Sorting of Structs'),
                 ('R', 'R'),
-                ('MAE', 'MAE'),
-                ('FractionCorrect', 'FC'),
+                ('MAE_unscaled', 'MAE'),
+                ('FractionCorrect_unscaled', 'FC'),
             ] )
         else:
             display_columns = collections.OrderedDict( [
@@ -1034,8 +1038,8 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
                 ('PredictionRun', 'Prediction Method'),
                 ('N', 'N'),
                 ('R', 'R'),
-                ('MAE', 'MAE'),
-                ('FractionCorrect', 'FC'),
+                ('MAE_unscaled', 'MAE'),
+                ('FractionCorrect_unscaled', 'FC'),
             ] )
 
 
@@ -1112,8 +1116,8 @@ def subset_table( table_name, results_df, display_runs, caption_text, short_capt
 
     # better_columns defines which metric is "best", since a higher R is better, whereas a lower MAE is better
     # These and first_numeric_columns will need to be changed if display_columns is changed
-    lower_better_columns = [ display_columns.keys().index('MAE') ]
-    higher_better_columns = [ display_columns.keys().index('R'), display_columns.keys().index('FractionCorrect') ]
+    lower_better_columns = [ display_columns.keys().index('MAE_unscaled') ]
+    higher_better_columns = [ display_columns.keys().index('R'), display_columns.keys().index('FractionCorrect_unscaled') ]
     first_numeric_column = display_columns.keys().index('R')
     new_group_rows = []
     for rows in group_rows:
