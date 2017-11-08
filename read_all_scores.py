@@ -493,12 +493,12 @@ def figure_scatter( force_backrub_step = 35000 ):
 
     out_path = os.path.join( output_fig_path, 'fig-scatter.pdf' )
     sub_dict = {
-        'exp-method-name' : run_names[exp_run_name].capitalize(),
+        'exp-method-name' : run_names[exp_run_name],
         'numsteps-a' : str( best_step_a ),
         'numsteps-c' : str( best_step_c ),
         'top-subset' : mut_types[top_subset].capitalize(),
         'top-n' : str( len(df_a) ),
-        'control-method-name' : run_names[control_run_name].capitalize(),
+        'control-method-name' : run_names[control_run_name],
         'bottom-subset' : mut_types[bottom_subset].capitalize(),
         'bottom-n' : str( len(df_c) ),
         'fig-path' : out_path,
@@ -627,10 +627,10 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
         if ax_i == 0:
             legend_lines.extend( [exp_rs_plot, control_rs_plot, exp_mae_plot, control_mae_plot] )
             legend_labels.extend( [
-                'R - ' + run_names[exp_run_name].capitalize(),
-                'R - ' + run_names[control_run].capitalize(),
-                'MAE - ' + run_names[exp_run_name].capitalize(),
-                'MAE - ' + run_names[control_run].capitalize(),
+                'R - ' + run_names[exp_run_name],
+                'R - ' + run_names[control_run],
+                'MAE - ' + run_names[exp_run_name],
+                'MAE - ' + run_names[control_run],
             ] )
 
         r_axes.append( ax )
@@ -728,11 +728,13 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
         mae_min = float('inf')
         mae_max = float('-inf')
 
-        # Information for caption/legend
+        # Information for caption/legend and output table
         ns = []
         best_step_ids = []
         legend_lines = []
         legend_labels = []
+        data_table = []
+
         for ax_i, mut_type_subset in enumerate( mut_type_subsets ):
             ax = fig.add_subplot( 2, 2, ax_i + 1 )
             ax.set_ylabel(u"Pearson's R")
@@ -791,14 +793,17 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
                 markersize = 5,
                 zorder = 2,
             )
+            for a, b, c, d, e in zip( control_rs['StructureOrder'], rs['Experimental ddG'], control_rs['Experimental ddG'], maes.values, control_maes.values ):
+                if a in [1, 20, 30, 40, 50]:
+                    data_table.append( (mut_types[mut_type_subset], a, b, c, d, e) )
 
             if ax_i == 0:
                 legend_lines.extend( [exp_r, control_r, exp_mae, control_mae] )
                 legend_labels.extend( [
-                    'R - ' + run_names[exp_run_name].capitalize(),
-                    'R - ' + run_names[control_run].capitalize(),
-                    'MAE - ' + run_names[exp_run_name].capitalize(),
-                    'MAE - ' + run_names[control_run].capitalize(),
+                    'R - ' + run_names[exp_run_name],
+                    'R - ' + run_names[control_run],
+                    'MAE - ' + run_names[exp_run_name],
+                    'MAE - ' + run_names[control_run],
                 ] )
 
             mae_min = min( mae_min, min(maes.values), min(control_maes.values) )
@@ -824,6 +829,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
 
         output_figure_name = 'structs-v-corr-%s-%s' % (sorting_type, exp_run_name)
         output_figure_name = output_figure_name.replace('_', '-').replace('.', '')
+        underlying_name = '%s-underlying-data' % output_figure_name
         out_path = os.path.join( output_fig_path, output_figure_name + '.pdf' )
         sub_dict = {
             'fig-label' : output_figure_name,
@@ -831,6 +837,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
             'exp-run-name' : run_names[exp_run_name],
             'control-name' : run_names[control_run],
             'sorting-type' : sorting_type_descriptions[sorting_type],
+            'underlying-label' : 'tab:%s' % underlying_name,
         }
         for alpha_i, alpha in enumerate( string.ascii_lowercase[:4] ):
             if best_step_ids[alpha_i] >= 10:
@@ -847,6 +854,18 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
         fig.savefig( out_path )
         save_latex( 'latex_templates/structs-vs-corr.tex', sub_dict, out_tex_name = output_figure_name )
         print out_path
+
+        # Save underlying data
+        data_table = pd.DataFrame.from_records(
+            data_table,
+            columns = ['Subset', 'Backrub Step', legend_labels[0], legend_labels[1], legend_labels[2], legend_labels[3] ],
+        )
+        latex_lines = data_table.to_latex( float_format = '%.2f', index = False ).split('\n')
+        latex_lines = [r'\begin{table}'] + latex_lines[:-2] + [
+            '\label{tab:%s}' % underlying_name,
+        ] + latex_lines[-2:] + ['\caption[]{Data underlying \cref{fig:%s}}' % output_figure_name, r'\end{table}', '']
+        with open( 'output/latex/%s.tex' % underlying_name, 'w' ) as f:
+            f.write( '\n'.join(latex_lines) )
 
 def table_main( results_df ):
     backrub_steps = 35000
@@ -1230,4 +1249,4 @@ if __name__ == '__main__':
     antibodies_table( results_df )
     stabilizing_table( results_df )
 
-    compile_latex()
+    # compile_latex()
