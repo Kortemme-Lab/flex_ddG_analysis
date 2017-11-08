@@ -861,9 +861,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
             columns = ['Subset', 'Backrub Step', legend_labels[0], legend_labels[1], legend_labels[2], legend_labels[3] ],
         )
         latex_lines = data_table.to_latex( float_format = '%.2f', index = False ).split('\n')
-        latex_lines = [r'\begin{table}'] + latex_lines[:-2] + [
-            '\label{tab:%s}' % underlying_name,
-        ] + latex_lines[-2:] + ['\caption[]{Data underlying \cref{fig:%s}}' % output_figure_name, r'\end{table}', '']
+        latex_lines = [r'\begin{table}'] + latex_lines + ['\caption[]{Data underlying \cref{fig:%s}}' % output_figure_name, '\label{tab:%s}' % underlying_name, r'\end{table}', '']
         with open( 'output/latex/%s.tex' % underlying_name, 'w' ) as f:
             f.write( '\n'.join(latex_lines) )
 
