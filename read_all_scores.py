@@ -12,6 +12,7 @@ import subprocess
 import collections
 import copy
 import string
+import random
 
 # TODO: move this into repository
 csv_paths = [
@@ -564,7 +565,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
     ns = []
     legend_lines = []
     legend_labels = []
-
+    data_table = []
     for ax_i, mut_type_subset in enumerate( mut_type_subsets ):
         ax = fig.add_subplot( 2, 2, ax_i + 1 )
         ax.set_title( mut_types[mut_type_subset] )
@@ -618,6 +619,13 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
             color = ( 1.0 + np.array(run_colors[control_run]) ) / 2.0,
         )
 
+        np.testing.assert_array_equal( rs['ScoreMethodID'], maes.index )
+        data_table.append( (run_names[control_run], mut_types[mut_type_subset], 0, control_r, control_mae) )
+        for step_num, r, mae in zip(rs['ScoreMethodID'], rs['Experimental ddG'], maes.values):
+            if step_num in [2500, 35000] or step_num % 10000 == 0:
+                data_table.append( (run_names[exp_run_name], mut_types[mut_type_subset], step_num, r, mae) )
+
+
         if force_control_in_axes:
             r_min = min( r_min, control_r )
             r_max = max( r_max, control_r )
@@ -650,6 +658,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
         r_ax.patch.set_visible(False)
 
     out_path = os.path.join( output_fig_path, '%s.pdf' % output_figure_name )
+    underlying_name = '%s-underlying-data' % output_figure_name
     sub_dict = {
         'panel-a' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[0] ].capitalize(),  ns[0] ),
         'panel-b' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[1] ].capitalize(),  ns[1] ),
@@ -657,6 +666,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
         'panel-d' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[3] ].capitalize(),  ns[3] ),
         'fig-label' : output_figure_name,
         'fig-path' : out_path,
+        'underlying-label' : 'tab:%s' % underlying_name,
     }
 
     leg = plt.figlegend(
@@ -671,6 +681,16 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
 
     fig.savefig( out_path )
     print out_path
+
+    # Save underlying data
+    data_table = pd.DataFrame.from_records(
+        data_table,
+        columns = ['Run', 'Subset', 'Backrub Step', 'R', 'MAE'],
+    )
+    latex_lines = data_table.to_latex( float_format = '%.2f', index = False ).split('\n')
+    latex_lines = [r'\begin{table}'] + latex_lines + ['\caption[]{Selection of key data shown in \cref{fig:%s}}' % output_figure_name, '\label{tab:%s}' % underlying_name, r'\end{table}', '']
+    with open( 'output/latex/%s.tex' % underlying_name, 'w' ) as f:
+        f.write( '\n'.join(latex_lines) )
 
 def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14', force_backrub_step = 35000 ):
     sorting_types = ['WildTypeComplex', 'id']
@@ -793,6 +813,10 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
                 markersize = 5,
                 zorder = 2,
             )
+            index_arrays = [np.array(x) for x in [control_rs['StructureOrder'].values, rs['StructureOrder'].values, control_maes.index.values, maes.index.values]]
+            for i in index_arrays:
+                for j in index_arrays:
+                    np.testing.assert_array_equal( i, j )
             for a, b, c, d, e in zip( control_rs['StructureOrder'], rs['Experimental ddG'], control_rs['Experimental ddG'], maes.values, control_maes.values ):
                 if a in [1, 20, 30, 40, 50]:
                     data_table.append( (mut_types[mut_type_subset], a, b, c, d, e) )
@@ -858,10 +882,10 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_validated-t14
         # Save underlying data
         data_table = pd.DataFrame.from_records(
             data_table,
-            columns = ['Subset', 'Backrub Step', legend_labels[0], legend_labels[1], legend_labels[2], legend_labels[3] ],
+            columns = ['Subset', 'Structures', legend_labels[0], legend_labels[1], legend_labels[2], legend_labels[3] ],
         )
         latex_lines = data_table.to_latex( float_format = '%.2f', index = False ).split('\n')
-        latex_lines = [r'\begin{table}'] + latex_lines + ['\caption[]{Data underlying \cref{fig:%s}}' % output_figure_name, '\label{tab:%s}' % underlying_name, r'\end{table}', '']
+        latex_lines = [r'\begin{table}'] + latex_lines + ['\caption[]{Selection of key data shown in \cref{fig:%s}}' % output_figure_name, '\label{tab:%s}' % underlying_name, r'\end{table}', '']
         with open( 'output/latex/%s.tex' % underlying_name, 'w' ) as f:
             f.write( '\n'.join(latex_lines) )
 
