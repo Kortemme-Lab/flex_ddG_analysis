@@ -13,6 +13,7 @@ import collections
 import copy
 import string
 import random
+import re
 
 # TODO: move this into repository
 csv_paths = [
@@ -174,7 +175,7 @@ def add_score_categories(df, mut_type_subsets = None):
 
     return df
 
-def save_latex( latex_template_file, sub_dict, out_tex_name = None ):
+def save_latex( latex_template_file, sub_dict, out_tex_name = None, long_table = False, wrap_command = None ):
     if 'fig-path' in sub_dict:
         shutil.copy( sub_dict['fig-path'], latex_output_dir )
         sub_dict['fig-path'] = os.path.basename( sub_dict['fig-path'] )
@@ -189,6 +190,24 @@ def save_latex( latex_template_file, sub_dict, out_tex_name = None ):
     for key in sub_dict:
         latex_key = '%%%%%s%%%%' % key
         latex_template = latex_template.replace( latex_key, sub_dict[key] )
+
+    if long_table:
+        latex_lines = latex_template.split('\n')
+        new_lines = []
+        for line in latex_lines:
+            if '\\begin{table}' in line or '\\end{tabular}' in line:
+                continue
+            elif 'begin{tabular}' in line:
+                col_sorting = line.strip()[ len('\\begin{tabular}') : ]
+                new_lines.append( '\\begin{longtable}' + col_sorting )
+            elif 'end{table}' in line:
+                new_lines.append( '\\end{longtable}' )
+            else:
+                new_lines.append(line)
+        latex_template = '\n'.join( new_lines )
+
+    if wrap_command != None:
+        latex_template = '{' + wrap_command + '\n' + latex_template + '\n}'
 
     with open( os.path.join( latex_output_dir, out_tex_name ), 'w') as f:
         f.write( latex_template )
@@ -669,7 +688,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
     if exp_run_name == 'zemu_1.2-60000_rscript_simplified-t14':
         color_description += '\nPredictions generated with the Flex ddG protocol are shown in blue.'
     elif exp_run_name == 'ddg_monomer_16_003-zemu-2':
-        color_description += '\nPredictions generated with the ddg\_monomer protocol are shown in purple.'
+        color_description += '\nPredictions generated with the ddg\_monomer method are shown in purple.'
     color_description += '\nPredictions generated with the no backrub control protocol are shown in green.'
     sub_dict = {
         'panel-a' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[0] ].capitalize(),  ns[0] ),
@@ -833,9 +852,13 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_simplified-t1
             for i in index_arrays:
                 for j in index_arrays:
                     np.testing.assert_array_equal( i, j )
-            for a, b, c, d, e in zip( control_rs['StructureOrder'], rs['Experimental ddG'], control_rs['Experimental ddG'], maes.values, control_maes.values ):
-                if a in [1, 20, 30, 40, 50]:
-                    data_table.append( (mut_types[mut_type_subset], a, b, c, d, e) )
+
+            for num_structs_to_save, r_to_save, mae_to_save in zip(rs['StructureOrder'], rs['Experimental ddG'], maes.values):
+                if num_structs_to_save in [1, 20, 30, 40, 50]:
+                    data_table.append( (run_names[exp_run_name], mut_types[mut_type_subset], num_structs_to_save, r_to_save, mae_to_save) )
+            for num_structs_to_save, r_to_save, mae_to_save in zip(control_rs['StructureOrder'], control_rs['Experimental ddG'], control_maes.values):
+                if num_structs_to_save in [1, 20, 30, 40, 50]:
+                    data_table.append( (run_names[control_run], mut_types[mut_type_subset], num_structs_to_save, r_to_save, mae_to_save) )
 
             if ax_i == 0:
                 legend_lines.extend( [exp_r, control_r, exp_mae, control_mae] )
@@ -877,7 +900,17 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_simplified-t1
         elif exp_run_name == 'ddg_monomer_16_003-zemu-2':
             color_description += '\nPredictions generated with the ddg\_monomer protocol are shown in purple.'
         color_description += '\nPredictions generated with the no backrub control protocol are shown in green.'
+        if sorting_type == 'id' and exp_run_name == 'zemu_1.2-60000_rscript_simplified-t14':
+            supp_note = ' This plot is analogous to \cref{fig:structs-v-corr-WildTypeComplex-zemu-12-60000-rscript-simplified-t14} in the main manuscript, except that the models used for averaging are not sorted by score.'
+        else:
+            supp_note = ''
+        if force_backrub_step != None and best_step_id > 10:
+            backrub_steps_note = ' Flex ddG is run with %d backrub steps.' % force_backrub_step
+        else:
+            backrub_steps_note = ''
         sub_dict = {
+            'backrub-steps-note' : backrub_steps_note,
+            'supp-note' : supp_note,
             'fig-label' : output_figure_name,
             'fig-path' : out_path,
             'exp-run-name' : run_names[exp_run_name],
@@ -887,7 +920,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_simplified-t1
             'color-description' : color_description,
         }
         for alpha_i, alpha in enumerate( string.ascii_lowercase[:4] ):
-            if best_step_ids[alpha_i] >= 10:
+            if best_step_ids[alpha_i] >= 10 and force_backrub_step == None:
                 sub_dict[ 'panel-' + alpha ] = '%s (n = %d, backrub steps = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i], best_step_ids[alpha_i] )
             else:
                 sub_dict[ 'panel-' + alpha ] = '%s (n = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i] )
@@ -905,7 +938,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_simplified-t1
         # Save underlying data
         data_table = pd.DataFrame.from_records(
             data_table,
-            columns = ['Subset', 'Structures', legend_labels[0], legend_labels[1], legend_labels[2], legend_labels[3] ],
+            columns = ['Run', 'Subset', 'Structures', 'R', 'MAE'],
         )
         latex_lines = data_table.to_latex( float_format = '%.2f', index = False ).split('\n')
         latex_lines = [r'\begin{table}'] + latex_lines + ['\caption[]{Selection of key data shown in \cref{fig:%s}}' % output_figure_name, '\label{tab:%s}' % underlying_name, r'\end{table}', '']
@@ -940,7 +973,7 @@ def table_ref( results_df ):
     ]
 
     short_caption = "REF results"
-    caption_text = 'Performance comparison of the standard flex ddG protocol (using Rosetta\'s Talaris energy function) with flex ddG run with the REF score function, and %d backrub steps. "res $<=$ 1.5 Ang." indicates data points for which the resolution of the input wild-type crystal structure is less than or equal to 1.5 \AA. N = number of cases in the dataset or subset. R = Pearson\'s R. MAE = Mean Absolute Error. FC = Fraction Correct.' % backrub_steps
+    caption_text = 'Performance comparison of the standard flex ddG protocol (using Rosetta\'s Talaris energy function) with flex ddG run with the REF score function, and %d backrub steps. Data for the flex ddG method with the Talaris energy function are as in \cref{tab:table-main} in the main text. res $<=$ 1.5 Ang." indicates data points for which the resolution of the input wild-type crystal structure is less than or equal to 1.5 \AA. N = number of cases in the dataset or subset. R = Pearson\'s R. MAE = Mean Absolute Error. FC = Fraction Correct.' % backrub_steps
 
     table_mut_types = [
         'complete', 's2l', 'sing_ala', 'mult_mut',
@@ -1029,7 +1062,7 @@ def by_pdb_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on PDB '
-    caption_text = ". Backrub steps = %d. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = ". Backrub steps = %d. N = number of cases (variants) for each complex. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     display_columns = collections.OrderedDict( [
         ('MutTypes', 'PDB'),
@@ -1055,7 +1088,7 @@ def by_pdb_table( results_df ):
             new_lines.append( '\hline' )
     new_lines.extend( footer_lines )
 
-    short_caption = 'Flex ddG performance by structure'
+    short_caption = 'Flex ddG performance by PDB structure for all complexes with 5 or more cases'
     table_name = 'table-by-structure'
     save_latex(
         'latex_templates/subset-table.tex',
@@ -1066,6 +1099,8 @@ def by_pdb_table( results_df ):
             'table-label' : table_name,
         },
         out_tex_name = table_name,
+        long_table = True,
+        wrap_command = '\\small',
     )
 
 def subset_table( table_name, results_df, display_runs, caption_text, short_caption, table_mut_types = None, display_columns = None ):
