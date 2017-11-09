@@ -4,7 +4,7 @@
 % ftal = zbrt.ros;
 % fcon = zc.ros;
 
-talaris_table = readtable('../data/by_step/zemu-backrub-1.2-50-30000-t14.csv');
+talaris_table = readtable('../data/by_step/zemu_1.2-60000_rscript_simplified-t14-id_50-30000-partial.csv');
 ref_table = readtable('../data/by_step/zemu-backrub-1.2-50-30000-REF-v2.csv');
 control_table = readtable('../data/by_step/zemu_control-69aa526-id_50-00008-partial.csv');
 talaris_fields = {'fa_sol', 'hbond_sc', 'hbond_bb_sc', 'fa_rep', 'fa_elec', 'hbond_lr_bb', 'fa_atr'};

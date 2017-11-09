@@ -71,7 +71,7 @@ for fpath in ['control_GAM_terms.csv', 'tal_GAM_terms.csv', 'ref_GAM_terms.csv']
         dodge = True,
         ax = ax,
         size = 3.5,
-        alpha = 0.95,
+        alpha = 0.4,
     )
     ax.set_ylabel('$\Delta\Delta G$ Score')
     fig.savefig( fpath + '-mpl.png' )
