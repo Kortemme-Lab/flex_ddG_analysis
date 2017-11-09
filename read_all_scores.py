@@ -493,6 +493,9 @@ def figure_scatter( force_backrub_step = 35000 ):
     assert( len(df_c) == len(df_d) )
 
     out_path = os.path.join( output_fig_path, 'fig-scatter.pdf' )
+    bottom_subset_label = mut_types[bottom_subset].capitalize()
+    if bottom_subset_label.strip() == 'Small-to-large mutation(s)':
+        bottom_subset_label = 'Small-to-large mutation(s) subset'
     sub_dict = {
         'exp-method-name' : run_names[exp_run_name],
         'numsteps-a' : str( best_step_a ),
@@ -538,7 +541,7 @@ def table_composition():
 def table_versions():
     save_latex( 'latex_templates/table-versions.tex', run_names )
 
-def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_control-69aa526', force_control_in_axes = True ):
+def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_control-69aa526', force_control_in_axes = True, max_backrub_steps = 50000 ):
     exp_run_name = 'zemu_1.2-60000_rscript_simplified-t14'
 
     df = load_df()
@@ -547,12 +550,15 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
     df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
     df = df.rename( columns = {'total' : pred_colname} )
 
+    if max_backrub_steps != None:
+        df = df.loc[ df['ScoreMethodID'] <= max_backrub_steps ]
+
     sns.set_style("white")
     fig = plt.figure(
         figsize=(10.0, 8.5), dpi=600
     )
     fig.subplots_adjust( wspace = 0.6, hspace = 0.3)
-    fig.suptitle('$\Delta\Delta G$ prediction performance vs. number of backrub sampling steps')
+    # fig.suptitle('$\Delta\Delta G$ prediction performance vs. number of backrub sampling steps')
 
     r_axes = []
     r_min = float('inf')
@@ -568,7 +574,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
     data_table = []
     for ax_i, mut_type_subset in enumerate( mut_type_subsets ):
         ax = fig.add_subplot( 2, 2, ax_i + 1 )
-        ax.set_title( mut_types[mut_type_subset] )
+        ax.set_title( '(%s) - %s' % (string.ascii_lowercase[ax_i], mut_types[mut_type_subset]) )
         ax.set_ylabel("Pearson's R")
         ax.set_xlabel("Backrub Step")
         ns.append( len(df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) & (df['ScoreMethodID'] == df['ScoreMethodID'].drop_duplicates().values[0]) ]) )
@@ -659,6 +665,12 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
 
     out_path = os.path.join( output_fig_path, '%s.pdf' % output_figure_name )
     underlying_name = '%s-underlying-data' % output_figure_name
+    color_description = ''
+    if exp_run_name == 'zemu_1.2-60000_rscript_simplified-t14':
+        color_description += '\nPredictions generated with the Flex ddG protocol are shown in blue.'
+    elif exp_run_name == 'ddg_monomer_16_003-zemu-2':
+        color_description += '\nPredictions generated with the ddg\_monomer protocol are shown in purple.'
+    color_description += '\nPredictions generated with the no backrub control protocol are shown in green.'
     sub_dict = {
         'panel-a' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[0] ].capitalize(),  ns[0] ),
         'panel-b' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[1] ].capitalize(),  ns[1] ),
@@ -667,6 +679,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
         'fig-label' : output_figure_name,
         'fig-path' : out_path,
         'underlying-label' : 'tab:%s' % underlying_name,
+        'color-description' : color_description,
     }
 
     leg = plt.figlegend(
@@ -692,7 +705,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
     with open( 'output/latex/%s.tex' % underlying_name, 'w' ) as f:
         f.write( '\n'.join(latex_lines) )
 
-def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_simplified-t14', force_backrub_step = 35000 ):
+def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_simplified-t14', force_backrub_step = 35000, max_backrub_step = 50000 ):
     sorting_types = ['WildTypeComplex', 'id']
     base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
     control_base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
@@ -733,12 +746,15 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_simplified-t1
         df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
         df = df.rename( columns = {'total' : pred_colname} )
 
+        if max_backrub_step != None:
+            df = df.loc[ df['ScoreMethodID'] <= max_backrub_step ]
+
         sns.set_style("white")
         fig = plt.figure(
             figsize = [10.0, 8.5], dpi=600
         )
         fig.subplots_adjust( wspace = 0.6, hspace = 0.3)
-        fig.suptitle('$\Delta\Delta G$ prediction performance vs. number of structural ensemble members', fontsize=20)
+        # fig.suptitle('$\Delta\Delta G$ prediction performance vs. number of structural ensemble members', fontsize=20)
 
         r_axes = []
         r_min = float('inf')
@@ -758,7 +774,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_simplified-t1
         for ax_i, mut_type_subset in enumerate( mut_type_subsets ):
             ax = fig.add_subplot( 2, 2, ax_i + 1 )
             ax.set_ylabel(u"Pearson's R")
-            ax.set_xlabel("Number of Structures")
+            ax.set_xlabel("Number of Models")
             rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby(['StructureOrder', 'ScoreMethodID'])[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
             # rs.to_csv( '/tmp/rs_structs-v-corr-%s-%s.csv' % (exp_run_name, mut_type_subset) )
             control_rs = df.loc[ (df['PredictionRunName'] == control_run) & (df['MutType'] == mut_type_subset ) ].groupby(['StructureOrder'])[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
@@ -855,6 +871,12 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_simplified-t1
         output_figure_name = output_figure_name.replace('_', '-').replace('.', '')
         underlying_name = '%s-underlying-data' % output_figure_name
         out_path = os.path.join( output_fig_path, output_figure_name + '.pdf' )
+        color_description = ''
+        if exp_run_name == 'zemu_1.2-60000_rscript_simplified-t14':
+            color_description += '\nPredictions generated with the Flex ddG protocol are shown in blue.'
+        elif exp_run_name == 'ddg_monomer_16_003-zemu-2':
+            color_description += '\nPredictions generated with the ddg\_monomer protocol are shown in purple.'
+        color_description += '\nPredictions generated with the no backrub control protocol are shown in green.'
         sub_dict = {
             'fig-label' : output_figure_name,
             'fig-path' : out_path,
@@ -862,6 +884,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_simplified-t1
             'control-name' : run_names[control_run],
             'sorting-type' : sorting_type_descriptions[sorting_type],
             'underlying-label' : 'tab:%s' % underlying_name,
+            'color-description' : color_description,
         }
         for alpha_i, alpha in enumerate( string.ascii_lowercase[:4] ):
             if best_step_ids[alpha_i] >= 10:
@@ -900,7 +923,7 @@ def table_main( results_df ):
     ]
 
     short_caption = ""
-    caption_text = short_caption + "Main results table. Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
+    caption_text = short_caption + "Summary of prediction performance. Flex ddG predictions used 50 models and %d backrub steps. ddG monomer predictions were taken by averaging the \ddg\ scores of the three lowest scoring output models. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table(
         'table-main', results_df, display_runs, caption_text, short_caption, table_mut_types = [
@@ -917,7 +940,7 @@ def table_ref( results_df ):
     ]
 
     short_caption = "REF results"
-    caption_text = 'Performance comparison of the standard flex ddG protocol (using Rosetta\'s Talaris energy function) with flex ddG run with the REF score function. "res $<=$ 1.5 Ang." indicates data points for which the resolution of the input wild-type crystal structure is less than or equal to 1.5 \AA. Backrub steps = %d. R = Pearson\'s R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset.' % backrub_steps
+    caption_text = 'Performance comparison of the standard flex ddG protocol (using Rosetta\'s Talaris energy function) with flex ddG run with the REF score function, and %d backrub steps. "res $<=$ 1.5 Ang." indicates data points for which the resolution of the input wild-type crystal structure is less than or equal to 1.5 \AA. N = number of cases in the dataset or subset. R = Pearson\'s R. MAE = Mean Absolute Error. FC = Fraction Correct.' % backrub_steps
 
     table_mut_types = [
         'complete', 's2l', 'sing_ala', 'mult_mut',
@@ -935,7 +958,7 @@ def backrub_temp_table( results_df ):
     ]
 
     short_caption = "Comparison of backrub temperature results"
-    caption_text = "Flex ddG performance comparison, when backrub is run with a sampling temperature (kT) of 1.2 or 1.6. Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
+    caption_text = "Flex ddG performance comparison, when backrub is run with a sampling temperature (kT) of 1.2 or 1.6 and %d backrub steps. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-temperature', results_df, display_runs, caption_text, short_caption )
 
@@ -951,7 +974,7 @@ def ddg_monomer_table( results_df ):
 
 
     short_caption = 'ddG monomer results'
-    caption_text = short_caption + ". R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset."
+    caption_text = short_caption + ". N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
 
     subset_table( 'table-ddG-monomer', results_df, display_runs, caption_text, short_caption )
 
@@ -964,7 +987,7 @@ def multiple_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Multiple mutations results'
-    caption_text = short_caption + " (backrub steps = %d). R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
+    caption_text = short_caption + " (backrub steps = %d). N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-mult', results_df, display_runs, caption_text, short_caption, table_mut_types = ['mult_mut', 'mult_all_ala', 'mult_none_ala', 'ala'] )
 
@@ -978,7 +1001,7 @@ def antibodies_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on antibodies'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of complexes containing an antibody binding partner (backrub steps = %d). R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of complexes containing an antibody binding partner (flex ddG run with %d backrub steps). N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-antibodies', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'antibodies'] )
 
@@ -992,7 +1015,7 @@ def stabilizing_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on stabilizing mutations'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta G <= -1$), neutral ($-1 < \Delta\Delta G < 1$), or destabilizing ($\Delta\Delta G >= 1$). Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta G <= -1$), neutral ($-1 < \Delta\Delta G < 1$), or destabilizing ($\Delta\Delta G >= 1$). Flex ddG was run with %d backrub steps. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     subset_table( 'table-stabilizing', results_df, display_runs, caption_text, short_caption, table_mut_types = ['stabilizing', 'neutral', 'positive'] )
 
@@ -1006,7 +1029,7 @@ def by_pdb_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on PDB '
-    caption_text = ". Backrub steps = %d. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. N = number of mutations in the dataset or subset." % backrub_steps
+    caption_text = ". Backrub steps = %d. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
 
     display_columns = collections.OrderedDict( [
         ('MutTypes', 'PDB'),
