@@ -956,7 +956,7 @@ def table_main( results_df ):
     ]
 
     short_caption = ""
-    caption_text = short_caption + "Summary of prediction performance. Flex ddG predictions used 50 models and %d backrub steps. ddG monomer predictions were taken by averaging the \ddg\ scores of the three lowest scoring output models. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = short_caption + "Summary of prediction performance. Flex ddG predictions used 50 models and %d backrub steps. ddG monomer predictions were taken by averaging the \ddg\ scores of the three lowest scoring output models. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold. Best performance for each metric is shown in bold." % backrub_steps
 
     subset_table(
         'table-main', results_df, display_runs, caption_text, short_caption, table_mut_types = [
@@ -973,7 +973,7 @@ def table_ref( results_df ):
     ]
 
     short_caption = "REF results"
-    caption_text = 'Performance comparison of the standard flex ddG protocol (using Rosetta\'s Talaris energy function) with flex ddG run with the REF score function, and %d backrub steps. Data for the flex ddG method with the Talaris energy function are as in \cref{tab:table-main} in the main text. res $<=$ 1.5 Ang." indicates data points for which the resolution of the input wild-type crystal structure is less than or equal to 1.5 \AA. N = number of cases in the dataset or subset. R = Pearson\'s R. MAE = Mean Absolute Error. FC = Fraction Correct.' % backrub_steps
+    caption_text = 'Performance comparison of the standard flex ddG protocol (using Rosetta\'s Talaris energy function) with flex ddG run with the REF score function, and %d backrub steps. Data for the flex ddG method with the Talaris energy function are as in \cref{tab:table-main} in the main text. res $<=$ 1.5 Ang." indicates data points for which the resolution of the input wild-type crystal structure is less than or equal to 1.5 \AA. N = number of cases in the dataset or subset. R = Pearson\'s R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold.' % backrub_steps
 
     table_mut_types = [
         'complete', 's2l', 'sing_ala', 'mult_mut',
@@ -991,7 +991,7 @@ def backrub_temp_table( results_df ):
     ]
 
     short_caption = "Comparison of backrub temperature results"
-    caption_text = "Flex ddG performance comparison, when backrub is run with a sampling temperature (kT) of 1.2 or 1.6 and %d backrub steps. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = "Flex ddG performance comparison, when backrub is run with a sampling temperature (kT) of 1.2 or 1.6 and %d backrub steps. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold." % backrub_steps
 
     subset_table( 'table-temperature', results_df, display_runs, caption_text, short_caption )
 
@@ -1007,7 +1007,7 @@ def ddg_monomer_table( results_df ):
 
 
     short_caption = 'ddG monomer results'
-    caption_text = short_caption + ". N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct."
+    caption_text = short_caption + ". N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold."
 
     subset_table( 'table-ddG-monomer', results_df, display_runs, caption_text, short_caption )
 
@@ -1020,7 +1020,7 @@ def multiple_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Multiple mutations results'
-    caption_text = short_caption + " (backrub steps = %d). N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = short_caption + " (backrub steps = %d). N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold." % backrub_steps
 
     subset_table( 'table-mult', results_df, display_runs, caption_text, short_caption, table_mut_types = ['mult_mut', 'mult_all_ala', 'mult_none_ala', 'ala'] )
 
@@ -1034,7 +1034,7 @@ def antibodies_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on antibodies'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of complexes containing an antibody binding partner (flex ddG run with %d backrub steps). N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of complexes containing an antibody binding partner (flex ddG run with %d backrub steps). N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold." % backrub_steps
 
     subset_table( 'table-antibodies', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'antibodies'] )
 
@@ -1048,7 +1048,7 @@ def stabilizing_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on stabilizing mutations'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta G <= -1$), neutral ($-1 < \Delta\Delta G < 1$), or destabilizing ($\Delta\Delta G >= 1$). Flex ddG was run with %d backrub steps. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta G <= -1$), neutral ($-1 < \Delta\Delta G < 1$), or destabilizing ($\Delta\Delta G >= 1$). Flex ddG was run with %d backrub steps. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold." % backrub_steps
 
     subset_table( 'table-stabilizing', results_df, display_runs, caption_text, short_caption, table_mut_types = ['stabilizing', 'neutral', 'positive'] )
 
@@ -1062,7 +1062,7 @@ def by_pdb_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on PDB '
-    caption_text = ". Backrub steps = %d. N = number of cases (variants) for each complex. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct." % backrub_steps
+    caption_text = ". Backrub steps = %d. N = number of cases (variants) for each complex. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold." % backrub_steps
 
     display_columns = collections.OrderedDict( [
         ('MutTypes', 'PDB'),
