@@ -224,7 +224,7 @@ def sum_and_average():
             # Write csv with partial score terms
             partial_columns = list( set( desired_summed_and_averaged_columns ).union( set(global_score_columns) ) )
             for backrub_step in sorted( avg_df['ScoreMethodID'].drop_duplicates() ):
-                if backrub_step < 100 or int(backrub_step) % 10000 == 0 and ( (num_structs == 1) or (num_structs % 10 == 0) ):
+                if backrub_step < 100 or int(backrub_step) % 5000 == 0 and ( (num_structs == 1) or (num_structs % 10 == 0) ):
                     inner_partial_csv_path = partial_csv_path % int(backrub_step)
                     if os.path.isfile( inner_partial_csv_path ):
                         continue

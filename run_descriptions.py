@@ -13,6 +13,11 @@ talaris_60k_simplified = ddg_benchmark_run(
     5 # Step multiplication factor
 )
 
+talaris_60k_16_simplified = ddg_benchmark_run(
+    'zemu_1.6-60000_rscript_simplified-t14', # Predicton run name
+    5 # Step multiplication factor
+)
+
 talaris_control_run = ddg_benchmark_run(
     'zemu_control', # Predicton run name
     1 # Step multiplication factor
@@ -54,6 +59,7 @@ temp_16 = ddg_benchmark_run(
 )
 
 all_runs = [
+    talaris_60k_16_simplified,
     ref_run_cart,
     ref_run,
     zemu_values,

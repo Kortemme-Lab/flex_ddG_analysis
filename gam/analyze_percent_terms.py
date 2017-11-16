@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 import matplotlib
-# matplotlib.use('Agg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 from stats import fraction_correct
@@ -74,7 +74,7 @@ for fpath in ['control_GAM_terms.csv', 'tal_GAM_terms.csv', 'ref_GAM_terms.csv']
         alpha = 0.4,
     )
     ax.set_ylabel('$\Delta\Delta G$ Score')
-    fig.savefig( fpath + '-mpl.png' )
+    fig.savefig( fpath.replace('_', '-')[:-4] + '-mpl.png' )
 
     continue
 
