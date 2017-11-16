@@ -19,13 +19,13 @@ defined as those with neighbor atoms (C-β) within 8Å of mutation positions.
 
 step3a [label=< <B>Step 3a - Pack</B> <BR/><FONT POINT-SIZE="10">
 Optimize side chains globally<BR/>
-on <B>wild-type</B> structure.<BR/>
+on <B>wild-type</B> model.<BR/>
 Generate pairwise atom constraints.
 </FONT> >, shape=box, width = 2.9, height = 0.9];
 
 step3b [label=< <B>Step 3b- Mutate and Pack</B> <BR/><FONT POINT-SIZE="10">
 Optimize side chains globally<BR/>
-on <B>mutant</B> structure<BR/>
+on <B>mutant</B> model<BR/>
 (using the mutant sequence).<BR/>
 Generate pairwise atom constraints.
 </FONT> >, shape=box, width = 2.9, height = 0.9];

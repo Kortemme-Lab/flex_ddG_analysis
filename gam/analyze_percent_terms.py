@@ -48,11 +48,13 @@ for fpath in ['control_GAM_terms.csv', 'tal_GAM_terms.csv', 'ref_GAM_terms.csv']
             else:
                 prediction_type = 'Rosetta'
                 score_term_name = col_name
+            if score_term_name == 'hbond_bb_sc':
+                score_term_name = 'hbond_bb\n_sc'
             new_rows.append( (score_term_name, prediction_type, value) )
 
     categorical_df =  pd.DataFrame.from_records(data = new_rows, columns = ['Score Term', 'Prediction Type', 'Score'] )
     print categorical_df.head()
-    fig = plt.figure(figsize=(16, 8.5), dpi=300)
+    fig = plt.figure(figsize=(8.5, 7), dpi=300)
     ax = fig.add_subplot(1, 1, 1)
     # ax.set_title(
     #     'abs(total) >= %.1f ; abs(exp) >= %.1f ; abs(error) >= %.1f; GAM MAE %.2f ; Rosetta MAE %.2f' % (
@@ -61,7 +63,7 @@ for fpath in ['control_GAM_terms.csv', 'tal_GAM_terms.csv', 'ref_GAM_terms.csv']
     #         np.mean(np.abs(df['error'])),
     #     )
     # )
-    ax.set_title( 'Experimental data $\Delta\Delta G$ values, Rosetta $\Delta\Delta G$ predictions by score term, and GAM-fit Rosetta $\Delta\Delta G$ predictions by score term' )
+    # ax.set_title( 'Experimental data $\Delta\Delta G$ values, Rosetta $\Delta\Delta G$ predictions by score term, and GAM-fit Rosetta $\Delta\Delta G$ predictions by score term' )
     ax.yaxis.grid(True)
     sns.swarmplot(
         x = "Score Term", y = "Score", hue = "Prediction Type",
@@ -75,6 +77,7 @@ for fpath in ['control_GAM_terms.csv', 'tal_GAM_terms.csv', 'ref_GAM_terms.csv']
     )
     ax.set_ylabel('$\Delta\Delta G$ Score')
     fig.savefig( fpath.replace('_', '-')[:-4] + '-mpl.png' )
+    print fpath + '-mpl.png'
 
     continue
 
