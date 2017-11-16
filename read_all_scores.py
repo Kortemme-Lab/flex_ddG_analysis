@@ -100,6 +100,9 @@ run_names = {
     'zemu-values' : 'ZEMu paper',
     'zemu_control-69aa526-noglypivot' : 'no backrub control',
     'zemu_control-69aa526' : 'no backrub control',
+    'tal_GAM' : 'GAM (Talaris)',
+    'ref_GAM' : 'GAM (REF)',
+    'control_GAM' : 'GAM (No backrub control, Talaris)',
 }
 
 run_colors = {
@@ -133,9 +136,30 @@ def load_df():
 
     print 'Performing initial .csv load'
 
+    # Load CSVs
     df = pd.read_csv( csv_paths[0] )
     for csv_path in csv_paths[1:]:
         df = df.append( pd.read_csv( csv_path ) )
+
+    # Load GAM
+    for run_name, csv_path in [
+            ('tal_GAM', os.path.join('gam', 'tal_GAM_terms.csv')),
+            ('ref_GAM', os.path.join('gam', 'ref_GAM_terms.csv')),
+            ('control_GAM', os.path.join('gam', 'control_GAM_terms.csv')),
+    ]:
+        gam_df = pd.read_csv( csv_path )
+        assert( len(gam_df) == 1240 )
+        gam_df['DataSetID'] = range(1, 1241)
+        gam_df = gam_df.assign( PredictionRunName = run_name )
+        gam_df = gam_df.assign( ScoreMethodID = 12 )
+        gam_df = gam_df.assign( PredictionID = None )
+        gam_df = gam_df.assign( StructureOrder = 'id_50' )
+        gam_df['total'] = gam_df[ [x for x in gam_df.columns if x.endswith('_GAM')] ].sum( axis = 1 )
+        gam_df = gam_df[ ['PredictionRunName', 'DataSetID', 'ScoreMethodID', 'total', 'exp_data', 'StructureOrder'] ]
+        gam_df.columns = [ 'PredictionRunName', 'DataSetID', 'ScoreMethodID', 'total', 'ExperimentalDDG', 'StructureOrder' ]
+        df = df.append( gam_df )
+
+    # Finish up
     df = add_score_categories( df )
     df = df.drop_duplicates( ['PredictionRunName', 'DataSetID', 'PredictionID', 'ScoreMethodID', 'MutType', 'total', 'ExperimentalDDG', 'StructureOrder'] )
     cached_loaded_df_initialized = True
@@ -938,7 +962,7 @@ def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_simplified-t1
         # Save underlying data
         data_table = pd.DataFrame.from_records(
             data_table,
-            columns = ['Run', 'Subset', 'Structures', 'R', 'MAE'],
+            columns = ['Run', 'Subset', 'Models', 'R', 'MAE'],
         )
         latex_lines = data_table.to_latex( float_format = '%.2f', index = False ).split('\n')
         latex_lines = [r'\begin{table}'] + latex_lines + ['\caption[]{Selection of key data shown in \cref{fig:%s}}' % output_figure_name, '\label{tab:%s}' % underlying_name, r'\end{table}', '']
@@ -956,7 +980,7 @@ def table_main( results_df ):
     ]
 
     short_caption = ""
-    caption_text = short_caption + "Summary of prediction performance. Flex ddG predictions used 50 models and %d backrub steps. ddG monomer predictions were taken by averaging the \ddg\ scores of the three lowest scoring output models. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold. Best performance for each metric is shown in bold." % backrub_steps
+    caption_text = short_caption + "Summary of prediction performance. Flex ddG predictions used 50 models and %d backrub steps. ddG monomer predictions were taken by averaging the \ddg\ scores of the three lowest scoring output models. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric and dataset is shown in bold." % backrub_steps # TODo and dataset. ddg monomer from text
 
     subset_table(
         'table-main', results_df, display_runs, caption_text, short_caption, table_mut_types = [
@@ -973,7 +997,7 @@ def table_ref( results_df ):
     ]
 
     short_caption = "REF results"
-    caption_text = 'Performance comparison of the standard flex ddG protocol (using Rosetta\'s Talaris energy function) with flex ddG run with the REF score function, and %d backrub steps. Data for the flex ddG method with the Talaris energy function are as in \cref{tab:table-main} in the main text. res $<=$ 1.5 Ang." indicates data points for which the resolution of the input wild-type crystal structure is less than or equal to 1.5 \AA. N = number of cases in the dataset or subset. R = Pearson\'s R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold.' % backrub_steps
+    caption_text = 'Performance comparison of the standard flex ddG protocol (using Rosetta\'s Talaris energy function) with flex ddG run with the REF score function, and %d backrub steps. Data for the flex ddG method with the Talaris energy function are as in \cref{tab:table-main} in the main text. res $<=$ 1.5 Ang." indicates data points for which the resolution of the input wild-type crystal structure is less than or equal to 1.5 \AA. N = number of cases in the dataset or subset. R = Pearson\'s R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric and dataset is shown in bold.' % backrub_steps
 
     table_mut_types = [
         'complete', 's2l', 'sing_ala', 'mult_mut',
@@ -991,7 +1015,7 @@ def backrub_temp_table( results_df ):
     ]
 
     short_caption = "Comparison of backrub temperature results"
-    caption_text = "Flex ddG performance comparison, when backrub is run with a sampling temperature (kT) of 1.2 or 1.6 and %d backrub steps. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold." % backrub_steps
+    caption_text = "Flex ddG performance comparison, when backrub is run with a sampling temperature (kT) of 1.2 or 1.6 and %d backrub steps (this differs from \cref{table-main}, which is shown at 35,000 backrub steps). N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric and dataset is shown in bold." % backrub_steps
 
     subset_table( 'table-temperature', results_df, display_runs, caption_text, short_caption )
 
@@ -1007,7 +1031,7 @@ def ddg_monomer_table( results_df ):
 
 
     short_caption = 'ddG monomer results'
-    caption_text = short_caption + ". N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold."
+    caption_text = short_caption + ". N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric and dataset is shown in bold."
 
     subset_table( 'table-ddG-monomer', results_df, display_runs, caption_text, short_caption )
 
@@ -1020,7 +1044,7 @@ def multiple_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Multiple mutations results'
-    caption_text = short_caption + " (backrub steps = %d). N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold." % backrub_steps
+    caption_text = short_caption + " (backrub steps = %d). N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric and dataset is shown in bold." % backrub_steps
 
     subset_table( 'table-mult', results_df, display_runs, caption_text, short_caption, table_mut_types = ['mult_mut', 'mult_all_ala', 'mult_none_ala', 'ala'] )
 
@@ -1034,7 +1058,7 @@ def antibodies_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on antibodies'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of complexes containing an antibody binding partner (flex ddG run with %d backrub steps). N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold." % backrub_steps
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of complexes containing an antibody binding partner (flex ddG run with %d backrub steps). N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric and dataset is shown in bold." % backrub_steps
 
     subset_table( 'table-antibodies', results_df, display_runs, caption_text, short_caption, table_mut_types = ['complete', 'antibodies'] )
 
@@ -1048,7 +1072,7 @@ def stabilizing_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on stabilizing mutations'
-    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta G <= -1$), neutral ($-1 < \Delta\Delta G < 1$), or destabilizing ($\Delta\Delta G >= 1$). Flex ddG was run with %d backrub steps. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold." % backrub_steps
+    caption_text = "Performance of the Rosetta flex ddG method on the subset of mutations experimentally determined to be stabilizing ($\Delta\Delta G <= -1$), neutral ($-1 < \Delta\Delta G < 1$), or destabilizing ($\Delta\Delta G >= 1$). Flex ddG was run with %d backrub steps. N = number of cases in the dataset or subset. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric and dataset is shown in bold." % backrub_steps
 
     subset_table( 'table-stabilizing', results_df, display_runs, caption_text, short_caption, table_mut_types = ['stabilizing', 'neutral', 'positive'] )
 
@@ -1062,7 +1086,7 @@ def by_pdb_table( results_df ):
         ('zemu-values', 11, 'id_01'),
     ]
     short_caption = 'Flex ddG performance on PDB '
-    caption_text = ". Backrub steps = %d. N = number of cases (variants) for each complex. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric is shown in bold." % backrub_steps
+    caption_text = ". Backrub steps = %d. N = number of cases (variants) for each complex. R = Pearson's R. MAE = Mean Absolute Error. FC = Fraction Correct. Best performance for each metric and dataset is shown in bold." % backrub_steps
 
     display_columns = collections.OrderedDict( [
         ('MutTypes', 'PDB'),
@@ -1305,7 +1329,88 @@ def prediction_error( score_method_id = 35000, prediction_run = 'zemu_1.2-60000_
     for mean_error, dataset_ids_len, subset in error_by_subset:
         print subset, dataset_ids_len, '%.2f' % mean_error
 
+def make_supp_csv():
+    df = load_df()
+
+    supp_df = pd.DataFrame( columns = df.columns )
+    display_run_names = [
+        'zemu_1.2-60000_rscript_simplified-t14',
+        'zemu_1.2-60000_rscript_validated-ref',
+        'zemu-brub_1.6-nt10000',
+        'zemu_control-69aa526',
+        'ddg_monomer_16_003-zemu-2',
+        'zemu-values',
+        'tal_GAM',
+        'ref_GAM',
+        'control_GAM',
+    ]
+    display_mut_types = ['s2l', 'ala', 'sing_ala', 'mult_mut', 'mult_all_ala', 'mult_none_ala', 'antibodies']
+    structure_orders = {
+        'id_01' : '1 model',
+        'id_30' : '30 unsorted models',
+        'id_50' : 'All 50 models',
+        'WildTypeComplex_01' : 'lowest scoring model by wild-type complex energy',
+        'WildTypeComplex_03' : '3 lowest scoring models by wild-type complex energy',
+        'WildTypeComplex_30' : '30 lowest scoring models by wild-type complex energy',
+    }
+    backrub_steps = [8, 11, 12, 2500, 10000, 35000, 50000]
+    column_name_map = collections.OrderedDict( [
+        ('PredictionRunName', 'Run'),
+        ('DataSetID', 'ID'),
+        ('ScoreMethodID', 'Backrub Steps'),
+        ('total', 'Total Score'),
+        ('ExperimentalDDG', 'Experimental ddG'),
+        ('StructureOrder', 'Number of Models'),
+        ('MutType', 'Subset'),
+        ('PredictionID', 'PredictionID'),
+    ] )
+
+    supp_df = df.loc[
+        ( df['PredictionRunName'].isin(display_run_names) ) &
+        ( df['ScoreMethodID'].isin(backrub_steps) ) &
+        ( df['StructureOrder'].isin(structure_orders.keys()) ) &
+        ( df['MutType'] == 'complete' )
+    ]
+
+    supp_df_renamed = supp_df[ column_name_map.keys() ]
+    supp_df_renamed['ScoreMethodID'] = supp_df_renamed['ScoreMethodID'].map(lambda x: int(x) if x > 100 else None)
+    supp_df_renamed['PredictionRunName'] = supp_df_renamed['PredictionRunName'].map(lambda x: run_names[x])
+    supp_df_renamed['StructureOrder'] = supp_df_renamed['StructureOrder'].map(lambda x: structure_orders[x])
+    supp_df_renamed.columns = column_name_map.values()
+    supp_df_renamed.to_csv( os.path.join(output_dir, 'supp-df-rows.csv') )
+
+    rev_df = pd.read_csv( 'table-zemu-filtered.csv' )[ ['DataSetID', 'PDBFileID', 'Mutations', 'ExperimentalDDG'] ]
+    for mut_type in display_mut_types:
+        rev_df[ 'Subset: ' + mut_types[mut_type] + '?' ] = rev_df['DataSetID'].isin( subsets[mut_type] )
+
+    supp_df.sort_values( ['PredictionRunName', 'StructureOrder', 'ScoreMethodID'], inplace = True )
+    for name, group in supp_df.groupby(['PredictionRunName', 'ScoreMethodID', 'StructureOrder']):
+        run_name, score_method, structure_order = name
+        run_name = run_names[run_name]
+        if score_method > 100:
+            score_method = '%05d' % int(score_method)
+        else:
+            score_method = 'N/A'
+        structure_order = structure_orders[structure_order]
+        name = (run_name, score_method, structure_order)
+
+        score_df = group[ ['DataSetID', 'total'] ]
+        new_col = 'Run: %s - Backrub steps: %s - Number of models: %s' % name
+        score_df.columns = ['DataSetID', new_col ]
+        rev_df = rev_df.merge( score_df, left_on = 'DataSetID', right_on = 'DataSetID', how = 'left', suffixes = ('','_y') )#.drop( 'DataSetID_y', axis = 1 )
+
+    new_cols = []
+    for col in rev_df.columns:
+        if col in column_name_map:
+            new_cols.append( column_name_map[col] )
+        else:
+            new_cols.append( col )
+    rev_df.columns = new_cols
+    rev_df.to_csv( os.path.join(output_dir, 'supp-df-cols.csv') )
+
 if __name__ == '__main__':
+    make_supp_csv()
+
     prediction_error()
 
     table_composition()
