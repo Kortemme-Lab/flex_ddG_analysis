@@ -14,21 +14,49 @@ import copy
 import string
 import random
 import re
+import copy
 
 # TODO: move this into repository
 csv_paths = [
-    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-t14-id_50.csv.gz' ),
+    # os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-t14-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-ref-id_01.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-ref-id_30.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-ref-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-ref-WildTypeComplex_01.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-ref-WildTypeComplex_30.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-ref-WildTypeComplex_50.csv.gz' ),
-    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-id_50.csv.gz' ),
-    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-69aa526-noglypivot-id_50.csv.gz' ),
+    # os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-id_50.csv.gz' ),
+    # os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-69aa526-noglypivot-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-69aa526-id_01.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-69aa526-id_30.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-69aa526-id_50.csv.gz' ),
-    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-WildTypeComplex_03.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-69aa526-WildTypeComplex_01.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-69aa526-WildTypeComplex_30.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_control-69aa526-WildTypeComplex_50.csv.gz' ),
+
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-id_01.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-id_30.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-WildTypeComplex_01.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-WildTypeComplex_30.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/ddg_monomer_16_003-zemu-2-WildTypeComplex_50.csv.gz' ),
+
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-brub_1.6-nt10000-id_01.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-brub_1.6-nt10000-id_30.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-brub_1.6-nt10000-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-brub_1.6-nt10000-WildTypeComplex_01.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-brub_1.6-nt10000-WildTypeComplex_30.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-brub_1.6-nt10000-WildTypeComplex_50.csv.gz' ),
+
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu-values-id_01.csv.gz' ),
-    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-ref-cart-id_50.csv.gz' ),
+
+    # os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_validated-ref-cart-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_simplified-t14-id_01.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_simplified-t14-id_30.csv.gz' ),
     os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_simplified-t14-id_50.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_simplified-t14-WildTypeComplex_01.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_simplified-t14-WildTypeComplex_30.csv.gz' ),
+    os.path.expanduser( '/dbscratch/kyleb/new_query_cache/summed_and_averaged/zemu_1.2-60000_rscript_simplified-t14-WildTypeComplex_50.csv.gz' ),
 ]
 output_dir = 'output'
 latex_output_dir = os.path.join( output_dir, 'latex' )
@@ -125,6 +153,89 @@ sorting_type_descriptions_short = {
     'WildTypeComplex' : 'structures sorted by wild-type complex energy',
 }
 
+def make_fig_components_text(fc, run_name, score_method, structure_order):
+    matching_uses = set()
+    score_method = int(score_method)
+    for use_name, uses_list in fc.iteritems():
+        for other_run_name, other_structure_order, other_score_method in uses_list:
+            if other_run_name == run_name and other_structure_order == structure_order and other_score_method == score_method:
+                matching_uses.add( use_name )
+    return '; '.join(sorted(list(matching_uses)))
+
+def figure_components():
+    # Figure to run map
+    def append_all_structs_helper( runs_steps, structure_orders ):
+        l = []
+        for run_name, step_num in runs_steps:
+            for structure_order in structure_orders:
+                for i in xrange(1, 51):
+                    if i == 50 and structure_order == 'WildTypeComplex':
+                        l.append( (run_name, '%s_%02d' % ('id', i), step_num ) )
+                    else:
+                        l.append( (run_name, '%s_%02d' % (structure_order, i), step_num ) )
+        return l
+
+    fig_4 = [ ('zemu_control-69aa526', 'id_50', 8) ]
+    for step in np.arange(0,50001,2500):
+        fig_4.append( ('zemu_1.2-60000_rscript_simplified-t14', 'id_50', step) )
+    total_ddg_score_figure_components = {
+        'Figure 2' : [
+            ('zemu_1.2-60000_rscript_simplified-t14', 'id_50', 35000),
+            ('zemu_control-69aa526', 'id_50', 8),
+        ],
+        'Figure 3' : append_all_structs_helper([('zemu_1.2-60000_rscript_simplified-t14', 35000), ('zemu_control-69aa526', 8)], ['WildTypeComplex']),
+        'Figure 4' : fig_4,
+        'Figure 5' : [
+            ('tal_GAM', 'id_50', 12),
+            ('control_GAM', 'id_50', 12),
+        ],
+        'Table 2' : [
+            ('zemu_1.2-60000_rscript_simplified-t14', 'id_50', 35000),
+            ('zemu_control-69aa526', 'id_50', 8),
+            ('zemu-values', 'id_01', 11),
+            ('ddg_monomer_16_003-zemu-2', 'id_50', 8),
+        ],
+        'Table S2' : [
+            ('zemu-brub_1.6-nt10000', 'id_50', 10000),
+            ('zemu_1.2-60000_rscript_simplified-t14', 'id_50', 10000),
+        ],
+        'Table S3' : [
+            ('zemu_1.2-60000_rscript_simplified-t14', 'id_50', 35000),
+            ('zemu_control-69aa526', 'id_50', 8),
+            ('zemu-values', 'id_01', 11),
+            ('ddg_monomer_16_003-zemu-2', 'id_50', 8),
+        ],
+        'Table S4' : append_all_structs_helper([('zemu_1.2-60000_rscript_simplified-t14', 35000), ('zemu_control-69aa526', 8)], ['WildTypeComplex']),
+        'Table S5' : append_all_structs_helper([('ddg_monomer_16_003-zemu-2', 8), ('zemu_control-69aa526', 8)], ['WildTypeComplex']),
+        'Table S6' : append_all_structs_helper([('zemu_1.2-60000_rscript_simplified-t14', 35000), ('zemu_control-69aa526', 8)], ['id']),
+        'Table S7' : fig_4,
+        'Table S8' : [
+            ('zemu_1.2-60000_rscript_simplified-t14', 'id_50', 35000),
+            ('zemu_1.2-60000_rscript_validated-ref', 'id_50', 35000),
+        ],
+        'Table S9' : [
+            ('tal_GAM', 'id_50', 12),
+            ('control_GAM', 'id_50', 12),
+            ('ref_GAM', 'id_50', 12),
+        ],
+        'Figure S2' : append_all_structs_helper([('ddg_monomer_16_003-zemu-2', 8), ('zemu_control-69aa526', 8)], ['WildTypeComplex']),
+        'Figure S3' : append_all_structs_helper([('zemu_1.2-60000_rscript_simplified-t14', 35000), ('zemu_control-69aa526', 8)], ['id']),
+        'Figure S5' : [
+            ('zemu_1.2-60000_rscript_validated-ref', 'id_50', 35000),
+            ('ref_GAM', 'id_50', 12),
+        ],
+        'Figure S6' : [
+            ('tal_GAM', 'id_50', 12),
+        ],
+    }
+
+    partial_ddg_score_figure_components = copy.deepcopy( total_ddg_score_figure_components )
+    fig_s1 = []
+    for step in np.arange(0,50001,2500):
+        fig_s1.extend( append_all_structs_helper( [('zemu_1.2-60000_rscript_simplified-t14', step)], ['WildTypeComplex']) )
+    partial_ddg_score_figure_components['Figure S1'] = fig_s1 # Not used now, but could be in the future
+
+    return total_ddg_score_figure_components
 
 cached_loaded_df_initialized = False
 cached_loaded_df = None
@@ -1077,7 +1188,7 @@ def stabilizing_table( results_df ):
     subset_table( 'table-stabilizing', results_df, display_runs, caption_text, short_caption, table_mut_types = ['stabilizing', 'neutral', 'positive'] )
 
 def by_pdb_table( results_df ):
-    backrub_steps = 32500
+    backrub_steps = 35000
     # PredictionRun, Step, StructureOrder
     display_runs = [
         ('zemu_1.2-60000_rscript_simplified-t14', backrub_steps, 'id_50'),
@@ -1329,10 +1440,11 @@ def prediction_error( score_method_id = 35000, prediction_run = 'zemu_1.2-60000_
     for mean_error, dataset_ids_len, subset in error_by_subset:
         print subset, dataset_ids_len, '%.2f' % mean_error
 
-def make_supp_csv():
+def make_supp_csv( only_fig_columns = True ):
     df = load_df()
 
-    supp_df = pd.DataFrame( columns = df.columns )
+    fc = figure_components()
+
     display_run_names = [
         'zemu_1.2-60000_rscript_simplified-t14',
         'zemu_1.2-60000_rscript_validated-ref',
@@ -1346,14 +1458,16 @@ def make_supp_csv():
     ]
     display_mut_types = ['s2l', 'ala', 'sing_ala', 'mult_mut', 'mult_all_ala', 'mult_none_ala', 'antibodies']
     structure_orders = {
-        'id_01' : '1 model',
-        'id_30' : '30 unsorted models',
+        'id_01' : '1 randomly selected model',
+        'id_30' : '3 randomly selected models',
+        'id_30' : '30 randomly selected models',
         'id_50' : 'All 50 models',
         'WildTypeComplex_01' : 'lowest scoring model by wild-type complex energy',
         'WildTypeComplex_03' : '3 lowest scoring models by wild-type complex energy',
         'WildTypeComplex_30' : '30 lowest scoring models by wild-type complex energy',
+        'WildTypeComplex_50' : 'All 50 models',
     }
-    backrub_steps = [8, 11, 12, 2500, 10000, 35000, 50000]
+    backrub_steps = range(8,21) + [2500, 10000, 35000, 50000]
     column_name_map = collections.OrderedDict( [
         ('PredictionRunName', 'Run'),
         ('DataSetID', 'ID'),
@@ -1364,7 +1478,6 @@ def make_supp_csv():
         ('MutType', 'Subset'),
         ('PredictionID', 'PredictionID'),
     ] )
-
     supp_df = df.loc[
         ( df['PredictionRunName'].isin(display_run_names) ) &
         ( df['ScoreMethodID'].isin(backrub_steps) ) &
@@ -1383,12 +1496,22 @@ def make_supp_csv():
     for mut_type in display_mut_types:
         rev_df[ 'Subset: ' + mut_types[mut_type] + '?' ] = rev_df['DataSetID'].isin( subsets[mut_type] )
 
+    rev_df = rev_df.append(
+        pd.DataFrame( {'DataSetID':[-1]} ),
+        ignore_index = True,
+    )
+    rev_df.sort_values( ['DataSetID'], inplace = True )
     supp_df.sort_values( ['PredictionRunName', 'StructureOrder', 'ScoreMethodID'], inplace = True )
     for name, group in supp_df.groupby(['PredictionRunName', 'ScoreMethodID', 'StructureOrder']):
         run_name, score_method, structure_order = name
+        fig_components_text = make_fig_components_text(fc, run_name, score_method, structure_order)
+        if only_fig_columns and len(fig_components_text.strip()) == 0:
+            continue
         run_name = run_names[run_name]
         if score_method > 100:
             score_method = '%05d' % int(score_method)
+        elif 'GAM' in run_name:
+            score_method = '35000' # HARD CODE
         else:
             score_method = 'N/A'
         structure_order = structure_orders[structure_order]
@@ -1396,9 +1519,18 @@ def make_supp_csv():
 
         score_df = group[ ['DataSetID', 'total'] ]
         new_col = 'Run: %s - Backrub steps: %s - Number of models: %s' % name
+        if new_col in rev_df.columns:
+            print name, new_col
+            print rev_df.columns
+            assert( new_col not in rev_df.columns )
         score_df.columns = ['DataSetID', new_col ]
+        score_df = score_df.append( pd.DataFrame( {
+            'DataSetID' : [-1],
+            new_col : [fig_components_text],
+        } ) )
         rev_df = rev_df.merge( score_df, left_on = 'DataSetID', right_on = 'DataSetID', how = 'left', suffixes = ('','_y') )#.drop( 'DataSetID_y', axis = 1 )
 
+    #rev_df.sort_values( ['PredictionRunName', 'StructureOrder', 'ScoreMethodID'], inplace = True )
     new_cols = []
     for col in rev_df.columns:
         if col in column_name_map:
@@ -1406,7 +1538,7 @@ def make_supp_csv():
         else:
             new_cols.append( col )
     rev_df.columns = new_cols
-    rev_df.to_csv( os.path.join(output_dir, 'supp-df-cols.csv') )
+    rev_df.to_csv( os.path.join(output_dir, 'flex-ddG-data.csv') )
 
 if __name__ == '__main__':
     make_supp_csv()
