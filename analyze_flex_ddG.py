@@ -182,7 +182,7 @@ def find_finished_jobs( output_folder ):
         for potential_struct_dir in sorted([ os.path.abspath(os.path.join(job_dir, d)) for d in os.listdir(job_dir) if os.path.isdir( os.path.join(job_dir, d) )]):
             if rosetta_output_succeeded( potential_struct_dir ):
                 completed_struct_dirs.append( potential_struct_dir )
-        if len(completed_struct_dirs) > 0:
+        if len(completed_struct_dirs) >= 30:
             return_dict[job_dir] = completed_struct_dirs
 
     return return_dict
@@ -325,8 +325,8 @@ def mutations_from_resfile( resfile_path ):
 def get_struct_info_from_db3_file( struct_db3_file, struct_number, case_name ):
     structures_per_stride = [ 'backrub', 'wt_bound', 'mut_bound' ]
 
-    task_id = os.path.basename( os.path.dirname( os.path.dirname(stuct_db3_file) ) )
-    data_dir = os.path.join( os.path.join( os.path.dirname( os.path.dirname( os.path.dirname(stuct_db3_file) ) ), 'data' ), task_id )
+    task_id = os.path.basename( os.path.dirname( os.path.dirname(struct_db3_file) ) )
+    data_dir = os.path.join( os.path.join( os.path.dirname( os.path.dirname( os.path.dirname(struct_db3_file) ) ), 'data' ), task_id )
     resfile_path = os.path.join( data_dir, 'mutations.resfile' )
     mutations = mutations_from_resfile( os.path.join( os.path.dirname(struct_db3_file), resfile_path ) )
 
