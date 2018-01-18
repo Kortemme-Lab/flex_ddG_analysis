@@ -13,6 +13,8 @@ import seaborn as sns
 # Configure Seaborn
 sns.set_style("whitegrid")
 
+top_x = 21
+
 def torsions( run_name, ids_to_use, sub_name ):
     output_dir = os.path.join( os.path.join( '/dbscratch/kyleb/local_data/output', run_name ), sub_name )
     if not os.path.isdir( output_dir ):
@@ -20,8 +22,14 @@ def torsions( run_name, ids_to_use, sub_name ):
 
     input_df_path = os.path.join('/dbscratch/kyleb/local_data/output', run_name + '-structs.csv')
 
+    assert( len(ids_to_use) == top_x )
+
     input_df = pd.read_csv( input_df_path )
+
     input_df = input_df.loc[ input_df['case_name'].isin(ids_to_use) ]
+    if not len(input_df['case_name'].drop_duplicates()) == top_x:
+        print( 'WARNING', len(input_df['case_name'].drop_duplicates()), top_x )
+    # assert( len(input_df['case_name'].drop_duplicates()) == top_x )
 
     ##########################################################################################
 
@@ -50,7 +58,7 @@ def torsions( run_name, ids_to_use, sub_name ):
         'case_name', 'state', 'backrub_steps', 'struct_num', 'residue_number',
         'phi', 'psi', 'chi1', 'chi2',
     ]]
-    df = df.loc[ df['backrub_steps'] >= 0 ]
+    df = df.loc[ df['backrub_steps'] >= -1 ]
 
     for col_name in ['phi', 'psi', 'chi1', 'chi2']:
         df[col_name] = df[col_name].apply( lambda x : None if np.abs(x) < 0.0000001 else x )
@@ -60,12 +68,13 @@ def torsions( run_name, ids_to_use, sub_name ):
 
     df = df.merge(
         df.loc[ df['backrub_steps'] == -1 ][ ['case_name', 'struct_num', 'residue_number', 'state'] + ['phi', 'psi', 'chi1', 'chi2'] ],
-        how = 'left',        on = ['case_name', 'struct_num', 'residue_number', 'state'],
+        how = 'left',        on = ['case_name', 'struct_num', 'residue_number'],
     )
 
     for col_name in ['phi', 'psi', 'chi1', 'chi2']:
         df[col_name] = rtod * np.arcsin( np.sin( dtor * df[col_name + '_x'] - dtor * df[col_name + '_y'] ) )
 
+    df.rename( columns = { 'state_x' : 'state' }, inplace = True )
     df = df[ ['case_name', 'struct_num', 'residue_number', 'state', 'backrub_steps'] + ['phi', 'psi', 'chi1', 'chi2'] ]
 
     df['chi1_chi2'] = df['chi1'] + df['chi2']
@@ -126,11 +135,11 @@ def torsions( run_name, ids_to_use, sub_name ):
 
 def main(run_name):
 
-    top_x = 15
-
     df = pd.read_csv( os.path.expanduser( '~/gits/interface_ddg/interesting.csv' ) )
     top_ids = df.iloc[:top_x]['ID']
+    assert( len(top_ids) == top_x )
     bottom_ids = df.iloc[-top_x:]['ID']
+    assert( len(bottom_ids) == top_x )
 
     torsions( run_name, top_ids, 'top%d' % top_x )
     torsions( run_name, bottom_ids, 'bottom%d' % top_x )

@@ -210,7 +210,7 @@ def get_scores_from_db3_file(db3_file, struct_number, case_name):
     ''', conn)
 
     def renumber_struct_id( struct_id ):
-        return trajectory_stride * ( int(struct_id-1) // num_batches )
+        return trajectory_stride * ( 1 + (int(struct_id-1) // num_batches) )
 
     scores['struct_id'] = scores['struct_id'].apply( renumber_struct_id )
     scores['name'] = scores['name'].apply( lambda x: x[:-9] if x.endswith('_dbreport') else x )
@@ -383,7 +383,7 @@ def get_struct_info_from_db3_file( struct_db3_file, struct_number, case_name ):
         elif struct_id == 2:
             return -1
         else:
-            return trajectory_stride * (( struct_id - 2 - 1 ) // len(structures_per_stride))
+            return trajectory_stride * ( 1 + (( struct_id - 2 - 1 ) // len(structures_per_stride)) )
 
     df['struct_id'] = df['struct_id'].apply( renumber_struct_id )
 
@@ -440,7 +440,10 @@ def analyze_output_folder( output_folder ):
 
     df = pd.concat( ddg_scores_dfs )
     df.to_csv( os.path.join(script_output_folder, basename + '-results.csv') )
+    return
     pivot_df = df.copy( ['backrub_steps', 'case_name', 'scored_state', 'score_function_name', 'nstruct', 'total_score' ] )
+    print( pivot_df.head(n=6) )
+    print( pivot_df.columns )
     pivot_df = pivot_df.pivot_table( columns = ['case_name', 'backrub_steps', 'score_function_name', 'scored_state', 'nstruct'], values = 'total_score' ).reset_index()
     pivot_df.rename( columns = { 0 : 'total_score' }, inplace = True )
     pivot_df.to_csv( os.path.join(script_output_folder, basename + '-pivot_results.csv') )
