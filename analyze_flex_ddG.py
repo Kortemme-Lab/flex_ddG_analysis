@@ -182,8 +182,10 @@ def find_finished_jobs( output_folder ):
         for potential_struct_dir in sorted([ os.path.abspath(os.path.join(job_dir, d)) for d in os.listdir(job_dir) if os.path.isdir( os.path.join(job_dir, d) )]):
             if rosetta_output_succeeded( potential_struct_dir ):
                 completed_struct_dirs.append( potential_struct_dir )
-        if len(completed_struct_dirs) >= 30:
+        if len(completed_struct_dirs) >= 25:
             return_dict[job_dir] = completed_struct_dirs
+        # else: # TMP
+        #     print( job_dir, len(completed_struct_dirs) ) # TMP
 
     return return_dict
 

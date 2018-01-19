@@ -13,7 +13,7 @@ import seaborn as sns
 # Configure Seaborn
 sns.set_style("whitegrid")
 
-top_x = 21
+top_x = 30
 
 def torsions( run_name, ids_to_use, sub_name ):
     output_dir = os.path.join( os.path.join( '/dbscratch/kyleb/local_data/output', run_name ), sub_name )
@@ -25,11 +25,17 @@ def torsions( run_name, ids_to_use, sub_name ):
     assert( len(ids_to_use) == top_x )
 
     input_df = pd.read_csv( input_df_path )
+    input_df_copy = pd.read_csv( input_df_path )
 
     input_df = input_df.loc[ input_df['case_name'].isin(ids_to_use) ]
     if not len(input_df['case_name'].drop_duplicates()) == top_x:
+        for id_to_use in ids_to_use:
+            if len( input_df_copy.loc[ input_df_copy['case_name'] == id_to_use ]['case_name'].drop_duplicates() ) != 1:
+                print( 'Missing:', id_to_use, sub_name )
         print( 'WARNING', len(input_df['case_name'].drop_duplicates()), top_x )
-    # assert( len(input_df['case_name'].drop_duplicates()) == top_x )
+        # print( input_df.head() )
+        # print( input_df['case_name'].drop_duplicates() )
+    assert( len(input_df['case_name'].drop_duplicates()) == top_x )
 
     ##########################################################################################
 
