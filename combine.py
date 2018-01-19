@@ -8,14 +8,14 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import json
 
 # Configure Seaborn
 sns.set_style("whitegrid")
 
 top_x = 30
 
-def torsions( run_name, ids_to_use, sub_name ):
+def torsions( run_name, ids_to_use, data_set_ids_to_use, sub_name ):
     output_dir = os.path.join( os.path.join( '/dbscratch/kyleb/local_data/output', run_name ), sub_name )
     if not os.path.isdir( output_dir ):
         os.makedirs( output_dir )
@@ -23,6 +23,20 @@ def torsions( run_name, ids_to_use, sub_name ):
     input_df_path = os.path.join('/dbscratch/kyleb/local_data/output', run_name + '-structs.csv')
 
     assert( len(ids_to_use) == top_x )
+
+    # Subset analysis
+    subset_counts = []
+    with open( os.path.expanduser('~/gits/interface_ddg/subsets.json') ) as f:
+        subsets = json.load(f)
+    for subset_name, subset_ids in subsets.items():
+        intersection = len( set(data_set_ids_to_use).intersection(set(subset_ids)) )
+        if intersection > 0:
+            subset_counts.append( ( subset_name, intersection) )
+    subset_counts = pd.DataFrame.from_records( subset_counts, columns = ['subset', 'count'] )
+    subset_counts.sort_values('count', inplace = True, ascending = False )
+    print( sub_name )
+    print( subset_counts )
+    print()
 
     input_df = pd.read_csv( input_df_path )
     input_df_copy = pd.read_csv( input_df_path )
@@ -147,8 +161,8 @@ def main(run_name):
     bottom_ids = df.iloc[-top_x:]['ID']
     assert( len(bottom_ids) == top_x )
 
-    torsions( run_name, top_ids, 'top%d' % top_x )
-    torsions( run_name, bottom_ids, 'bottom%d' % top_x )
+    torsions( run_name, top_ids, df.iloc[:top_x]['DataSetID'],  'top%d' % top_x )
+    torsions( run_name, bottom_ids, df.iloc[-top_x:]['DataSetID'], 'bottom%d' % top_x )
 
 if __name__ == '__main__':
     main( '180115-kyleb_zemu_1.2-60000_struct-t14' )
