@@ -357,6 +357,23 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
         if mutants_some_l2s:
             some_l2s.add( dataset_id )
 
+    subsets_dict = {}
+
+    # Load DSSP information
+    assert( os.path.isfile( 'dssp_results.csv' ) ) # Generate with dssp.py if doesn't exist
+    dssp = pd.read_csv( 'dssp_results.csv' )
+    for ss_type in sorted( dssp['SS'].dropna().drop_duplicates() ):
+        ss_ids = sorted( dssp.loc[ dssp['SS'] == ss_type ]['DataSetID'] )
+        if len(ss_ids) >= 5:
+            subsets_dict[ 'SS-' + ss_type] = ss_ids
+    for exposure_metric in [x.split('_')[0] for x in dssp.columns if x.endswith('exposure')]:
+        for cut_off in [ 0.05, 0.1, 0.25 ]:
+            buried_ids = dssp.loc[ dssp[exposure_metric + '_exposure'] < cut_off ]
+            if len(buried_ids) > 0:
+                subsets_dict[ 'buried_lt' + '%.2f' % cut_off + '_' + exposure_metric ] = sorted( buried_ids['DataSetID'] )
+    # for key, value in subsets_dict.iteritems():
+    #     print key, len(value)
+
     if print_debug:
         print 'Summary:'
         print 'Single mutations:', len(single)
@@ -375,7 +392,6 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
         print 'Antibodies:', len(antibodies)
         print
 
-    subsets_dict = {}
     subsets_dict['mult_mut'] = sorted(multiple)
     subsets_dict['mult_all_ala'] = sorted(multiple_all_ala)
     subsets_dict['mult_none_ala'] = sorted(multiple_none_ala)
