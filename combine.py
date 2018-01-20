@@ -13,12 +13,39 @@ import json
 # Configure Seaborn
 sns.set_style("whitegrid")
 
-top_x = 30
+top_x = 3
 
-def torsions( run_name, ids_to_use, data_set_ids_to_use, sub_name ):
+mut_types = {
+    'complete' : 'Complete dataset',
+    'sing_mut' : 'Single mutation',
+    'mult_mut' : 'Multiple mutations',
+    'mult_all_ala' : 'Multiple mutations, all to alanine',
+    'mult_none_ala' : 'Multiple mutations, none to alanine',
+    's2l' : 'Small-to-large mutation(s)',
+    'l2s' : 'Large-to-small',
+    'ala' : 'Mutation(s) to alanine',
+    'sing_ala' : 'Single mutation to alanine',
+    'res_gte25' : 'Res. $>=$ 2.5 Ang.',
+    'res_lte15' : 'Res. $<=$ 1.5 Ang.',
+    'res_gt15_lt25' : '1.5 Ang. $<$ Res. $<$ 2.5 Ang.',
+    'some_s2l' : 'Some small-to-large',
+    'some_l2s' : 'Some large-to-small',
+    'antibodies' : 'Antibodies',
+    'stabilizing' : 'Stabilizing',
+    'neutral' : 'Neutral',
+    'positive' : 'Positive',
+    's2l_stabilizing' : 'Small-to-large and stabilizing',
+}
+
+def torsions( run_name, df_to_use, sub_name ):
+    ids_to_use = df_to_use['ID']
+    data_set_ids_to_use = df_to_use['DataSetID']
+
     output_dir = os.path.join( os.path.join( '/dbscratch/kyleb/local_data/output', run_name ), sub_name )
     if not os.path.isdir( output_dir ):
         os.makedirs( output_dir )
+
+    df_to_use.to_csv( os.path.join( output_dir, run_name + '.csv' ) )
 
     input_df_path = os.path.join('/dbscratch/kyleb/local_data/output', run_name + '-structs.csv')
 
@@ -31,11 +58,15 @@ def torsions( run_name, ids_to_use, data_set_ids_to_use, sub_name ):
     for subset_name, subset_ids in subsets.items():
         intersection = len( set(data_set_ids_to_use).intersection(set(subset_ids)) )
         if intersection > 0:
-            subset_counts.append( ( subset_name, intersection) )
+            if subset_name in mut_types:
+                subset_counts.append( ( mut_types[subset_name], intersection) )
+            else:
+                subset_counts.append( ( subset_name, intersection) )
     subset_counts = pd.DataFrame.from_records( subset_counts, columns = ['subset', 'count'] )
     subset_counts.sort_values('count', inplace = True, ascending = False )
     print( sub_name )
     print( subset_counts )
+    subset_counts.to_csv( os.path.join( output_dir, run_name + '-subset_counts.csv' ) )
     print()
 
     input_df = pd.read_csv( input_df_path )
@@ -156,13 +187,14 @@ def torsions( run_name, ids_to_use, data_set_ids_to_use, sub_name ):
 def main(run_name):
 
     df = pd.read_csv( os.path.expanduser( '~/gits/interface_ddg/interesting.csv' ) )
-    top_ids = df.iloc[:top_x]['ID']
-    assert( len(top_ids) == top_x )
-    bottom_ids = df.iloc[-top_x:]['ID']
-    assert( len(bottom_ids) == top_x )
+    df = df.loc[ np.abs(df['total']) >= 0.5 ]
+    top_df = df.iloc[:top_x]
+    assert( len(top_df) == top_x )
+    bottom_df = df.iloc[-top_x:]
+    assert( len(bottom_df) == top_x )
 
-    torsions( run_name, top_ids, df.iloc[:top_x]['DataSetID'],  'top%d' % top_x )
-    torsions( run_name, bottom_ids, df.iloc[-top_x:]['DataSetID'], 'bottom%d' % top_x )
+    torsions( run_name, top_df, 'top%d' % top_x )
+    torsions( run_name, bottom_df, 'bottom%d' % top_x )
 
 if __name__ == '__main__':
     main( '180115-kyleb_zemu_1.2-60000_struct-t14' )

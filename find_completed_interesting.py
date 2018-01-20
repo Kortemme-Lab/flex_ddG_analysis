@@ -21,7 +21,7 @@ def get_df( mysql_con ):
 
     data_df['abs_error'] = np.abs( data_df['total'] - data_df['ExperimentalDDG'] )
     data_df.sort_values( 'abs_error', inplace = True )
-    data_ids = data_df[['DataSetID', 'abs_error']]
+    data_ids = data_df[['DataSetID', 'abs_error', 'total', 'ExperimentalDDG']]
     data_ids = data_ids.merge( new_df, left_on = 'DataSetID', right_on = 'UserPPDataSetExperimentID' )
 
     return data_ids
