@@ -13,8 +13,6 @@ import json
 # Configure Seaborn
 sns.set_style("whitegrid")
 
-top_x = 3
-
 mut_types = {
     'complete' : 'Complete dataset',
     'sing_mut' : 'Single mutation',
@@ -37,7 +35,17 @@ mut_types = {
     's2l_stabilizing' : 'Small-to-large and stabilizing',
 }
 
-def torsions( run_name, df_to_use, sub_name ):
+class TopXException(Exception):
+    pass
+
+run_name = '180115-kyleb_zemu_1.2-60000_struct-t14'
+input_df_path = os.path.join('/dbscratch/kyleb/local_data/output', run_name + '-structs.csv')
+input_df_cache = pd.read_csv( input_df_path )
+
+def torsions( df_to_use, sub_name, top_x, test_only = False ):
+    input_df = input_df_cache.copy()
+    input_df_copy = input_df_cache.copy()
+
     ids_to_use = df_to_use['ID']
     data_set_ids_to_use = df_to_use['DataSetID']
 
@@ -46,8 +54,6 @@ def torsions( run_name, df_to_use, sub_name ):
         os.makedirs( output_dir )
 
     df_to_use.to_csv( os.path.join( output_dir, run_name + '.csv' ) )
-
-    input_df_path = os.path.join('/dbscratch/kyleb/local_data/output', run_name + '-structs.csv')
 
     assert( len(ids_to_use) == top_x )
 
@@ -64,23 +70,28 @@ def torsions( run_name, df_to_use, sub_name ):
                 subset_counts.append( ( subset_name, intersection) )
     subset_counts = pd.DataFrame.from_records( subset_counts, columns = ['subset', 'count'] )
     subset_counts.sort_values('count', inplace = True, ascending = False )
-    print( sub_name )
-    print( subset_counts )
+    if not test_only:
+        print( sub_name )
+        print( subset_counts )
+        print()
     subset_counts.to_csv( os.path.join( output_dir, run_name + '-subset_counts.csv' ) )
-    print()
-
-    input_df = pd.read_csv( input_df_path )
-    input_df_copy = pd.read_csv( input_df_path )
 
     input_df = input_df.loc[ input_df['case_name'].isin(ids_to_use) ]
     if not len(input_df['case_name'].drop_duplicates()) == top_x:
+        if test_only:
+            return False
+
         for id_to_use in ids_to_use:
             if len( input_df_copy.loc[ input_df_copy['case_name'] == id_to_use ]['case_name'].drop_duplicates() ) != 1:
-                print( 'Missing:', id_to_use, sub_name )
-        print( 'WARNING', len(input_df['case_name'].drop_duplicates()), top_x )
+                if not test_only:
+                    print( 'Missing:', id_to_use, sub_name )
+        if not test_only:
+            print( 'WARNING', len(input_df['case_name'].drop_duplicates()), top_x )
         # print( input_df.head() )
         # print( input_df['case_name'].drop_duplicates() )
     assert( len(input_df['case_name'].drop_duplicates()) == top_x )
+    if test_only:
+        return True
 
     ##########################################################################################
 
@@ -184,17 +195,32 @@ def torsions( run_name, df_to_use, sub_name ):
             # sns.distplot(x, kde=False, rug=True)
 
 
-def main(run_name):
-
+def main():
     df = pd.read_csv( os.path.expanduser( '~/gits/interface_ddg/interesting.csv' ) )
-    df = df.loc[ np.abs(df['total']) >= 0.5 ]
+    # df = df.loc[ np.abs(df['total']) >= 0.5 ]
+
+    top_x = None
+    for potential_top_x in range(3, 31): # 1241):
+        top_df = df.iloc[:potential_top_x]
+        assert( len(top_df) == potential_top_x )
+        bottom_df = df.iloc[-potential_top_x:]
+        assert( len(bottom_df) == potential_top_x )
+
+        top_x = potential_top_x - 1
+        if not torsions( top_df, 'top%d' % potential_top_x, potential_top_x, test_only = True ):
+            break
+        if not torsions( bottom_df, 'bottom%d' % potential_top_x, potential_top_x, test_only = True ):
+            break
+        top_x = potential_top_x
+
+    print( 'TopX:', top_x )
     top_df = df.iloc[:top_x]
     assert( len(top_df) == top_x )
     bottom_df = df.iloc[-top_x:]
     assert( len(bottom_df) == top_x )
 
-    torsions( run_name, top_df, 'top%d' % top_x )
-    torsions( run_name, bottom_df, 'bottom%d' % top_x )
+    torsions( top_df, 'top%d' % top_x, top_x )
+    torsions( bottom_df, 'bottom%d' % top_x, top_x )
 
 if __name__ == '__main__':
-    main( '180115-kyleb_zemu_1.2-60000_struct-t14' )
+    main()
