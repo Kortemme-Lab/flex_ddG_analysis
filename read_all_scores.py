@@ -710,7 +710,7 @@ def table_composition():
 def table_versions():
     save_latex( 'latex_templates/table-versions.tex', run_names )
 
-def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_control-69aa526', force_control_in_axes = True, max_backrub_steps = 50000 ):
+def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_control-69aa526', force_control_in_axes = True, max_backrub_steps = 50000, structure_order = 'id_50' ):
     exp_run_name = 'zemu_1.2-60000_rscript_simplified-t14'
 
     df = load_df()
@@ -718,6 +718,10 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
     pred_colname = 'Rosetta Score'
     df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
     df = df.rename( columns = {'total' : pred_colname} )
+
+    # Filter to desired StructureOrder
+    if structure_order != None:
+        df = df.loc[ df['StructureOrder'] == structure_order ]
 
     if max_backrub_steps != None:
         df = df.loc[ df['ScoreMethodID'] <= max_backrub_steps ]
@@ -749,6 +753,9 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
         ns.append( len(df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) & (df['ScoreMethodID'] == df['ScoreMethodID'].drop_duplicates().values[0]) ]) )
         rs = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].corr().ix[0::2, exp_colname].reset_index()
         maes = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
+        assert( len(rs) == len(maes) )
+        for name, group in df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('ScoreMethodID'):
+            assert( len(group) == len(subsets[mut_type_subset]) )
 
         exp_rs_plot, = ax.plot(
             rs['ScoreMethodID'], rs['Experimental ddG'],
@@ -1567,15 +1574,14 @@ def make_subsets_report():
     df.to_csv( 'subset_report.csv' )
 
 if __name__ == '__main__':
-    # make_supp_csv()
+    make_supp_csv()
 
-    # prediction_error()
+    prediction_error()
 
-    # table_composition()
-    # table_versions()
-    # figure_scatter()
+    table_composition()
+    table_versions()
+    figure_scatter()
     make_subsets_report()
-    sys.exit()
     steps_vs_corr( 'steps-v-corr_burial', ['buried_lt0.10_mean', 'buried_gte0.10_mean', 'buried_lt0.25_mean', 'buried_gte0.25_mean'] )
     steps_vs_corr( 'steps-v-corr_burial2', ['buried_lt0.10_mean', 'buried_gte0.10_mean', 'buried_lt0.05_mean', 'buried_gte0.05_mean'] )
     steps_vs_corr( 'steps-v-corr_ss', ['SS-all-None', 'SS-all-H', 'SS-all-E', 'SS-all-T'] )
