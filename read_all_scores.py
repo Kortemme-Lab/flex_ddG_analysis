@@ -1562,19 +1562,20 @@ def make_supp_csv( only_fig_columns = True ):
     rev_df.to_csv( os.path.join(output_dir, 'flex-ddG-data.csv') )
 
 def make_subsets_report():
-    df = pd.DataFrame( [(key, len(value)) for key, value in subsets.iteritems()], columns = ['subset', 'count'] )
+    df = pd.DataFrame( [(mut_types[key] if key in mut_types else key, len(value)) for key, value in subsets.iteritems()], columns = ['subset', 'count'] )
     df.sort_values( 'count', ascending = False, inplace = True )
     df.to_csv( 'subset_report.csv' )
 
 if __name__ == '__main__':
-    make_supp_csv()
+    # make_supp_csv()
 
-    prediction_error()
+    # prediction_error()
 
-    table_composition()
-    table_versions()
-    figure_scatter()
+    # table_composition()
+    # table_versions()
+    # figure_scatter()
     make_subsets_report()
+    sys.exit()
     steps_vs_corr( 'steps-v-corr_burial', ['buried_lt0.10_mean', 'buried_gte0.10_mean', 'buried_lt0.25_mean', 'buried_gte0.25_mean'] )
     steps_vs_corr( 'steps-v-corr_burial2', ['buried_lt0.10_mean', 'buried_gte0.10_mean', 'buried_lt0.05_mean', 'buried_gte0.05_mean'] )
     steps_vs_corr( 'steps-v-corr_ss', ['SS-all-None', 'SS-all-H', 'SS-all-E', 'SS-all-T'] )

@@ -1,55 +1,55 @@
 ,subset,count
-39,some_l2s,1110
-35,l2s,1076
+39,Some large-to-small,1110
+35,Large-to-small,1076
 49,buried_gte0.05_max,969
-82,sing_mut,967
-40,buried_gte0.05_mean,945
+82,Single mutation,967
+40,Mean burial score >= 0.05,945
 70,buried_gte0.05_median,943
 90,all-mut-to-A,939
-5,ala,939
+5,Mutation(s) to alanine,939
 41,buried_gte0.05_min,873
 60,buried_gte0.10_max,824
 29,buried_lt0.25_min,815
-38,buried_gte0.10_mean,804
+38,Mean burial score >= 0.10,804
 22,buried_gte0.10_median,802
 6,buried_lt0.25_median,765
-47,buried_lt0.25_mean,758
-76,sing_ala,748
+47,Mean burial score < 0.25,758
+76,Single mutation to alanine,748
 62,buried_gte0.10_min,738
-16,res_gt15_lt25,731
+16,1.5 Ang. $<$ Res. $<$ 2.5 Ang.,731
 24,buried_lt0.25_max,717
 17,buried_gte0.25_max,523
 15,buried_lt0.10_min,502
-59,buried_gte0.25_mean,482
+59,Mean burial score >= 0.25,482
 83,buried_gte0.25_median,475
-44,res_gte25,457
+44,Res. $>=$ 2.5 Ang.,457
 48,buried_lt0.10_median,438
-74,buried_lt0.10_mean,436
+74,Mean burial score < 0.10,436
 42,buried_gte0.25_min,425
 3,buried_lt0.10_max,416
 9,buried_lt0.05_min,367
-88,antibodies,355
-80,SS-all-None,349
+88,Antibodies,355
+80,Loop,349
 4,buried_lt0.05_median,297
-81,buried_lt0.05_mean,295
-33,SS-all-E,280
-54,mult_mut,273
+81,Mean burial score < 0.05,295
+33,Strand,280
+54,Multiple mutations,273
 12,buried_lt0.05_max,271
-31,SS-all-H,198
-43,mult_all_ala,191
-36,SS-all-T,183
-37,SS-all-S,165
-52,some_s2l,164
+31,Alpha Helix,198
+43,"Multiple mutations, all to alanine",191
+36,Turn,183
+37,Bend,165
+52,Some small-to-large,164
 73,pdb-1A22,142
-78,s2l,130
+78,Small-to-large mutation(s),130
 75,pdb-1DAN,118
 72,pdb-1JTG,118
 84,pdb-1GC1,56
 28,pdb-1JRH,53
-106,res_lte15,52
+106,Res. $<=$ 1.5 Ang.,52
 57,pdb-1EMV,51
 67,pdb-1A4Y,45
-66,mult_none_ala,45
+66,"Multiple mutations, none to alanine",45
 8,pdb-2JEL,43
 20,pdb-1VFB,43
 97,all-mut-to-K,39
@@ -57,8 +57,8 @@
 50,pdb-1IAR,36
 23,pdb-1DQJ,34
 45,pdb-2WPT,32
-34,SS-all-B,32
-32,SS-all-G,31
+34,Beta Bridge,32
+32,Helix-3,31
 10,pdb-3NPS,27
 1,pdb-1EAW,27
 51,pdb-1KTZ,27
