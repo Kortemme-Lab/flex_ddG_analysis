@@ -17,37 +17,7 @@ import re
 import copy
 
 csv_paths = [
-    # 'data/zemu_1.2-60000_rscript_validated-ref-id_01.csv.gz',
-    # 'data/zemu_1.2-60000_rscript_validated-ref-id_30.csv.gz',
-    # 'data/zemu_1.2-60000_rscript_validated-ref-id_50.csv.gz',
-    # 'data/zemu_1.2-60000_rscript_validated-ref-WildTypeComplex_01.csv.gz',
-    # 'data/zemu_1.2-60000_rscript_validated-ref-WildTypeComplex_30.csv.gz',
-    # 'data/zemu_1.2-60000_rscript_validated-ref-WildTypeComplex_50.csv.gz',
-    'data/zemu_control-69aa526-id_01.csv.gz',
-    'data/zemu_control-69aa526-id_30.csv.gz',
-    'data/zemu_control-69aa526-id_50.csv.gz',
-    'data/zemu_control-69aa526-WildTypeComplex_01.csv.gz',
-    'data/zemu_control-69aa526-WildTypeComplex_30.csv.gz',
-    'data/zemu_control-69aa526-WildTypeComplex_50.csv.gz',
-    # 'data/ddg_monomer_16_003-zemu-2-id_01.csv.gz',
-    # 'data/ddg_monomer_16_003-zemu-2-id_30.csv.gz',
-    # 'data/ddg_monomer_16_003-zemu-2-id_50.csv.gz',
-    # 'data/ddg_monomer_16_003-zemu-2-WildTypeComplex_01.csv.gz',
-    # 'data/ddg_monomer_16_003-zemu-2-WildTypeComplex_30.csv.gz',
-    # 'data/ddg_monomer_16_003-zemu-2-WildTypeComplex_50.csv.gz',
-    # 'data/zemu-brub_1.6-nt10000-id_01.csv.gz',
-    # 'data/zemu-brub_1.6-nt10000-id_30.csv.gz',
-    # 'data/zemu-brub_1.6-nt10000-id_50.csv.gz',
-    # 'data/zemu-brub_1.6-nt10000-WildTypeComplex_01.csv.gz',
-    # 'data/zemu-brub_1.6-nt10000-WildTypeComplex_30.csv.gz',
-    # 'data/zemu-brub_1.6-nt10000-WildTypeComplex_50.csv.gz',
-    'data/zemu-values-id_01.csv.gz',
-    'data/zemu_1.2-60000_rscript_simplified-t14-id_01.csv.gz',
-    'data/zemu_1.2-60000_rscript_simplified-t14-id_30.csv.gz',
-    'data/zemu_1.2-60000_rscript_simplified-t14-id_50.csv.gz',
-    'data/zemu_1.2-60000_rscript_simplified-t14-WildTypeComplex_01.csv.gz',
-    'data/zemu_1.2-60000_rscript_simplified-t14-WildTypeComplex_30.csv.gz',
-    'data/zemu_1.2-60000_rscript_simplified-t14-WildTypeComplex_50.csv.gz'
+    'data/zemu_1.2-60000_rscript_validated-ref-id_01.csv.gz', 'data/zemu_1.2-60000_rscript_validated-ref-id_30.csv.gz', 'data/zemu_1.2-60000_rscript_validated-ref-id_50.csv.gz', 'data/zemu_1.2-60000_rscript_validated-ref-WildTypeComplex_01.csv.gz', 'data/zemu_1.2-60000_rscript_validated-ref-WildTypeComplex_30.csv.gz', 'data/zemu_1.2-60000_rscript_validated-ref-WildTypeComplex_50.csv.gz', 'data/zemu_control-69aa526-id_01.csv.gz', 'data/zemu_control-69aa526-id_30.csv.gz', 'data/zemu_control-69aa526-id_50.csv.gz', 'data/zemu_control-69aa526-WildTypeComplex_01.csv.gz', 'data/zemu_control-69aa526-WildTypeComplex_30.csv.gz', 'data/zemu_control-69aa526-WildTypeComplex_50.csv.gz', 'data/ddg_monomer_16_003-zemu-2-id_01.csv.gz', 'data/ddg_monomer_16_003-zemu-2-id_30.csv.gz', 'data/ddg_monomer_16_003-zemu-2-id_50.csv.gz', 'data/ddg_monomer_16_003-zemu-2-WildTypeComplex_01.csv.gz', 'data/ddg_monomer_16_003-zemu-2-WildTypeComplex_30.csv.gz', 'data/ddg_monomer_16_003-zemu-2-WildTypeComplex_50.csv.gz', 'data/zemu-brub_1.6-nt10000-id_01.csv.gz', 'data/zemu-brub_1.6-nt10000-id_30.csv.gz', 'data/zemu-brub_1.6-nt10000-id_50.csv.gz', 'data/zemu-brub_1.6-nt10000-WildTypeComplex_01.csv.gz', 'data/zemu-brub_1.6-nt10000-WildTypeComplex_30.csv.gz', 'data/zemu-brub_1.6-nt10000-WildTypeComplex_50.csv.gz', 'data/zemu-values-id_01.csv.gz', 'data/zemu_1.2-60000_rscript_simplified-t14-id_01.csv.gz', 'data/zemu_1.2-60000_rscript_simplified-t14-id_30.csv.gz', 'data/zemu_1.2-60000_rscript_simplified-t14-id_50.csv.gz', 'data/zemu_1.2-60000_rscript_simplified-t14-WildTypeComplex_01.csv.gz', 'data/zemu_1.2-60000_rscript_simplified-t14-WildTypeComplex_30.csv.gz', 'data/zemu_1.2-60000_rscript_simplified-t14-WildTypeComplex_50.csv.gz'
 ]
 
 output_dir = 'output'
@@ -108,16 +78,7 @@ mut_types = {
     'neutral' : 'Neutral',
     'positive' : 'Positive',
     's2l_stabilizing' : 'Small-to-large and stabilizing',
-    'SS-all-None' : 'Loop',
-    'SS-all-H' : 'Alpha Helix',
-    'SS-all-E' : 'Strand',
-    'SS-all-T' : 'Turn',
 }
-
-for cut_off in [0.1, 0.25]:
-    for stat_type in ['mean']:
-        for comparison_type, comparison_type_name in [('lt', '<'), ('gte', '>=')]:
-            mut_types[ 'buried_%s%.2f_%s' % (comparison_type, cut_off, stat_type) ] = '%s burial score %s %.2f' % (stat_type.capitalize(), comparison_type_name, cut_off)
 
 run_names = {
     'zemu_1.2-60000_rscript_validated-t14' : 'flex ddG',
@@ -306,7 +267,6 @@ def add_score_categories(df, mut_type_subsets = None):
     for subset_name, subset_keys in subsets.iteritems():
         if mut_type_subsets == None or subset_name in mut_type_subsets:
             subset_df = df.loc[ (df['MutType'] == 'complete') & (df['DataSetID'].isin(subset_keys)) ].copy()
-            assert( len(subset_df) > 0 )
             subset_df.loc[:,'MutType'] = subset_name
             df = df.append( subset_df )
 
@@ -861,15 +821,12 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
     with open( 'output/latex/%s.tex' % underlying_name, 'w' ) as f:
         f.write( '\n'.join(latex_lines) )
 
-def figure_structs_vs_corr(
-        exp_run_name = 'zemu_1.2-60000_rscript_simplified-t14', force_backrub_step = 35000, max_backrub_step = 50000,
-        mut_type_subsets = ['complete', 's2l', 'mult_none_ala', 'sing_ala'],
-        extra_fig_name = None,
-):
+def figure_structs_vs_corr( exp_run_name = 'zemu_1.2-60000_rscript_simplified-t14', force_backrub_step = 35000, max_backrub_step = 50000 ):
     sorting_types = ['WildTypeComplex', 'id']
-    base_path = 'data/by_struct/%s-%s_%02d.csv.gz'
-    control_base_path = 'data/by_struct/%s-%s_%02d.csv.gz'
+    base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
+    control_base_path = '/dbscratch/kyleb/new_query_cache/summed_and_averaged/%s-%s_%02d.csv.gz'
     number_of_structures = 50
+    mut_type_subsets = ['complete', 's2l', 'mult_none_ala', 'sing_ala']
     control_run = 'zemu_control-69aa526'
 
     for sorting_type in sorting_types:
@@ -877,7 +834,6 @@ def figure_structs_vs_corr(
         df = None
         for struct_id in xrange(1, number_of_structures + 1):
             csv_path = base_path % (exp_run_name, sorting_type, struct_id)
-            print csv_path
             assert( os.path.isfile( csv_path ) )
 
             if struct_id == 1:
@@ -1031,10 +987,7 @@ def figure_structs_vs_corr(
             r_ax.set_zorder( mae_ax.get_zorder() + 10 )
             r_ax.patch.set_visible(False)
 
-        if extra_fig_name != None:
-            output_figure_name = 'structs-v-corr-%s-%s-%s' % (sorting_type, exp_run_name, extra_fig_name)
-        else:
-            output_figure_name = 'structs-v-corr-%s-%s' % (sorting_type, exp_run_name)
+        output_figure_name = 'structs-v-corr-%s-%s' % (sorting_type, exp_run_name)
         output_figure_name = output_figure_name.replace('_', '-').replace('.', '')
         underlying_name = '%s-underlying-data' % output_figure_name
         out_path = os.path.join( output_fig_path, output_figure_name + '.pdf' )
@@ -1549,38 +1502,20 @@ def make_supp_csv( only_fig_columns = True ):
     rev_df.columns = new_cols
     rev_df.to_csv( os.path.join(output_dir, 'flex-ddG-data.csv') )
 
-def make_subsets_report():
-    df = pd.DataFrame( [(key, len(value)) for key, value in subsets.iteritems()], columns = ['subset', 'count'] )
-    df.sort_values( 'count', ascending = False, inplace = True )
-    df.to_csv( 'subset_report.csv' )
-
 if __name__ == '__main__':
-    # make_supp_csv()
+    make_supp_csv()
 
-    # prediction_error()
+    prediction_error()
 
-    # table_composition()
-    # table_versions()
-    # figure_scatter()
-    make_subsets_report()
-    steps_vs_corr( 'steps-v-corr_burial', ['buried_lt0.10_mean', 'buried_gte0.10_mean', 'buried_lt0.25_mean', 'buried_gte0.25_mean'] )
-    steps_vs_corr( 'steps-v-corr_ss', ['SS-all-None', 'SS-all-H', 'SS-all-E', 'SS-all-T'] )
-    figure_structs_vs_corr() # TMP
-    figure_structs_vs_corr(
-        mut_type_subsets = ['buried_lt0.10_mean', 'buried_gte0.10_mean', 'buried_lt0.25_mean', 'buried_gte0.25_mean'],
-        extra_fig_name = 'burial',
-    )
-    figure_structs_vs_corr(
-        mut_type_subsets = ['SS-all-None', 'SS-all-H', 'SS-all-E', 'SS-all-T'],
-        extra_fig_name = 'SS',
-    )
-    sys.exit()
-    # steps_vs_corr( 'steps-v-corr', ['complete', 's2l', 'mult_none_ala', 'sing_ala'] )
-    # steps_vs_corr( 'steps-v-corr_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
-    # steps_vs_corr( 'steps-v-corr_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
-    # steps_vs_corr( 'steps-v-corr_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
-    # figure_structs_vs_corr()
-    # figure_structs_vs_corr( 'ddg_monomer_16_003-zemu-2' )
+    table_composition()
+    table_versions()
+    figure_scatter()
+    steps_vs_corr( 'steps-v-corr', ['complete', 's2l', 'mult_none_ala', 'sing_ala'] )
+    steps_vs_corr( 'steps-v-corr_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
+    steps_vs_corr( 'steps-v-corr_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
+    steps_vs_corr( 'steps-v-corr_some_sizes', ['some_s2l', 's2l', 'some_l2s', 'l2s'] )
+    figure_structs_vs_corr()
+    figure_structs_vs_corr( 'ddg_monomer_16_003-zemu-2' )
 
     results_df = make_results_df()
 
