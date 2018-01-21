@@ -372,6 +372,11 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
             buried_ids = dssp.loc[ dssp[exposure_metric + '_exposure'] < cut_off ]
             if len(buried_ids) > 0:
                 subsets_dict[ 'buried_lt' + '%.2f' % cut_off + '_' + exposure_metric ] = sorted( buried_ids['DataSetID'] )
+
+            buried_ids = dssp.loc[ dssp[exposure_metric + '_exposure'] >= cut_off ]
+            if len(buried_ids) > 0:
+                subsets_dict[ 'buried_gte' + '%.2f' % cut_off + '_' + exposure_metric ] = sorted( buried_ids['DataSetID'] )
+
     # for key, value in subsets_dict.iteritems():
     #     print key, len(value)
 
