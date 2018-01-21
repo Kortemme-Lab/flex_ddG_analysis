@@ -377,6 +377,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
             if len(buried_ids) > 0:
                 subsets_dict[ 'buried_gte' + '%.2f' % cut_off + '_' + exposure_metric ] = sorted( buried_ids['DataSetID'] )
 
+    subsets_dict['complete'] = sorted( df['DataSetID'].drop_duplicates() )
     # for key, value in subsets_dict.iteritems():
     #     print key, len(value)
 
