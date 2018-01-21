@@ -362,6 +362,7 @@ def fetch_zemu_properties( mysql_con, print_debug = False ):
     # Load DSSP information
     assert( os.path.isfile( 'dssp_results.csv' ) ) # Generate with dssp.py if doesn't exist
     dssp = pd.read_csv( 'dssp_results.csv' )
+    subsets_dict[ 'SS-all-None' ] = sorted( dssp.loc[ dssp['SS'].isnull() ]['DataSetID'] )
     for ss_type in sorted( dssp['SS'].dropna().drop_duplicates() ):
         ss_ids = sorted( dssp.loc[ dssp['SS'] == ss_type ]['DataSetID'] )
         if len(ss_ids) >= 5:
