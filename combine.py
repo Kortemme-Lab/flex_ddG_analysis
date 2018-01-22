@@ -193,14 +193,14 @@ def torsions( df_to_use, sub_name, top_x, test_only = False ):
 
             # Histogram
             # sns.distplot(x, kde=False, rug=True)
-
+    return subset_counts
 
 def main():
     df = pd.read_csv( os.path.expanduser( '~/gits/interface_ddg/interesting.csv' ) )
     # df = df.loc[ np.abs(df['total']) >= 0.5 ]
 
     top_x = None
-    for potential_top_x in range(3, 31): # 1241):
+    for potential_top_x in range(142, 1241):
         top_df = df.iloc[:potential_top_x]
         assert( len(top_df) == potential_top_x )
         bottom_df = df.iloc[-potential_top_x:]
@@ -219,8 +219,15 @@ def main():
     bottom_df = df.iloc[-top_x:]
     assert( len(bottom_df) == top_x )
 
-    torsions( top_df, 'top%d' % top_x, top_x )
-    torsions( bottom_df, 'bottom%d' % top_x, top_x )
+    top_counts = torsions( top_df, 'top%d' % top_x, top_x )
+    bottom_counts = torsions( bottom_df, 'bottom%d' % top_x, top_x )
+
+    joint_counts = top_counts.merge( bottom_counts, how = 'inner', on = 'subset',  suffixes=('_top', '_bottom') )
+    joint_counts['diff'] = joint_counts['count_top'] - joint_counts['count_bottom']
+    joint_counts['abs_diff'] = np.abs( joint_counts['diff'] )
+    joint_counts.sort_values('abs_diff', inplace = True, ascending = False )
+    joint_counts.to_csv( 'joint_counts.csv' )
+    print( joint_counts )
 
 if __name__ == '__main__':
     main()
