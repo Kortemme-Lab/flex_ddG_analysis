@@ -556,6 +556,58 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
 
     return results_df
 
+def figure_mult_non_ala():
+    exp_run_name = 'zemu_1.2-60000_rscript_simplified-t14'
+    control_run_name = 'zemu_control-69aa526'
+    zemu_run_name = 'zemu-values'
+    force_backrub_step = 35000
+    point_size = 6.0
+    alpha = 1.0
+    scatter_kws = { 's' : point_size, 'alpha' : alpha }
+    line_kws = { 'linewidth' : 0.8 }
+
+    df = load_df()
+    exp_colname = 'Experimental ddG'
+    pred_colname = 'Rosetta Score'
+    display_subset = 'mult_none_ala'
+    df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
+    df = df.rename( columns = {'total' : pred_colname} )
+
+    sns.set_style("whitegrid")
+    fig = plt.figure(
+        figsize=(6, 8.5), dpi=600
+    )
+
+    df_a = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == display_subset) & (df['ScoreMethodID'] == force_backrub_step) & (df['StructureOrder'] == 'id_50') ]
+    ax1 = fig.add_subplot( 2, 1, 1 )
+
+    df_b = df.loc[ (df['PredictionRunName'] == zemu_run_name) & (df['MutType'] == display_subset) ]
+    ax2 = fig.add_subplot( 2, 1, 2 )
+
+    sns.regplot(
+        y = pred_colname, x = exp_colname,
+        data = df_a, ax = ax1,
+        scatter_kws = scatter_kws,
+        line_kws = line_kws,
+        ci = None,
+        color = run_colors[exp_run_name],
+    )
+    sns.regplot(
+        y = pred_colname, x = exp_colname,
+        data = df_b, ax = ax2,
+        scatter_kws = scatter_kws,
+        line_kws = line_kws,
+        ci = None,
+        color = run_colors[exp_run_name],
+    )
+
+    # ax1.set_xlabel('')
+    ax2.set_ylabel('ZEMu score')
+    fig.suptitle(mut_types[display_subset])
+
+    out_path = os.path.join( output_fig_path, 'fig-scatter_mult-non-ala.pdf' )
+    fig.savefig( out_path )
+
 def figure_scatter( force_backrub_step = 35000 ):
     exp_run_name = 'zemu_1.2-60000_rscript_simplified-t14'
     control_run_name = 'zemu_control-69aa526'
@@ -1574,6 +1626,7 @@ def make_subsets_report():
     df.to_csv( 'subset_report.csv' )
 
 if __name__ == '__main__':
+    figure_mult_non_ala()
     make_supp_csv()
 
     prediction_error()
