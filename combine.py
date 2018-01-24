@@ -197,10 +197,10 @@ def torsions( df_to_use, sub_name, top_x, test_only = False ):
 
 def main():
     df = pd.read_csv( os.path.expanduser( '~/gits/interface_ddg/interesting.csv' ) )
-    # df = df.loc[ np.abs(df['total']) >= 0.5 ]
+    df = df.loc[ np.abs(df['total']) >= 0.5 ]
 
     top_x = None
-    for potential_top_x in range(142, 1241):
+    for potential_top_x in range(1, 1241):
         top_df = df.iloc[:potential_top_x]
         assert( len(top_df) == potential_top_x )
         bottom_df = df.iloc[-potential_top_x:]
