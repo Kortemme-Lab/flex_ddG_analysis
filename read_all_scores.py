@@ -556,58 +556,6 @@ def make_results_df( generate_plots = False, print_statistics = False, use_cache
 
     return results_df
 
-def figure_mult_non_ala():
-    exp_run_name = 'zemu_1.2-60000_rscript_simplified-t14'
-    control_run_name = 'zemu_control-69aa526'
-    zemu_run_name = 'zemu-values'
-    force_backrub_step = 35000
-    point_size = 6.0
-    alpha = 1.0
-    scatter_kws = { 's' : point_size, 'alpha' : alpha }
-    line_kws = { 'linewidth' : 0.8 }
-
-    df = load_df()
-    exp_colname = 'Experimental ddG'
-    pred_colname = 'Rosetta Score'
-    display_subset = 'mult_none_ala'
-    df = df.rename( columns = {'ExperimentalDDG' : exp_colname} )
-    df = df.rename( columns = {'total' : pred_colname} )
-
-    sns.set_style("whitegrid")
-    fig = plt.figure(
-        figsize=(6, 8.5), dpi=600
-    )
-
-    df_a = df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == display_subset) & (df['ScoreMethodID'] == force_backrub_step) & (df['StructureOrder'] == 'id_50') ]
-    ax1 = fig.add_subplot( 2, 1, 1 )
-
-    df_b = df.loc[ (df['PredictionRunName'] == zemu_run_name) & (df['MutType'] == display_subset) ]
-    ax2 = fig.add_subplot( 2, 1, 2 )
-
-    sns.regplot(
-        y = pred_colname, x = exp_colname,
-        data = df_a, ax = ax1,
-        scatter_kws = scatter_kws,
-        line_kws = line_kws,
-        ci = None,
-        color = run_colors[exp_run_name],
-    )
-    sns.regplot(
-        y = pred_colname, x = exp_colname,
-        data = df_b, ax = ax2,
-        scatter_kws = scatter_kws,
-        line_kws = line_kws,
-        ci = None,
-        color = run_colors[exp_run_name],
-    )
-
-    # ax1.set_xlabel('')
-    ax2.set_ylabel('ZEMu score')
-    fig.suptitle(mut_types[display_subset])
-
-    out_path = os.path.join( output_fig_path, 'fig-scatter_mult-non-ala.pdf' )
-    fig.savefig( out_path )
-
 def figure_scatter( force_backrub_step = 35000 ):
     exp_run_name = 'zemu_1.2-60000_rscript_simplified-t14'
     control_run_name = 'zemu_control-69aa526'
@@ -799,10 +747,7 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
     data_table = []
     for ax_i, mut_type_subset in enumerate( mut_type_subsets ):
         ax = fig.add_subplot( 2, 2, ax_i + 1 )
-        if mut_type_subset in mut_types:
-            ax.set_title( '(%s) - %s' % (string.ascii_lowercase[ax_i], mut_types[mut_type_subset]) )
-        else:
-            ax.set_title( '(%s) - %s' % (string.ascii_lowercase[ax_i], mut_type_subset) )
+        ax.set_title( '(%s) - %s' % (string.ascii_lowercase[ax_i], mut_types[mut_type_subset]) )
         ax.set_ylabel("Pearson's R")
         ax.set_xlabel("Backrub Step")
         ns.append( len(df.loc[ (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) & (df['ScoreMethodID'] == df['ScoreMethodID'].drop_duplicates().values[0]) ]) )
@@ -857,13 +802,10 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
         )
 
         np.testing.assert_array_equal( rs['ScoreMethodID'], maes.index )
-        if mut_type_subset in mut_types:
-            data_table.append( (run_names[control_run], mut_types[mut_type_subset], 0, control_r, control_mae) )
-        else:
-            data_table.append( (run_names[control_run], mut_type_subset, 0, control_r, control_mae) )
+        data_table.append( (run_names[control_run], mut_types[mut_type_subset], 0, control_r, control_mae) )
         for step_num, r, mae in zip(rs['ScoreMethodID'], rs['Experimental ddG'], maes.values):
             if step_num in [2500, 35000] or step_num % 10000 == 0:
-                data_table.append( (run_names[exp_run_name], mut_type_subset, step_num, r, mae) )
+                data_table.append( (run_names[exp_run_name], mut_types[mut_type_subset], step_num, r, mae) )
 
 
         if force_control_in_axes:
@@ -906,10 +848,10 @@ def steps_vs_corr( output_figure_name, mut_type_subsets, control_run = 'zemu_con
         color_description += '\nPredictions generated with the ddg\_monomer method are shown in purple.'
     color_description += '\nPredictions generated with the no backrub control protocol are shown in green.'
     sub_dict = {
-        'panel-a' : '%s (n=%d)' % ( mut_type_subsets[0].capitalize(),  ns[0] ),
-        'panel-b' : '%s (n=%d)' % ( mut_type_subsets[1].capitalize(),  ns[1] ),
-        'panel-c' : '%s (n=%d)' % ( mut_type_subsets[2].capitalize(),  ns[2] ),
-        'panel-d' : '%s (n=%d)' % ( mut_type_subsets[3].capitalize(),  ns[3] ),
+        'panel-a' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[0] ].capitalize(),  ns[0] ),
+        'panel-b' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[1] ].capitalize(),  ns[1] ),
+        'panel-c' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[2] ].capitalize(),  ns[2] ),
+        'panel-d' : '%s (n=%d)' % ( mut_types[ mut_type_subsets[3] ].capitalize(),  ns[3] ),
         'fig-label' : output_figure_name,
         'fig-path' : out_path,
         'underlying-label' : 'tab:%s' % underlying_name,
@@ -1023,7 +965,7 @@ def figure_structs_vs_corr(
                 best_step_id = force_backrub_step
             best_step_ids.append( best_step_id )
 
-            ax.set_title( '(%s) - %s' % (string.ascii_lowercase[ax_i], mut_type_subset) )
+            ax.set_title( '(%s) - %s' % (string.ascii_lowercase[ax_i], mut_types[mut_type_subset]) )
             rs = rs.loc[ rs['ScoreMethodID'] == best_step_id ]
 
             maes = df.loc[ (df['ScoreMethodID'] == best_step_id) & (df['PredictionRunName'] == exp_run_name) & (df['MutType'] == mut_type_subset ) ].groupby('StructureOrder')[[pred_colname, exp_colname]].apply( lambda x: calc_mae( x[exp_colname], x[pred_colname] ) )
@@ -1073,10 +1015,10 @@ def figure_structs_vs_corr(
 
             for num_structs_to_save, r_to_save, mae_to_save in zip(rs['StructureOrder'], rs['Experimental ddG'], maes.values):
                 if num_structs_to_save in [1, 20, 30, 40, 50]:
-                    data_table.append( (run_names[exp_run_name], mut_type_subset, num_structs_to_save, r_to_save, mae_to_save) )
+                    data_table.append( (run_names[exp_run_name], mut_types[mut_type_subset], num_structs_to_save, r_to_save, mae_to_save) )
             for num_structs_to_save, r_to_save, mae_to_save in zip(control_rs['StructureOrder'], control_rs['Experimental ddG'], control_maes.values):
                 if num_structs_to_save in [1, 20, 30, 40, 50]:
-                    data_table.append( (run_names[control_run], mut_type_subset, num_structs_to_save, r_to_save, mae_to_save) )
+                    data_table.append( (run_names[control_run], mut_types[mut_type_subset], num_structs_to_save, r_to_save, mae_to_save) )
 
             if ax_i == 0:
                 legend_lines.extend( [exp_r, control_r, exp_mae, control_mae] )
@@ -1140,11 +1082,11 @@ def figure_structs_vs_corr(
             'underlying-label' : 'tab:%s' % underlying_name,
             'color-description' : color_description,
         }
- #        for alpha_i, alpha in enumerate( string.ascii_lowercase[:4] ):
-  #          if best_step_ids[alpha_i] >= 10 and force_backrub_step == None:
-   #             sub_dict[ 'panel-' + alpha ] = '%s (n = %d, backrub steps = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i], best_step_ids[alpha_i] )
-    #        else:
-     #           sub_dict[ 'panel-' + alpha ] = '%s (n = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i] )
+        for alpha_i, alpha in enumerate( string.ascii_lowercase[:4] ):
+            if best_step_ids[alpha_i] >= 10 and force_backrub_step == None:
+                sub_dict[ 'panel-' + alpha ] = '%s (n = %d, backrub steps = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i], best_step_ids[alpha_i] )
+            else:
+                sub_dict[ 'panel-' + alpha ] = '%s (n = %d)' % ( mut_types[ mut_type_subsets[alpha_i] ].capitalize(),  ns[alpha_i] )
 
         leg = plt.figlegend(
             legend_lines, legend_labels, loc = 'lower center', labelspacing=0.0,
@@ -1632,29 +1574,12 @@ def make_subsets_report():
     df.to_csv( 'subset_report.csv' )
 
 if __name__ == '__main__':
-    figure_mult_non_ala()
     make_supp_csv()
 
     prediction_error()
 
     table_composition()
     table_versions()
-    bad_pdbs = ['pdb-1HE8', 'pdb-1MLC', 'pdb-2I9B', 'pdb-1AHW']
-    steps_vs_corr( 'steps-v-corr_bad-PDBs', bad_pdbs )
-    figure_structs_vs_corr(
-        mut_type_subsets = bad_pdbs,
-        extra_fig_name = 'bad-PDBS',
-    )
-
-    good_pdbs = ['pdb-1A4Y', 'pdb-1EMV', 'pdb-1KTZ', 'pdb-1REW']
-    steps_vs_corr( 'steps-v-corr_good-PDBs', good_pdbs )
-    figure_structs_vs_corr(
-        mut_type_subsets = good_pdbs,
-        extra_fig_name = 'good-PDBS',
-    )
-
-    sys.exit()
-
     figure_scatter()
     make_subsets_report()
     steps_vs_corr( 'steps-v-corr_burial', ['buried_lt0.10_mean', 'buried_gte0.10_mean', 'buried_lt0.25_mean', 'buried_gte0.25_mean'] )
