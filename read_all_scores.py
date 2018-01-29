@@ -121,7 +121,7 @@ mut_types = {
 for cut_off in [0.05, 0.1, 0.25]:
     for stat_type in ['mean']:
         for comparison_type, comparison_type_name in [('lt', '<'), ('gte', '>=')]:
-            mut_types[ 'buried_%s%.2f_%s' % (comparison_type, cut_off, stat_type) ] = '%s burial score %s %.2f' % (stat_type.capitalize(), comparison_type_name, cut_off)
+            mut_types[ 'buried_%s%.2f_%s' % (comparison_type, cut_off, stat_type) ] = '%s solvent exposure %s %.2f' % (stat_type.capitalize(), comparison_type_name, cut_off)
 
 run_names = {
     'zemu_1.2-60000_rscript_validated-t14' : 'flex ddG',
@@ -1630,7 +1630,6 @@ def make_subsets_report():
     df.to_csv( 'subset_report.csv' )
 
 if __name__ == '__main__':
-    make_supp_csv()
     steps_vs_corr( 'steps-v-corr_burial', ['buried_lt0.10_mean', 'buried_gte0.10_mean', 'buried_lt0.25_mean', 'buried_gte0.25_mean'] )
     steps_vs_corr( 'steps-v-corr_burial2', ['buried_lt0.10_mean', 'buried_gte0.10_mean', 'buried_lt0.05_mean', 'buried_gte0.05_mean'] )
     steps_vs_corr( 'steps-v-corr_ss', ['SS-all-None', 'SS-all-H', 'SS-all-E', 'SS-all-T'] )
@@ -1649,6 +1648,8 @@ if __name__ == '__main__':
 
     table_composition()
     table_versions()
+    figure_scatter()
+    make_subsets_report()
     figure_scatter()
     make_subsets_report()
     steps_vs_corr( 'steps-v-corr', ['complete', 's2l', 'mult_none_ala', 'sing_ala'] )
