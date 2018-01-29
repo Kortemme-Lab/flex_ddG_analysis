@@ -223,13 +223,17 @@ def figure_components():
             ('control_GAM', 'id_50', 12),
             ('ref_GAM', 'id_50', 12),
         ],
+        'Table S10' : append_all_structs_helper([('zemu_1.2-60000_rscript_simplified-t14', 35000), ('zemu_control-69aa526', 8)], ['id']),
+        'Table S11' : append_all_structs_helper([('zemu_1.2-60000_rscript_simplified-t14', 35000), ('zemu_control-69aa526', 8)], ['id']),
         'Figure S2' : append_all_structs_helper([('ddg_monomer_16_003-zemu-2', 8), ('zemu_control-69aa526', 8)], ['WildTypeComplex']),
         'Figure S3' : append_all_structs_helper([('zemu_1.2-60000_rscript_simplified-t14', 35000), ('zemu_control-69aa526', 8)], ['id']),
-        'Figure S5' : [
+        'Figure S4' : append_all_structs_helper([('zemu_1.2-60000_rscript_simplified-t14', 35000), ('zemu_control-69aa526', 8)], ['id']),
+        'Figure S5' : append_all_structs_helper([('zemu_1.2-60000_rscript_simplified-t14', 35000), ('zemu_control-69aa526', 8)], ['id']),
+        'Figure S7' : [
             ('zemu_1.2-60000_rscript_validated-ref', 'id_50', 35000),
             ('ref_GAM', 'id_50', 12),
         ],
-        'Figure S6' : [
+        'Figure S8' : [
             ('tal_GAM', 'id_50', 12),
         ],
     }
@@ -1536,7 +1540,7 @@ def make_supp_csv( only_fig_columns = True ):
         'ref_GAM',
         'control_GAM',
     ]
-    display_mut_types = ['s2l', 'ala', 'sing_ala', 'mult_mut', 'mult_all_ala', 'mult_none_ala', 'antibodies']
+    display_mut_types = ['s2l', 'ala', 'sing_ala', 'mult_mut', 'mult_all_ala', 'mult_none_ala', 'antibodies', 'SS-all-None', 'SS-all-H', 'SS-all-E', 'SS-all-T', 'buried_lt0.10_mean', 'buried_gte0.10_mean', 'buried_lt0.25_mean', 'buried_gte0.25_mean']
     structure_orders = {
         'id_01' : '1 randomly selected model',
         'id_30' : '3 randomly selected models',
@@ -1626,15 +1630,7 @@ def make_subsets_report():
     df.to_csv( 'subset_report.csv' )
 
 if __name__ == '__main__':
-    figure_mult_non_ala()
     make_supp_csv()
-
-    prediction_error()
-
-    table_composition()
-    table_versions()
-    figure_scatter()
-    make_subsets_report()
     steps_vs_corr( 'steps-v-corr_burial', ['buried_lt0.10_mean', 'buried_gte0.10_mean', 'buried_lt0.25_mean', 'buried_gte0.25_mean'] )
     steps_vs_corr( 'steps-v-corr_burial2', ['buried_lt0.10_mean', 'buried_gte0.10_mean', 'buried_lt0.05_mean', 'buried_gte0.05_mean'] )
     steps_vs_corr( 'steps-v-corr_ss', ['SS-all-None', 'SS-all-H', 'SS-all-E', 'SS-all-T'] )
@@ -1647,6 +1643,14 @@ if __name__ == '__main__':
         mut_type_subsets = ['SS-all-None', 'SS-all-H', 'SS-all-E', 'SS-all-T'],
         extra_fig_name = 'SS',
     )
+    figure_mult_non_ala()
+
+    prediction_error()
+
+    table_composition()
+    table_versions()
+    figure_scatter()
+    make_subsets_report()
     steps_vs_corr( 'steps-v-corr', ['complete', 's2l', 'mult_none_ala', 'sing_ala'] )
     steps_vs_corr( 'steps-v-corr_mult', ['mult_mut', 'ala', 'mult_all_ala', 'mult_none_ala'] )
     steps_vs_corr( 'steps-v-corr_resolution', ['complete', 'res_gte25', 'res_lte15', 'res_gt15_lt25'] )
