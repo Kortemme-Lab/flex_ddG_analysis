@@ -8,3 +8,5 @@ Flex ddG: Rosetta Ensemble-Based Estimation of Changes in Protein-Protein Bindin
 Barlow KA, Ó Conchúir S, Thompson S, Suresh P, Lucas J, Heinonen M, Kortemme T
 J Phys Chem B. 2018 Feb 5. doi: 10.1021/acs.jpcb.7b11367
 PMID: 29401388
+
+Run `./read_all_scores.py` to generate paper figures and tables.

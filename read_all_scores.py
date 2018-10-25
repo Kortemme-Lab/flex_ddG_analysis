@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import cPickle as pickle
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
