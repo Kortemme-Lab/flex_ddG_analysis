@@ -427,7 +427,10 @@ def analyze_output_folder( output_folder ):
         ddg_scores, struct_scores = calc_ddg( scores )
         struct_scores_dfs.append( struct_scores )
         ddg_scores_dfs.append( ddg_scores )
-        ddg_scores_dfs.append( apply_zemu_gam(ddg_scores) )
+        try:
+            ddg_scores_dfs.append( apply_zemu_gam(ddg_scores) )
+        except Exception:
+            print('GAM scores could not be calculated. You may be running the protocol on an incompatible version of Rosetta.')
         ddg_scores_dfs.extend( calc_dgs( scores ) )
         r.increment_report()
     r.done()
